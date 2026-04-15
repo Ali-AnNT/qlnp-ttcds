@@ -61,7 +61,7 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
   return (
     <aside
       className={cn(
-        "bg-primary text-primary-foreground flex flex-col shrink-0 transition-all duration-200 h-screen sticky top-0 z-40",
+        "bg-sidebar text-sidebar-foreground flex flex-col shrink-0 transition-all duration-200 h-screen sticky top-0 z-40 border-r border-sidebar-border",
         isMobile ? "fixed left-0 top-0 w-60" : sidebarWidth
       )}
     >

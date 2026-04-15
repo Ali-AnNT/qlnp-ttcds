@@ -32,15 +32,15 @@
     --success-foreground: 0 0% 100%;
     --info: 199 89% 48%;
     --info-foreground: 0 0% 100%;
-    --sidebar-background: 217 70% 26%;
-    --sidebar-foreground: 0 0% 100%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 40%;
     --sidebar-primary: 221 83% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 60% 32%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 217 50% 35%;
+    --sidebar-accent: 210 20% 95%;
+    --sidebar-accent-foreground: 0 0% 30%;
+    --sidebar-border: 214 20% 89%;
     --sidebar-ring: 221 83% 53%;
-    --sidebar-muted: 217 40% 40%;
+    --sidebar-muted: 0 0% 60%;
   }
 }
 
