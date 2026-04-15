@@ -110,7 +110,7 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
                         onClick={isMobile ? onClose : undefined}
                         className={({ isActive }) => cn(
                           "block pl-6 pr-4 py-2 text-[13px] hover:bg-sidebar-accent transition-colors",
-                          isActive ? "bg-accent text-accent-foreground font-medium" : "text-primary-foreground/80"
+                          isActive ? "bg-accent text-accent-foreground font-medium" : "text-sidebar-foreground"
                         )}
                       >
                         {child.label}
