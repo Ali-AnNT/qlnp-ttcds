@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useStore } from "@/store/useStore";
 import { UserRole, roleLabels } from "@/lib/leave-data";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { toast } from "sonner";
 
 const LoginPage = () => {
   const login = useStore(s => s.login);
+  const navigate = useNavigate();
   const [username, setUsername] = useState("nvan");
   const [password, setPassword] = useState("123456");
   const [role, setRole] = useState<UserRole>("CB.PCM");
@@ -18,7 +20,11 @@ const LoginPage = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     const success = login(username, password, role);
-    if (!success) toast.error("Sai tên đăng nhập, mật khẩu hoặc vai trò!");
+    if (success) {
+      navigate("/");
+    } else {
+      toast.error("Sai tên đăng nhập, mật khẩu hoặc vai trò!");
+    }
   };
 
   const demoAccounts = [
