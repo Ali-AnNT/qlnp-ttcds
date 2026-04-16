@@ -8,6 +8,7 @@ interface AuthUser {
   username: string;
   fullName: string;
   departmentName: string;
+  departmentId: string;
   position: string;
 }
 
@@ -40,6 +41,14 @@ export const useStore = create<AppState>((set, get) => ({
     });
     if (error || !data || (data as any[]).length === 0) return false;
     const user = (data as any[])[0];
+
+    // Find employee to get department_id
+    const { data: empData } = await supabase
+      .from("employees")
+      .select("department_id")
+      .eq("id", user.employee_id)
+      .single();
+
     set({
       currentUser: {
         employeeId: user.employee_id,
@@ -47,6 +56,7 @@ export const useStore = create<AppState>((set, get) => ({
         username: user.emp_username,
         fullName: user.emp_full_name,
         departmentName: user.department_name || "",
+        departmentId: empData?.department_id || "",
         position: user.emp_position || "",
       },
     });
@@ -62,12 +72,35 @@ export const useStore = create<AppState>((set, get) => ({
   leaveRequests: [],
 
   loadData: async () => {
-    const [deptRes, empRes, ltRes, lrRes] = await Promise.all([
+    const currentUser = get().currentUser;
+    const role = currentUser?.role;
+
+    const [deptRes, empRes, ltRes] = await Promise.all([
       supabase.from("departments").select("*"),
       supabase.from("employees").select("id, username, full_name, department_id, job_title, role, phone, email, is_active"),
       supabase.from("leave_types").select("*").eq("is_active", true),
-      supabase.from("leave_requests").select("*").order("created_at", { ascending: false }),
     ]);
+
+    // Load leave requests based on role
+    let lrQuery = supabase.from("leave_requests").select("*").order("created_at", { ascending: false });
+
+    if (role === "CB.PCM" && currentUser) {
+      // CB.PCM: only own requests
+      lrQuery = lrQuery.eq("employee_id", currentUser.employeeId);
+    } else if (role === "LD.PCM" && currentUser) {
+      // LD.PCM: requests from their department
+      const deptEmployees = (empRes.data || []).filter(
+        (e: any) => e.department_id === currentUser.departmentId
+      );
+      const deptEmployeeIds = deptEmployees.map((e: any) => e.id);
+      if (deptEmployeeIds.length > 0) {
+        lrQuery = lrQuery.in("employee_id", deptEmployeeIds);
+      }
+    }
+    // GD.PGD and QTHT: load all (no filter)
+
+    const lrRes = await lrQuery;
+
     set({
       departments: (deptRes.data || []) as Department[],
       employees: (empRes.data || []) as Employee[],

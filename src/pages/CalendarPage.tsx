@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useStore } from "@/store/useStore";
 import { leaveStatusLabels, LeaveStatus } from "@/lib/leave-data";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatDate } from "@/lib/date-utils";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -126,8 +127,8 @@ const CalendarPage = () => {
                       <TableCell className="font-medium">{emp?.full_name}</TableCell>
                       <TableCell>{dept?.name}</TableCell>
                       <TableCell>{getLeaveType(r.leave_type_id)?.name}</TableCell>
-                      <TableCell>{r.start_date}</TableCell>
-                      <TableCell>{r.end_date}</TableCell>
+                      <TableCell>{formatDate(r.start_date)}</TableCell>
+                      <TableCell>{formatDate(r.end_date)}</TableCell>
                       <TableCell className="text-center">{r.total_days}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className={cn("text-[11px]", statusColor[r.status])}>
