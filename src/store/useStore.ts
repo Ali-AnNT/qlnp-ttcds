@@ -77,10 +77,11 @@ export const useStore = create<AppState>((set, get) => ({
     const currentUser = get().currentUser;
     const role = currentUser?.role;
 
-    const [deptRes, empRes, ltRes] = await Promise.all([
+    const [deptRes, empRes, ltRes, acRes] = await Promise.all([
       supabase.from("departments").select("*"),
       supabase.from("employees").select("id, username, full_name, department_id, job_title, role, phone, email, is_active"),
       supabase.from("leave_types").select("*").eq("is_active", true),
+      supabase.from("approval_config").select("*").order("approval_level", { ascending: true }),
     ]);
 
     // Load leave requests based on role
