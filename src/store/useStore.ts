@@ -71,6 +71,7 @@ export const useStore = create<AppState>((set, get) => ({
   employees: [],
   leaveTypes: [],
   leaveRequests: [],
+  approvalConfigs: [],
 
   loadData: async () => {
     const currentUser = get().currentUser;
