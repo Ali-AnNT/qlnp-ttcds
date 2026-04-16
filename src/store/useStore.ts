@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { supabase } from "@/integrations/supabase/client";
-import type { UserRole, Department, Employee, LeaveType, LeaveRequest } from "@/lib/leave-data";
+import type { UserRole, Department, Employee, LeaveType, LeaveRequest, ApprovalConfig } from "@/lib/leave-data";
 
 interface AuthUser {
   employeeId: string;
