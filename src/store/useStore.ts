@@ -109,6 +109,7 @@ export const useStore = create<AppState>((set, get) => ({
       employees: (empRes.data || []) as Employee[],
       leaveTypes: (ltRes.data || []) as LeaveType[],
       leaveRequests: (lrRes.data || []) as LeaveRequest[],
+      approvalConfigs: (acRes.data || []) as ApprovalConfig[],
     });
   },
 
