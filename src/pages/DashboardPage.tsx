@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useStore } from "@/store/useStore";
 import { leaveStatusLabels, LeaveStatus } from "@/lib/leave-data";
+import { formatDate } from "@/lib/date-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, Clock, CheckCircle, FileText } from "lucide-react";
@@ -19,11 +20,9 @@ const statusColor: Record<string, string> = {
 const DashboardPage = () => {
   const currentUser = useStore((s) => s.currentUser);
   const leaveRequests = useStore((s) => s.leaveRequests);
-  const employees = useStore((s) => s.employees);
   const leaveTypes = useStore((s) => s.leaveTypes);
   const loadData = useStore((s) => s.loadData);
   const getEmployee = useStore((s) => s.getEmployee);
-  const getDepartment = useStore((s) => s.getDepartment);
   const getLeaveType = useStore((s) => s.getLeaveType);
   const role = currentUser?.role;
 
@@ -91,7 +90,7 @@ const DashboardPage = () => {
                 <div key={r.id} className="flex items-center justify-between py-2 border-b last:border-0 text-sm">
                   <div className="flex-1 min-w-0">
                     <span className="font-medium">{emp?.full_name}</span>
-                    <span className="text-muted-foreground"> — {lt?.name}: {r.start_date} → {r.end_date} ({r.total_days} ngày)</span>
+                    <span className="text-muted-foreground"> — {lt?.name}: {formatDate(r.start_date)} → {formatDate(r.end_date)} ({r.total_days} ngày)</span>
                   </div>
                   <Badge className={cn("text-[11px] ml-2 shrink-0", statusColor[r.status])} variant="outline">
                     {leaveStatusLabels[r.status as LeaveStatus]}

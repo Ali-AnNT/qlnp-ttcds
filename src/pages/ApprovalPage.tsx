@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useStore } from "@/store/useStore";
 import { leaveStatusLabels, LeaveStatus, LeaveRequest } from "@/lib/leave-data";
+import { formatDate } from "@/lib/date-utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,13 +20,35 @@ const ApprovalPage = () => {
   const getEmployee = useStore((s) => s.getEmployee);
   const getDepartment = useStore((s) => s.getDepartment);
   const getLeaveType = useStore((s) => s.getLeaveType);
+  const employees = useStore((s) => s.employees);
   const [filterName, setFilterName] = useState("");
   const [detailRequest, setDetailRequest] = useState<LeaveRequest | null>(null);
   const [rejectId, setRejectId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
 
+  // Filter pending requests based on approver role
   const pendingRequests = leaveRequests
     .filter((r) => r.status === "pending")
+    .filter((r) => {
+      if (!currentUser) return false;
+      const emp = getEmployee(r.employee_id);
+      if (!emp) return false;
+
+      // LD.PCM: only sees requests from their own department
+      if (currentUser.role === "LD.PCM") {
+        const currentEmp = employees.find((e) => e.id === currentUser.employeeId);
+        return emp.department_id === currentEmp?.department_id && emp.id !== currentUser.employeeId;
+      }
+      // GD.PGD: sees all pending requests (or those already approved by leader)
+      if (currentUser.role === "GD.PGD") {
+        return true;
+      }
+      // QTHT: sees all
+      if (currentUser.role === "QTHT") {
+        return true;
+      }
+      return false;
+    })
     .filter((r) => {
       const emp = getEmployee(r.employee_id);
       return !filterName || emp?.full_name.toLowerCase().includes(filterName.toLowerCase());
@@ -81,11 +104,11 @@ const ApprovalPage = () => {
                     <TableCell className="font-medium">{emp?.full_name}</TableCell>
                     <TableCell>{dept?.name}</TableCell>
                     <TableCell>{getLeaveType(r.leave_type_id)?.name}</TableCell>
-                    <TableCell>{r.start_date}</TableCell>
-                    <TableCell>{r.end_date}</TableCell>
+                    <TableCell>{formatDate(r.start_date)}</TableCell>
+                    <TableCell>{formatDate(r.end_date)}</TableCell>
                     <TableCell className="text-center">{r.total_days}</TableCell>
                     <TableCell className="max-w-[150px] truncate">{r.reason}</TableCell>
-                    <TableCell>{r.created_at?.split("T")[0]}</TableCell>
+                    <TableCell>{formatDate(r.created_at)}</TableCell>
                     <TableCell>
                       <div className="flex gap-1">
                         <Button size="sm" className="h-7 px-2 bg-success hover:bg-success/90 text-success-foreground" onClick={() => handleApprove(r.id)}>
@@ -131,8 +154,8 @@ const ApprovalPage = () => {
                   <div><span className="text-muted-foreground">Phòng ban:</span> {dept?.name}</div>
                   <div><span className="text-muted-foreground">Loại phép:</span> {getLeaveType(detailRequest.leave_type_id)?.name}</div>
                   <div><span className="text-muted-foreground">Số ngày:</span> {detailRequest.total_days}</div>
-                  <div><span className="text-muted-foreground">Từ ngày:</span> {detailRequest.start_date}</div>
-                  <div><span className="text-muted-foreground">Đến ngày:</span> {detailRequest.end_date}</div>
+                  <div><span className="text-muted-foreground">Từ ngày:</span> {formatDate(detailRequest.start_date)}</div>
+                  <div><span className="text-muted-foreground">Đến ngày:</span> {formatDate(detailRequest.end_date)}</div>
                 </div>
                 <div><span className="text-muted-foreground">Lý do:</span> {detailRequest.reason}</div>
               </div>

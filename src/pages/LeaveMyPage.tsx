@@ -1,14 +1,20 @@
 import { useState } from "react";
 import { useStore } from "@/store/useStore";
 import { leaveStatusLabels, LeaveStatus } from "@/lib/leave-data";
+import { formatDate } from "@/lib/date-utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { XCircle } from "lucide-react";
+import { XCircle, Pencil } from "lucide-react";
+import { differenceInBusinessDays, parseISO } from "date-fns";
 
 const statusColor: Record<string, string> = {
   pending: "bg-warning/10 text-warning border-warning/30",
@@ -23,7 +29,15 @@ const LeaveMyPage = () => {
   const leaveRequests = useStore((s) => s.leaveRequests);
   const updateLeaveRequest = useStore((s) => s.updateLeaveRequest);
   const getLeaveType = useStore((s) => s.getLeaveType);
+  const leaveTypes = useStore((s) => s.leaveTypes);
   const [filterStatus, setFilterStatus] = useState<string>("all");
+
+  // Edit dialog state
+  const [editRequest, setEditRequest] = useState<any | null>(null);
+  const [editLeaveTypeId, setEditLeaveTypeId] = useState("");
+  const [editStartDate, setEditStartDate] = useState("");
+  const [editEndDate, setEditEndDate] = useState("");
+  const [editReason, setEditReason] = useState("");
 
   const myRequests = leaveRequests
     .filter((r) => r.employee_id === currentUser?.employeeId)
@@ -32,6 +46,37 @@ const LeaveMyPage = () => {
   const handleCancel = async (id: string) => {
     await updateLeaveRequest(id, { status: "cancelled" });
     toast.success("Đã hủy đơn");
+  };
+
+  const openEdit = (r: any) => {
+    setEditRequest(r);
+    setEditLeaveTypeId(r.leave_type_id);
+    setEditStartDate(r.start_date);
+    setEditEndDate(r.end_date);
+    setEditReason(r.reason || "");
+  };
+
+  const editDays = editStartDate && editEndDate
+    ? Math.max(1, differenceInBusinessDays(parseISO(editEndDate), parseISO(editStartDate)) + 1)
+    : 0;
+
+  const handleSaveEdit = async () => {
+    if (!editRequest) return;
+    if (!editStartDate || !editEndDate) { toast.error("Vui lòng chọn ngày"); return; }
+    if (editStartDate > editEndDate) { toast.error("Ngày bắt đầu phải trước ngày kết thúc"); return; }
+    if (!editReason.trim()) { toast.error("Vui lòng nhập lý do"); return; }
+    if (!editLeaveTypeId) { toast.error("Vui lòng chọn loại phép"); return; }
+
+    await updateLeaveRequest(editRequest.id, {
+      leave_type_id: editLeaveTypeId,
+      start_date: editStartDate,
+      end_date: editEndDate,
+      total_days: editDays,
+      reason: editReason,
+      status: "pending",
+    });
+    toast.success("Đã cập nhật và gửi lại đơn");
+    setEditRequest(null);
   };
 
   return (
@@ -62,7 +107,7 @@ const LeaveMyPage = () => {
                 <TableHead>Lý do</TableHead>
                 <TableHead>Trạng thái</TableHead>
                 <TableHead>Ngày gửi</TableHead>
-                <TableHead className="w-24">Thao tác</TableHead>
+                <TableHead className="w-28">Thao tác</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -72,8 +117,8 @@ const LeaveMyPage = () => {
                 <TableRow key={r.id} className={i % 2 === 1 ? "bg-muted/20" : ""}>
                   <TableCell className="text-center">{i + 1}</TableCell>
                   <TableCell>{getLeaveType(r.leave_type_id)?.name}</TableCell>
-                  <TableCell>{r.start_date}</TableCell>
-                  <TableCell>{r.end_date}</TableCell>
+                  <TableCell>{formatDate(r.start_date)}</TableCell>
+                  <TableCell>{formatDate(r.end_date)}</TableCell>
                   <TableCell className="text-center">{r.total_days}</TableCell>
                   <TableCell className="max-w-[200px] truncate">{r.reason}</TableCell>
                   <TableCell>
@@ -81,12 +126,17 @@ const LeaveMyPage = () => {
                       {leaveStatusLabels[r.status as LeaveStatus]}
                     </Badge>
                   </TableCell>
-                  <TableCell>{r.created_at?.split("T")[0]}</TableCell>
+                  <TableCell>{formatDate(r.created_at)}</TableCell>
                   <TableCell>
                     {r.status === "pending" && (
-                      <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive" onClick={() => handleCancel(r.id)}>
-                        <XCircle className="h-3 w-3" />
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="ghost" className="h-7 px-2 text-primary" onClick={() => openEdit(r)}>
+                          <Pencil className="h-3 w-3" />
+                        </Button>
+                        <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive" onClick={() => handleCancel(r.id)}>
+                          <XCircle className="h-3 w-3" />
+                        </Button>
+                      </div>
                     )}
                   </TableCell>
                 </TableRow>
@@ -95,6 +145,49 @@ const LeaveMyPage = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editRequest} onOpenChange={() => setEditRequest(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Sửa đơn xin nghỉ phép</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-[13px]">Loại đơn xin nghỉ</Label>
+              <Select value={editLeaveTypeId} onValueChange={setEditLeaveTypeId}>
+                <SelectTrigger><SelectValue placeholder="Chọn loại phép" /></SelectTrigger>
+                <SelectContent>
+                  {leaveTypes.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-[13px]">Ngày bắt đầu</Label>
+                <Input type="date" value={editStartDate} onChange={(e) => setEditStartDate(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[13px]">Ngày kết thúc</Label>
+                <Input type="date" value={editEndDate} onChange={(e) => setEditEndDate(e.target.value)} />
+              </div>
+            </div>
+            {editDays > 0 && (
+              <div className="bg-muted rounded-md px-3 py-2 text-sm">
+                Số ngày nghỉ: <strong>{editDays}</strong> ngày
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label className="text-[13px]">Lý do nghỉ</Label>
+              <Textarea value={editReason} onChange={(e) => setEditReason(e.target.value)} placeholder="Nhập lý do xin nghỉ..." rows={3} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditRequest(null)}>Hủy</Button>
+            <Button onClick={handleSaveEdit}>Lưu & Gửi lại</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
