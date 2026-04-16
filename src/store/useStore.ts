@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { supabase } from "@/integrations/supabase/client";
-import type { UserRole, Department, Employee, LeaveType, LeaveRequest } from "@/lib/leave-data";
+import type { UserRole, Department, Employee, LeaveType, LeaveRequest, ApprovalConfig } from "@/lib/leave-data";
 
 interface AuthUser {
   employeeId: string;
@@ -21,6 +21,7 @@ interface AppState {
   employees: Employee[];
   leaveTypes: LeaveType[];
   leaveRequests: LeaveRequest[];
+  approvalConfigs: ApprovalConfig[];
 
   loadData: () => Promise<void>;
   getEmployee: (id: string) => Employee | undefined;
@@ -70,15 +71,17 @@ export const useStore = create<AppState>((set, get) => ({
   employees: [],
   leaveTypes: [],
   leaveRequests: [],
+  approvalConfigs: [],
 
   loadData: async () => {
     const currentUser = get().currentUser;
     const role = currentUser?.role;
 
-    const [deptRes, empRes, ltRes] = await Promise.all([
+    const [deptRes, empRes, ltRes, acRes] = await Promise.all([
       supabase.from("departments").select("*"),
       supabase.from("employees").select("id, username, full_name, department_id, job_title, role, phone, email, is_active"),
       supabase.from("leave_types").select("*").eq("is_active", true),
+      supabase.from("approval_config").select("*").order("approval_level", { ascending: true }),
     ]);
 
     // Load leave requests based on role
@@ -106,6 +109,7 @@ export const useStore = create<AppState>((set, get) => ({
       employees: (empRes.data || []) as Employee[],
       leaveTypes: (ltRes.data || []) as LeaveType[],
       leaveRequests: (lrRes.data || []) as LeaveRequest[],
+      approvalConfigs: (acRes.data || []) as ApprovalConfig[],
     });
   },
 

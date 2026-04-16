@@ -69,3 +69,10 @@ export interface LeaveBalance {
   total_days: number;
   used_days: number;
 }
+
+export interface ApprovalConfig {
+  id: string;
+  leave_type_id: string;
+  approval_level: number;
+  approver_role: UserRole;
+}

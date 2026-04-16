@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useStore } from "@/store/useStore";
 import { leaveStatusLabels, LeaveStatus } from "@/lib/leave-data";
 import { formatDate } from "@/lib/date-utils";
@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { XCircle, Pencil } from "lucide-react";
-import { differenceInBusinessDays, parseISO } from "date-fns";
+import { differenceInBusinessDays, parseISO, format, eachDayOfInterval } from "date-fns";
 
 const statusColor: Record<string, string> = {
   pending: "bg-warning/10 text-warning border-warning/30",
@@ -30,6 +30,8 @@ const LeaveMyPage = () => {
   const updateLeaveRequest = useStore((s) => s.updateLeaveRequest);
   const getLeaveType = useStore((s) => s.getLeaveType);
   const leaveTypes = useStore((s) => s.leaveTypes);
+  const employees = useStore((s) => s.employees);
+  const approvalConfigs = useStore((s) => s.approvalConfigs);
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
   // Edit dialog state
@@ -38,10 +40,61 @@ const LeaveMyPage = () => {
   const [editStartDate, setEditStartDate] = useState("");
   const [editEndDate, setEditEndDate] = useState("");
   const [editReason, setEditReason] = useState("");
+  const [editApproverId, setEditApproverId] = useState("");
+
+  const today = format(new Date(), "yyyy-MM-dd");
 
   const myRequests = leaveRequests
     .filter((r) => r.employee_id === currentUser?.employeeId)
     .filter((r) => filterStatus === "all" || r.status === filterStatus);
+
+  // Approved dates (excluding the request being edited)
+  const approvedDates = useMemo(() => {
+    if (!currentUser) return new Set<string>();
+    const dates = new Set<string>();
+    leaveRequests
+      .filter((r) => r.employee_id === currentUser.employeeId && (r.status === "approved_leader" || r.status === "approved_director") && r.id !== editRequest?.id)
+      .forEach((r) => {
+        try {
+          const interval = { start: parseISO(r.start_date), end: parseISO(r.end_date) };
+          eachDayOfInterval(interval).forEach((d) => dates.add(format(d, "yyyy-MM-dd")));
+        } catch {}
+      });
+    return dates;
+  }, [leaveRequests, currentUser, editRequest]);
+
+  const editHasOverlap = useMemo(() => {
+    if (!editStartDate || !editEndDate) return false;
+    try {
+      const interval = { start: parseISO(editStartDate), end: parseISO(editEndDate) };
+      return eachDayOfInterval(interval).some((d) => approvedDates.has(format(d, "yyyy-MM-dd")));
+    } catch { return false; }
+  }, [editStartDate, editEndDate, approvedDates]);
+
+  // Approvers for edit form
+  const editAvailableApprovers = useMemo(() => {
+    if (!editLeaveTypeId) return [];
+    const configs = approvalConfigs
+      .filter((c) => c.leave_type_id === editLeaveTypeId)
+      .sort((a, b) => a.approval_level - b.approval_level);
+
+    const emp = employees.find((e) => e.id === currentUser?.employeeId);
+    const approvers: { id: string; full_name: string; level: number; role: string }[] = [];
+
+    configs.forEach((cfg) => {
+      employees.filter((e) => {
+        if (e.id === currentUser?.employeeId) return false;
+        if (e.role !== cfg.approver_role) return false;
+        if (cfg.approver_role === "LD.PCM" && emp) return e.department_id === emp.department_id;
+        return true;
+      }).forEach((e) => {
+        if (!approvers.find((a) => a.id === e.id)) {
+          approvers.push({ id: e.id, full_name: e.full_name, level: cfg.approval_level, role: cfg.approver_role });
+        }
+      });
+    });
+    return approvers;
+  }, [editLeaveTypeId, approvalConfigs, employees, currentUser]);
 
   const handleCancel = async (id: string) => {
     await updateLeaveRequest(id, { status: "cancelled" });
@@ -54,6 +107,7 @@ const LeaveMyPage = () => {
     setEditStartDate(r.start_date);
     setEditEndDate(r.end_date);
     setEditReason(r.reason || "");
+    setEditApproverId(r.approved_by || "");
   };
 
   const editDays = editStartDate && editEndDate
@@ -64,8 +118,11 @@ const LeaveMyPage = () => {
     if (!editRequest) return;
     if (!editStartDate || !editEndDate) { toast.error("Vui lòng chọn ngày"); return; }
     if (editStartDate > editEndDate) { toast.error("Ngày bắt đầu phải trước ngày kết thúc"); return; }
+    if (editStartDate < today) { toast.error("Không được chọn ngày trong quá khứ"); return; }
     if (!editReason.trim()) { toast.error("Vui lòng nhập lý do"); return; }
     if (!editLeaveTypeId) { toast.error("Vui lòng chọn loại phép"); return; }
+    if (!editApproverId) { toast.error("Vui lòng chọn người phê duyệt"); return; }
+    if (editHasOverlap) { toast.error("Khoảng ngày nghỉ trùng với đơn đã được duyệt"); return; }
 
     await updateLeaveRequest(editRequest.id, {
       leave_type_id: editLeaveTypeId,
@@ -74,6 +131,7 @@ const LeaveMyPage = () => {
       total_days: editDays,
       reason: editReason,
       status: "pending",
+      approved_by: editApproverId,
     });
     toast.success("Đã cập nhật và gửi lại đơn");
     setEditRequest(null);
@@ -153,7 +211,7 @@ const LeaveMyPage = () => {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label className="text-[13px]">Loại đơn xin nghỉ</Label>
-              <Select value={editLeaveTypeId} onValueChange={setEditLeaveTypeId}>
+              <Select value={editLeaveTypeId} onValueChange={(val) => { setEditLeaveTypeId(val); setEditApproverId(""); }}>
                 <SelectTrigger><SelectValue placeholder="Chọn loại phép" /></SelectTrigger>
                 <SelectContent>
                   {leaveTypes.map((t) => (
@@ -165,11 +223,14 @@ const LeaveMyPage = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-[13px]">Ngày bắt đầu</Label>
-                <Input type="date" value={editStartDate} onChange={(e) => setEditStartDate(e.target.value)} />
+                <Input type="date" min={today} value={editStartDate} onChange={(e) => {
+                  setEditStartDate(e.target.value);
+                  if (editEndDate && e.target.value > editEndDate) setEditEndDate("");
+                }} />
               </div>
               <div className="space-y-2">
                 <Label className="text-[13px]">Ngày kết thúc</Label>
-                <Input type="date" value={editEndDate} onChange={(e) => setEditEndDate(e.target.value)} />
+                <Input type="date" min={editStartDate || today} value={editEndDate} onChange={(e) => setEditEndDate(e.target.value)} />
               </div>
             </div>
             {editDays > 0 && (
@@ -177,9 +238,31 @@ const LeaveMyPage = () => {
                 Số ngày nghỉ: <strong>{editDays}</strong> ngày
               </div>
             )}
+            {editHasOverlap && (
+              <div className="bg-destructive/10 text-destructive rounded-md px-3 py-2 text-sm">
+                ⚠ Khoảng ngày nghỉ trùng với đơn đã được duyệt. Vui lòng chọn ngày khác.
+              </div>
+            )}
             <div className="space-y-2">
               <Label className="text-[13px]">Lý do nghỉ</Label>
               <Textarea value={editReason} onChange={(e) => setEditReason(e.target.value)} placeholder="Nhập lý do xin nghỉ..." rows={3} />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[13px]">Người phê duyệt</Label>
+              {editAvailableApprovers.length > 0 ? (
+                <Select value={editApproverId} onValueChange={setEditApproverId}>
+                  <SelectTrigger><SelectValue placeholder="Chọn người phê duyệt" /></SelectTrigger>
+                  <SelectContent>
+                    {editAvailableApprovers.map((a) => (
+                      <SelectItem key={a.id} value={a.id}>
+                        {a.full_name} (Cấp {a.level})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input disabled value={editLeaveTypeId ? "Chưa cấu hình cấp phê duyệt" : "Vui lòng chọn loại phép"} />
+              )}
             </div>
           </div>
           <DialogFooter>
