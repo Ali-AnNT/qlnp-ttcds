@@ -21,6 +21,7 @@ interface AppState {
   employees: Employee[];
   leaveTypes: LeaveType[];
   leaveRequests: LeaveRequest[];
+  approvalConfigs: ApprovalConfig[];
 
   loadData: () => Promise<void>;
   getEmployee: (id: string) => Employee | undefined;
