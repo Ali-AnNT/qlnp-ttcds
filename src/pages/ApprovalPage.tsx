@@ -130,7 +130,7 @@ const ApprovalPage = () => {
                             className="h-7 px-2 bg-success hover:bg-success/90 text-success-foreground"
                             onClick={() => handleApprove(r.id)}
                           >
-                            <CheckCircle className="h-3 w-3 mr-1" /> Duyệt
+                            <CheckCircle className="h-3 w-3 mr-1" />
                           </Button>
                           <Button
                             size="sm"
