@@ -1,38 +1,40 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useStore } from "@/store/useStore";
-import { UserRole, roleLabels } from "@/lib/leave-data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, Shield } from "lucide-react";
+import { CalendarDays, Shield, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 const LoginPage = () => {
-  const login = useStore(s => s.login);
+  const login = useStore((s) => s.login);
   const navigate = useNavigate();
-  const [username, setUsername] = useState("nvan");
-  const [password, setPassword] = useState("123456");
-  const [role, setRole] = useState<UserRole>("CB.PCM");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = login(username, password, role);
-    if (success) {
-      navigate("/");
-    } else {
-      toast.error("Sai tên đăng nhập, mật khẩu hoặc vai trò!");
+    if (!username || !password) {
+      toast.error("Vui lòng nhập tên đăng nhập và mật khẩu!");
+      return;
+    }
+    setLoading(true);
+    try {
+      const success = await login(username, password);
+      if (success) {
+        navigate("/");
+      } else {
+        toast.error("Sai tên đăng nhập hoặc mật khẩu!");
+      }
+    } catch {
+      toast.error("Lỗi kết nối. Vui lòng thử lại!");
+    } finally {
+      setLoading(false);
     }
   };
-
-  const demoAccounts = [
-    { label: "CB.PCM (Nhân viên)", username: "nvan", role: "CB.PCM" as UserRole },
-    { label: "LĐ.PCM (Trưởng phòng)", username: "lhcuong", role: "LD.PCM" as UserRole },
-    { label: "GĐ/PGĐ (Giám đốc)", username: "dqson", role: "GD.PGD" as UserRole },
-    { label: "QTHT (Quản trị)", username: "cttam", role: "QTHT" as UserRole },
-  ];
 
   return (
     <div className="min-h-screen bg-primary flex items-center justify-center p-4">
@@ -56,42 +58,31 @@ const LoginPage = () => {
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-[13px]">Tên đăng nhập</Label>
-                <Input value={username} onChange={e => setUsername(e.target.value)} placeholder="Nhập tên đăng nhập" />
+                <Input
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Nhập tên đăng nhập"
+                  autoFocus
+                />
               </div>
               <div className="space-y-2">
                 <Label className="text-[13px]">Mật khẩu</Label>
-                <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Nhập mật khẩu" />
+                <Input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Nhập mật khẩu"
+                />
               </div>
-              <div className="space-y-2">
-                <Label className="text-[13px]">Vai trò</Label>
-                <Select value={role} onValueChange={v => setRole(v as UserRole)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {(Object.keys(roleLabels) as UserRole[]).map(r => (
-                      <SelectItem key={r} value={r}>{r} — {roleLabels[r]}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">Đăng nhập</Button>
+              <Button
+                type="submit"
+                className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
+                disabled={loading}
+              >
+                {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Đăng nhập
+              </Button>
             </form>
-
-            <div className="mt-6 border-t pt-4">
-              <p className="text-xs text-muted-foreground mb-3">Tài khoản demo (mật khẩu: 123456):</p>
-              <div className="grid grid-cols-2 gap-2">
-                {demoAccounts.map(a => (
-                  <button
-                    key={a.username}
-                    onClick={() => { setUsername(a.username); setRole(a.role); }}
-                    className="text-left p-2 rounded-md border text-xs hover:bg-muted transition-colors"
-                  >
-                    <span className="font-medium text-accent">{a.username}</span>
-                    <br />
-                    <span className="text-muted-foreground">{a.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>

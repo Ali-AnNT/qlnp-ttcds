@@ -1,66 +1,100 @@
 import { create } from "zustand";
-import {
-  Employee, LeaveRequest, LeaveConfig, UserRole,
-  employees as mockEmployees,
-  initialLeaveRequests,
-  defaultLeaveConfig,
-  mockUsers,
-} from "@/lib/leave-data";
+import { supabase } from "@/integrations/supabase/client";
+import type { UserRole, Department, Employee, LeaveType, LeaveRequest } from "@/lib/leave-data";
 
 interface AuthUser {
   employeeId: string;
   role: UserRole;
   username: string;
+  fullName: string;
+  departmentName: string;
+  position: string;
 }
 
 interface AppState {
-  // Auth
   currentUser: AuthUser | null;
-  login: (username: string, password: string, role: UserRole) => boolean;
+  login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
 
-  // Employees
+  departments: Department[];
   employees: Employee[];
-  getEmployee: (id: string) => Employee | undefined;
-
-  // Leave requests
+  leaveTypes: LeaveType[];
   leaveRequests: LeaveRequest[];
-  addLeaveRequest: (req: Omit<LeaveRequest, "id" | "createdAt" | "updatedAt">) => void;
-  updateLeaveRequest: (id: string, updates: Partial<LeaveRequest>) => void;
 
-  // Config
-  leaveConfig: LeaveConfig;
-  updateLeaveConfig: (config: Partial<LeaveConfig>) => void;
+  loadData: () => Promise<void>;
+  getEmployee: (id: string) => Employee | undefined;
+  getDepartment: (id: string) => Department | undefined;
+  getLeaveType: (id: string) => LeaveType | undefined;
+
+  addLeaveRequest: (req: Omit<LeaveRequest, "id" | "created_at" | "updated_at">) => Promise<void>;
+  updateLeaveRequest: (id: string, updates: Partial<LeaveRequest>) => Promise<void>;
 }
 
 export const useStore = create<AppState>((set, get) => ({
   currentUser: null,
-  login: (username, password, role) => {
-    const user = mockUsers.find(u => u.username === username && u.password === password && u.role === role);
-    if (user) {
-      set({ currentUser: { employeeId: user.employeeId, role: user.role, username: user.username } });
-      return true;
-    }
-    return false;
+
+  login: async (username, password) => {
+    const { data, error } = await supabase.rpc("verify_login", {
+      p_username: username,
+      p_password: password,
+    });
+    if (error || !data || (data as any[]).length === 0) return false;
+    const user = (data as any[])[0];
+    set({
+      currentUser: {
+        employeeId: user.employee_id,
+        role: user.emp_role,
+        username: user.emp_username,
+        fullName: user.emp_full_name,
+        departmentName: user.department_name || "",
+        position: user.emp_position || "",
+      },
+    });
+    await get().loadData();
+    return true;
   },
+
   logout: () => set({ currentUser: null }),
 
-  employees: mockEmployees,
-  getEmployee: (id) => get().employees.find(e => e.id === id),
+  departments: [],
+  employees: [],
+  leaveTypes: [],
+  leaveRequests: [],
 
-  leaveRequests: initialLeaveRequests,
-  addLeaveRequest: (req) => {
-    const id = `lr${Date.now()}`;
-    const now = new Date().toISOString().split("T")[0];
-    set(s => ({ leaveRequests: [{ ...req, id, createdAt: now, updatedAt: now }, ...s.leaveRequests] }));
-  },
-  updateLeaveRequest: (id, updates) => {
-    const now = new Date().toISOString().split("T")[0];
-    set(s => ({
-      leaveRequests: s.leaveRequests.map(r => r.id === id ? { ...r, ...updates, updatedAt: now } : r),
-    }));
+  loadData: async () => {
+    const [deptRes, empRes, ltRes, lrRes] = await Promise.all([
+      supabase.from("departments").select("*"),
+      supabase.from("employees").select("id, username, full_name, department_id, job_title, role, phone, email, is_active"),
+      supabase.from("leave_types").select("*").eq("is_active", true),
+      supabase.from("leave_requests").select("*").order("created_at", { ascending: false }),
+    ]);
+    set({
+      departments: (deptRes.data || []) as Department[],
+      employees: (empRes.data || []) as Employee[],
+      leaveTypes: (ltRes.data || []) as LeaveType[],
+      leaveRequests: (lrRes.data || []) as LeaveRequest[],
+    });
   },
 
-  leaveConfig: defaultLeaveConfig,
-  updateLeaveConfig: (config) => set(s => ({ leaveConfig: { ...s.leaveConfig, ...config } })),
+  getEmployee: (id) => get().employees.find((e) => e.id === id),
+  getDepartment: (id) => get().departments.find((d) => d.id === id),
+  getLeaveType: (id) => get().leaveTypes.find((t) => t.id === id),
+
+  addLeaveRequest: async (req) => {
+    const { data, error } = await supabase.from("leave_requests").insert(req as any).select().single();
+    if (!error && data) {
+      set((s) => ({ leaveRequests: [data as LeaveRequest, ...s.leaveRequests] }));
+    }
+  },
+
+  updateLeaveRequest: async (id, updates) => {
+    const { error } = await supabase.from("leave_requests").update(updates as any).eq("id", id);
+    if (!error) {
+      set((s) => ({
+        leaveRequests: s.leaveRequests.map((r) =>
+          r.id === id ? { ...r, ...updates, updated_at: new Date().toISOString() } : r
+        ),
+      }));
+    }
+  },
 }));
