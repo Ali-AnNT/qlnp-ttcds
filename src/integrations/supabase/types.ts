@@ -14,41 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      approval_config: {
-        Row: {
-          approval_level: number
-          approver_role: Database["public"]["Enums"]["app_role"]
-          created_at: string
-          id: string
-          leave_type_id: string
-          updated_at: string
-        }
-        Insert: {
-          approval_level: number
-          approver_role: Database["public"]["Enums"]["app_role"]
-          created_at?: string
-          id?: string
-          leave_type_id: string
-          updated_at?: string
-        }
-        Update: {
-          approval_level?: number
-          approver_role?: Database["public"]["Enums"]["app_role"]
-          created_at?: string
-          id?: string
-          leave_type_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "approval_config_leave_type_id_fkey"
-            columns: ["leave_type_id"]
-            isOneToOne: false
-            referencedRelation: "leave_types"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       departments: {
         Row: {
           code: string | null
