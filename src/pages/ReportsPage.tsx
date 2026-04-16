@@ -1,4 +1,5 @@
 import { useStore } from "@/store/useStore";
+import { formatDate } from "@/lib/date-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from "recharts";
@@ -38,7 +39,7 @@ const ReportsPage = () => {
       const emp = getEmployee(r.employee_id);
       const dept = emp?.department_id ? getDepartment(emp.department_id) : undefined;
       const lt = getLeaveType(r.leave_type_id);
-      rows.push([emp?.full_name || "", dept?.name || "", lt?.name || "", r.start_date, r.end_date, String(r.total_days), r.status]);
+      rows.push([emp?.full_name || "", dept?.name || "", lt?.name || "", formatDate(r.start_date), formatDate(r.end_date), String(r.total_days), r.status]);
     });
     const csv = rows.map((r) => r.join(",")).join("\n");
     const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
