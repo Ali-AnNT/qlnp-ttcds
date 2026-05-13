@@ -35,28 +35,49 @@
 | No environment variable validation | **Low** | Missing VITE_SUPABASE_URL or KEY causes cryptic runtime errors |
 | No Vietnamese locale for business days | **Low** | date-fns default locale may miscount Vietnamese holidays |
 
-## Phase 1: Production Hardening (Planned)
+## Phase 1: Architecture Migration (Planned)
 
-Priority: Security and stability for production deployment.
+**Priority:** P0 — Replace Supabase with .NET 9 + FastEndpoints + Vertical Slice Architecture + SQL Server.
 
-| Feature | Priority | Effort |
-|---------|----------|--------|
-| Proper password hashing (bcrypt/argon2) in verify_login | Critical | Small |
-| Granular RLS policies: restrict INSERT/UPDATE to authorized roles | Critical | Medium |
-| Server-side authorization checks in RPC functions | Critical | Medium |
-| Input validation and sanitization (DOMPurify / Zod on server) | High | Small |
-| Environment variable validation on startup | High | Small |
-| Add vietnamese-holidays or custom holiday list for business days calc | Medium | Small |
-| Implement rate limiting via Supabase edge functions or middleware | Medium | Medium |
-| Split migration file into logical sequence | Low | Small |
-| Add proper error boundaries in React | Medium | Small |
+### 1.1 .NET Backend + SQL Server (P0)
+| Task | Priority | Effort |
+|------|----------|--------|
+| SQL Server schema migration (6 tables + data from PostgreSQL) | Critical | Medium |
+| FastEndpoints project setup + Vertical Slice folder structure | Critical | Small |
+| Auth slices: Login, Exchange, Me endpoints + JWT middleware (dual issuer) | Critical | Medium |
+| Employee CRUD slices | High | Small |
+| Department CRUD slices | High | Small |
+| Leave Type CRUD slices | High | Small |
+| Leave Request slices: List/Create/Update + overlap detection | Critical | Medium |
+| Leave Request slices: Approve/Reject (2-level state machine) | Critical | Medium |
+| Leave Request slices: Cancel | High | Small |
+| Leave Balance slices: List/My | High | Small |
+| Config slices: Get/Update | Medium | Small |
+| BCrypt password migration script | Critical | Small |
+
+### 1.2 Frontend Refactor (P1)
+| Task | Priority | Effort |
+|------|----------|--------|
+| Replace Supabase client with fetch-based api/client.ts | Critical | Medium |
+| JWT AuthContext (replaces Zustand auth state) | Critical | Medium |
+| postMessage listener for embed JWT exchange | High | Small |
+| Remove all Supabase package dependencies | Critical | Small |
+| Remove `src/integrations/supabase/` directory | Critical | Small |
+| Update all pages to use new API layer | Critical | Medium |
+
+### 1.3 Embedding Support (P2)
+| Task | Priority | Effort |
+|------|----------|--------|
+| iframe detection + dual mode UI | High | Small |
+| Host JWT validation via public key endpoint | High | Medium |
+| PostMessage handshake protocol | Medium | Small |
 
 ## Phase 2: Feature Enhancements (Planned)
 
 | Feature | Priority | Description |
 |---------|----------|-------------|
-| Email notifications | Medium | Send email on request submitted/approved/rejected. Integrate with Supabase Edge Functions or third-party (SendGrid/Resend) |
-| File attachments | Low | Allow attaching medical certificates or supporting documents to leave requests |
+| Email notifications | Medium | Send email on request submitted/approved/rejected |
+| File attachments | Low | Allow attaching medical certificates or supporting documents |
 | Multi-language (EN/VN) | Low | Support English interface for international staff |
 | Leave balance auto-calculation | Medium | Automatically calculate and update leave_balances based on approved requests |
 | Employee self-registration | Low | Allow employees to create accounts (admin approval required) |
@@ -72,20 +93,19 @@ Priority: Security and stability for production deployment.
 | SSO Integration | SAML/OIDC integration with organizational identity provider |
 | Multi-tenant | Support for multiple centers/departments with isolated data |
 | API for external systems | REST API with proper authentication for HR system integration |
-| Real-time updates | Supabase Realtime for live notification of request status changes |
 | Comprehensive test suite | Unit + integration + E2E tests (Cypress/Playwright) |
 | CI/CD pipeline | GitHub Actions for automated test, build, deploy |
 
 ## Milestone Timeline (Proposed)
 
 ```
-Q2 2026 (Current): Prototype complete
-    - All core features working
-    - Internal testing with mock data
+Q2 2026 (Current): Prototype complete + Migration start
+    - All core features working on Supabase
+    - Phase 1.1: FastEndpoints + Vertical Slice backend + SQL Server migration
 
-Q3 2026: Phase 1 - Production Hardening
-    - Security fixes
-    - RLS and auth improvements
+Q3 2026: Phase 1 Complete
+    - Frontend refactor (remove Supabase dependency)
+    - Embedding support
     - Pilot deployment with 1-2 departments
 
 Q4 2026: Phase 2 - Feature Enhancements

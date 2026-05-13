@@ -8,10 +8,10 @@
 
 ### 1.1 Mục tiêu
 
-- **Mục tiêu tổng quát**: Chuyển đổi hệ thống QLNP-TTCDS từ kiến trúc Supabase (BaaS PostgreSQL) + React SPA sang kiến trúc Standalone .NET 9 Minimal API + SQL Server + React Frontend, đồng thời bổ sung khả năng nhúng (embed) app vào website khác qua iframe.
+- **Mục tiêu tổng quát**: Chuyển đổi hệ thống QLNP-TTCDS từ kiến trúc Supabase (BaaS PostgreSQL) + React SPA sang kiến trúc .NET 9 + FastEndpoints + Vertical Slice Architecture + SQL Server + React Frontend, đồng thời bổ sung khả năng nhúng (embed) app vào website khác qua iframe.
 
 - **Mục tiêu cụ thể**:
-  - Thay thế hoàn toàn Supabase bằng .NET 9 Minimal API + Dapper + SQL Server, giữ nguyên toàn bộ logic nghiệp vụ
+  - Thay thế hoàn toàn Supabase bằng .NET 9 FastEndpoints + Vertical Slice Architecture + Dapper + SQL Server, giữ nguyên toàn bộ logic nghiệp vụ
   - Hỗ trợ dual auth mode: đăng nhập trực tiếp (standalone) + nhận JWT từ host website (embed)
   - Giữ nguyên UI/UX hiện tại, refactor dần frontend để loại bỏ dependency Supabase
   - Hoàn thành migration không làm gián đoạn hoạt động của TTCDS
@@ -19,7 +19,8 @@
 ### 1.2 Phạm vi
 
 - **Trong phạm vi**:
-  - Thiết kế và triển khai .NET 9 Minimal API với 19+ endpoints (auth, departments, employees, leave-types, leave-requests, leave-balances, config)
+  - Thiết kế và triển khai .NET 9 FastEndpoints API theo Vertical Slice Architecture với 19+ endpoints (auth, departments, employees, leave-types, leave-requests, leave-balances, config)
+  - Tổ chức code theo feature slices: mỗi feature (Login, CreateLeave, ApproveLeave, ...) là một vertical slice chứa Endpoint + Request + Response + Validator + Handler
   - Migration database từ PostgreSQL sang SQL Server (6 tables: departments, employees, leave_types, leave_balances, leave_requests, leave_config)
   - Chuyển đổi password từ plaintext sang BCrypt hash
   - Refactor frontend: thay Supabase client bằng fetch-based API layer, JWT auth context
@@ -124,11 +125,20 @@ Host Website
        └─ api/client.ts (fetch + JWT intercept)
             │
             ▼ POST/GET /api/*
-ASP.NET Minimal API (.NET 9)
+ASP.NET 9 + FastEndpoints (Vertical Slice Architecture)
   ├─ JwtMiddleware (own + host issuer)
-  ├─ Dapper ──► SQL Server
-  └─ Services: AuthService, LeaveService, BalanceService
-```
+  ├─ Features/
+  │   ├─ Auth/
+  │   │   ├─ Login/        (LoginEndpoint + LoginRequest + LoginResponse + LoginValidator)
+  │   │   ├─ Exchange/     (ExchangeEndpoint + ExchangeRequest + ExchangeResponse)
+  │   │   └─ Me/           (MeEndpoint)
+  │   ├─ Employees/        (List/Create/Update/Delete endpoints)
+  │   ├─ Departments/      (List/Create/Update/Delete endpoints)
+  │   ├─ LeaveRequests/    (List/Create/Update/Approve/Reject/Cancel endpoints)
+  │   ├─ LeaveBalances/    (Summary/My endpoints)
+  │   └─ Config/           (Get/Put endpoints)
+  ├─ Data/                 (Dapper queries, IDbConnection factory)
+  └─ SQL Server
 
 ```mermaid
 sequenceDiagram
@@ -141,12 +151,14 @@ sequenceDiagram
     alt Standalone Login
         U->>R: Nhập username + password
         R->>API: POST /api/auth/login
+        API->>API: FastEndpoints LoginEndpoint handles
         API->>DB: SELECT + BCrypt verify
         DB-->>API: Employee row
         API-->>R: JWT (app issuer)
     else Embed Mode
         H->>R: postMessage({ type: "auth", token: hostJWT })
         R->>API: POST /api/auth/exchange { hostJWT }
+        API->>API: FastEndpoints ExchangeEndpoint handles
         API->>API: Validate host JWT (public key)
         API-->>R: JWT (app issuer)
     end
@@ -157,7 +169,9 @@ sequenceDiagram
 ```
 
 **Cải tiến chính**:
-- API server trung gian che giấu cấu trúc DB, tập trung business logic
+- API server trung gian che giấu cấu trúc DB, tập trung business logic theo từng vertical slice
+- **FastEndpoints**: Mỗi endpoint là một class riêng (REPR pattern: Request-EndPoint-Response), code rõ ràng, dễ test từng endpoint độc lập
+- **Vertical Slice Architecture**: Code tổ chức theo feature thay vì layer ngang. Mỗi feature slice (Login, CreateLeave, ApproveLeave...) chứa endpoint + request + response + validator + handler — giảm coupling, dễ maintain
 - Dual auth: tự đăng nhập hoặc nhận JWT từ host
 - BCrypt hash password, JWT với 2 issuer validation
 - Dapper cho phép viết SQL thuần, tối ưu hiệu năng
@@ -301,7 +315,7 @@ sequenceDiagram
 
 | ID | Ràng buộc | Nguồn | Ảnh hưởng |
 |----|-----------|-------|-----------|
-| CST-001 | Phải dùng .NET 9 Minimal API + Dapper (user preference) | Tech | Hạn chế dùng EF Core, phải viết SQL thuần |
+| CST-001 | Phải dùng .NET 9 + FastEndpoints + Vertical Slice Architecture + Dapper (user preference) | Tech | Không dùng Minimal API inline hay Controllers truyền thống; tổ chức code theo feature slices, mỗi endpoint là 1 class độc lập |
 | CST-002 | Phải giữ nguyên UI/UX hiện tại | Business | Không thay đổi component tree, chỉ thay data layer |
 | CST-003 | Không làm gián đoạn hoạt động của TTCDS | Business | Phải có kế hoạch cut-over rõ ràng, rollback plan |
 | CST-004 | SQL Server license cost | Budget | Có thể dùng SQL Server Express (free, giới hạn 10GB) |
@@ -357,31 +371,91 @@ sequenceDiagram
 | NUMERIC(5,1) | DECIMAL(5,1) |
 | BOOLEAN | BIT |
 
-## Appendix B: API Endpoints Summary
+## Appendix B: API Endpoints Summary (FastEndpoints)
 
-| Method | Path | Auth | Role |
-|--------|------|------|------|
-| POST | /api/auth/login | No | — |
-| POST | /api/auth/exchange | No (host JWT) | — |
-| GET | /api/auth/me | App JWT | All |
-| GET/POST | /api/departments | App JWT | QTHT |
-| PUT/DELETE | /api/departments/{id} | App JWT | QTHT |
-| GET/POST | /api/employees | App JWT | QTHT |
-| PUT/DELETE | /api/employees/{id} | App JWT | QTHT |
-| GET/POST | /api/leave-types | App JWT | QTHT |
-| PUT/DELETE | /api/leave-types/{id} | App JWT | QTHT |
-| GET/POST | /api/leave-requests | App JWT | All (role-filtered) |
-| PUT | /api/leave-requests/{id} | App JWT | LD.PCM, GD.PGD |
-| DELETE | /api/leave-requests/{id} | App JWT | Owner |
-| GET | /api/leave-balances | App JWT | GD.PGD |
-| GET | /api/leave-balances/my | App JWT | All |
-| GET | /api/config | App JWT | All |
-| PUT | /api/config/{key} | App JWT | QTHT |
+Các endpoint được tổ chức theo Vertical Slice Architecture — mỗi endpoint là một class kế thừa `Endpoint<TRequest, TResponse>`:
+
+| Method | Path | Endpoint Class | Auth | Role |
+|--------|------|----------------|------|------|
+| POST | /api/auth/login | LoginEndpoint | No | — |
+| POST | /api/auth/exchange | ExchangeEndpoint | No (host JWT) | — |
+| GET | /api/auth/me | MeEndpoint | App JWT | All |
+| GET | /api/departments | ListDepartmentsEndpoint | App JWT | QTHT |
+| POST | /api/departments | CreateDepartmentEndpoint | App JWT | QTHT |
+| PUT | /api/departments/{id} | UpdateDepartmentEndpoint | App JWT | QTHT |
+| DELETE | /api/departments/{id} | DeleteDepartmentEndpoint | App JWT | QTHT |
+| GET | /api/employees | ListEmployeesEndpoint | App JWT | QTHT |
+| POST | /api/employees | CreateEmployeeEndpoint | App JWT | QTHT |
+| PUT | /api/employees/{id} | UpdateEmployeeEndpoint | App JWT | QTHT |
+| DELETE | /api/employees/{id} | DeleteEmployeeEndpoint | App JWT | QTHT |
+| GET | /api/leave-types | ListLeaveTypesEndpoint | App JWT | QTHT |
+| POST | /api/leave-types | CreateLeaveTypeEndpoint | App JWT | QTHT |
+| PUT | /api/leave-types/{id} | UpdateLeaveTypeEndpoint | App JWT | QTHT |
+| DELETE | /api/leave-types/{id} | DeleteLeaveTypeEndpoint | App JWT | QTHT |
+| GET | /api/leave-requests | ListLeaveRequestsEndpoint | App JWT | All (role-filtered) |
+| POST | /api/leave-requests | CreateLeaveRequestEndpoint | App JWT | CB.PCM, LD.PCM |
+| PUT | /api/leave-requests/{id} | UpdateLeaveRequestEndpoint | App JWT | Owner (pending only) |
+| PUT | /api/leave-requests/{id}/approve | ApproveLeaveRequestEndpoint | App JWT | LD.PCM, GD.PGD |
+| PUT | /api/leave-requests/{id}/reject | RejectLeaveRequestEndpoint | App JWT | LD.PCM, GD.PGD |
+| DELETE | /api/leave-requests/{id} | CancelLeaveRequestEndpoint | App JWT | Owner |
+| GET | /api/leave-balances | ListLeaveBalancesEndpoint | App JWT | GD.PGD |
+| GET | /api/leave-balances/my | MyLeaveBalanceEndpoint | App JWT | All |
+| GET | /api/config | GetConfigEndpoint | App JWT | All |
+| PUT | /api/config/{key} | UpdateConfigEndpoint | App JWT | QTHT |
 
 ## Appendix C: Phase Breakdown
 
 | Phase | Name | Priority | Est. Tasks |
 |-------|------|----------|------------|
-| 1 | .NET Backend + SQL Server | P0 | 12-15 |
+| 1 | .NET Backend + SQL Server (FastEndpoints + Vertical Slice Architecture) | P0 | 12-15 |
 | 2 | Frontend Refactor (bỏ Supabase) | P1 | 6-8 |
 | 3 | Standalone Embedding | P2 | 5-7 |
+
+## Appendix D: Vertical Slice Feature Structure
+
+```
+Features/
+├── Auth/
+│   ├── Login/
+│   │   ├── LoginEndpoint.cs       (Endpoint<LoginRequest, LoginResponse>)
+│   │   ├── LoginRequest.cs        (record with FluentValidation)
+│   │   ├── LoginResponse.cs       (JWT + user profile)
+│   │   └── LoginValidator.cs      (FluentValidation rules)
+│   ├── Exchange/
+│   │   ├── ExchangeEndpoint.cs
+│   │   ├── ExchangeRequest.cs
+│   │   └── ExchangeResponse.cs
+│   └── Me/
+│       └── MeEndpoint.cs
+├── Employees/
+│   ├── List/ListEmployeesEndpoint.cs
+│   ├── Create/CreateEmployeeEndpoint.cs
+│   ├── Update/UpdateEmployeeEndpoint.cs
+│   └── Delete/DeleteEmployeeEndpoint.cs
+├── Departments/
+│   ├── List/ListDepartmentsEndpoint.cs
+│   ├── Create/CreateDepartmentEndpoint.cs
+│   ├── Update/UpdateDepartmentEndpoint.cs
+│   └── Delete/DeleteDepartmentEndpoint.cs
+├── LeaveRequests/
+│   ├── List/ListLeaveRequestsEndpoint.cs
+│   ├── Create/CreateLeaveRequestEndpoint.cs
+│   ├── Update/UpdateLeaveRequestEndpoint.cs
+│   ├── Approve/ApproveLeaveRequestEndpoint.cs
+│   ├── Reject/RejectLeaveRequestEndpoint.cs
+│   └── Cancel/CancelLeaveRequestEndpoint.cs
+├── LeaveBalances/
+│   ├── List/ListLeaveBalancesEndpoint.cs
+│   └── My/MyLeaveBalanceEndpoint.cs
+└── Config/
+    ├── Get/GetConfigEndpoint.cs
+    └── Update/UpdateConfigEndpoint.cs
+```
+
+**FastEndpoints Pipeline**: `Request → Validator (FluentValidation) → PreProcessor → Endpoint.HandleAsync() → PostProcessor → Response`
+
+**Cross-cutting concerns** (dùng chung giữa các slices):
+- `Data/DbConnectionFactory.cs` — SQL Server IDbConnection factory
+- `Auth/JwtService.cs` — Tạo + validate JWT (own issuer + host issuer)
+- `Auth/CurrentUserService.cs` — Lấy thông tin user từ HttpContext
+- `Middleware/JwtMiddleware.cs` — Tự động validate token trước mỗi request

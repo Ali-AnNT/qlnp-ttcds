@@ -1,6 +1,8 @@
 # Code Standards - QLNP-TTCDS
 
-## Naming Conventions
+## Frontend (React + TypeScript)
+
+### Naming Conventions
 
 | Artifact | Convention | Example |
 |----------|-----------|---------|
@@ -147,6 +149,121 @@ export default MyComponent;
 - Use `cn()` utility for conditional classes
 - Status colors: semantic CSS classes (bg-warning, text-success, etc.)
 - Responsive: mobile-first with md: breakpoint for desktop
+
+## Backend (.NET 9 + FastEndpoints + Vertical Slice Architecture)
+
+### Project Structure
+
+```
+src/Server/
+├── Program.cs                      # FastEndpoints registration + middleware
+├── Features/                       # Vertical slices
+│   ├── Auth/
+│   │   ├── Login/
+│   │   │   ├── LoginEndpoint.cs
+│   │   │   ├── LoginRequest.cs
+│   │   │   ├── LoginResponse.cs
+│   │   │   └── LoginValidator.cs
+│   │   ├── Exchange/
+│   │   └── Me/
+│   ├── Employees/
+│   │   ├── List/ListEmployeesEndpoint.cs
+│   │   ├── Create/CreateEmployeeEndpoint.cs + Request + Validator
+│   │   ├── Update/UpdateEmployeeEndpoint.cs + Request + Validator
+│   │   └── Delete/DeleteEmployeeEndpoint.cs
+│   ├── Departments/
+│   ├── LeaveRequests/
+│   ├── LeaveBalances/
+│   └── Config/
+├── Data/
+│   └── DbConnectionFactory.cs      # SQL Server IDbConnection factory
+└── Middleware/
+    └── JwtMiddleware.cs            # JWT validation for both issuers
+```
+
+### Naming Conventions
+
+| Artifact | Convention | Example |
+|----------|-----------|---------|
+| Endpoint classes | PascalCase, suffix `Endpoint` | `LoginEndpoint`, `CreateLeaveRequestEndpoint` |
+| Request DTOs | PascalCase, suffix `Request` | `LoginRequest`, `CreateEmployeeRequest` |
+| Response DTOs | PascalCase, suffix `Response` | `LoginResponse`, `EmployeeResponse` |
+| Validator classes | PascalCase, suffix `Validator` | `LoginValidator` |
+| Feature folders | PascalCase | `Auth/`, `Employees/`, `LeaveRequests/` |
+| SQL tables/columns | snake_case | `leave_requests`, `employee_id` |
+| SQL stored procedures | snake_case, prefix `usp_` | `usp_get_leave_balance` |
+
+### Endpoint Pattern (REPR)
+
+```csharp
+// LoginRequest.cs
+public record LoginRequest(string Username, string Password);
+
+// LoginResponse.cs
+public record LoginResponse(string Token, EmployeeProfile Profile);
+
+// LoginValidator.cs
+public class LoginValidator : Validator<LoginRequest>
+{
+    public LoginValidator()
+    {
+        RuleFor(x => x.Username).NotEmpty();
+        RuleFor(x => x.Password).NotEmpty().MinimumLength(6);
+    }
+}
+
+// LoginEndpoint.cs
+public class LoginEndpoint : Endpoint<LoginRequest, LoginResponse>
+{
+    private readonly IDbConnection _db;
+
+    public LoginEndpoint(IDbConnectionFactory dbFactory)
+    {
+        _db = dbFactory.CreateConnection();
+    }
+
+    public override void Configure()
+    {
+        Post("/api/auth/login");
+        AllowAnonymous();
+    }
+
+    public override async Task HandleAsync(LoginRequest req, CancellationToken ct)
+    {
+        // 1. Query user
+        // 2. BCrypt verify
+        // 3. Generate JWT
+        // 4. Return response
+        await SendAsync(response, cancellation: ct);
+    }
+}
+```
+
+### FastEndpoints Pipeline
+
+```
+HTTP Request
+  → Validator.ValidateAsync()     [FluentValidation, auto]
+  → PreProcessor.PreProcessAsync() [optional: auth check, rate limiting]
+  → Endpoint.HandleAsync()         [business logic + Dapper query]
+  → PostProcessor.PostProcessAsync() [optional: audit log, cleanup]
+  → HTTP Response
+```
+
+### Data Access (Dapper)
+
+- Mỗi slice tự quản lý data access — không tách repository layer
+- SQL query viết trực tiếp trong handler hoặc trong constants gần handler
+- Dùng Dapper parameterized queries để chống SQL injection
+- Không dùng stored procedures mặc định, ưu tiên SQL inline trong handler (dễ đọc context)
+
+### API Conventions
+
+- Request/Response dùng C# `record` types
+- Tất cả endpoint đều có `[Authorize]` trừ `LoginEndpoint` và `ExchangeEndpoint`
+- Role check: `Roles("GD.PGD", "QTHT")` hoặc check trong handler
+- Response format nhất quán: `{ data, error }` envelope
+- Error response dùng `AddError()` hoặc `ThrowError()` của FastEndpoints
 
 ## Git Practices
 

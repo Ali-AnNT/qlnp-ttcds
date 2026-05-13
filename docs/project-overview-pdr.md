@@ -79,7 +79,7 @@ Xay dung he thong noi bo thay the quy trinh xin nghi phep thu cong (giay to, ema
 |----------|------------|
 | **Performance** | Page load < 3s, form submit < 1s |
 | **Availability** | 99% trong gio hanh chinh (8h-17h, T2-T6) |
-| **Security** | Xac thuc qua Supabase RPC verify_login, RLS tren tat ca cac bang |
+| **Security** | JWT-based auth (FastEndpoints middleware), BCrypt password hash, role-based endpoint authorization |
 | **Usability** | Giao dien tieng Viet, responsive mobile + desktop |
 | **Browser Support** | Chrome, Firefox, Edge (latest 2 versions) |
 | **Data Integrity** | Unique constraints tranh trung lap du lieu balance |
@@ -96,17 +96,17 @@ Xay dung he thong noi bo thay the quy trinh xin nghi phep thu cong (giay to, ema
 
 ## 7. Technical Constraints
 
-- Infrastructure: Supabase free tier (hien tai), co the nang cap sau
-- Backend: Khong co server rieng, su dung Supabase Postgres + RPC
+- Infrastructure: .NET 9 API server + SQL Server (on-premise hoac cloud)
+- Backend: FastEndpoints + Vertical Slice Architecture + Dapper + SQL Server
 - Frontend: SPA React, khong SSR
-- Database: PostgreSQL 15+ (Supabase managed)
-- Hosting: Vercel / Netlify / static hosting
+- Database: SQL Server (Express hoac Standard)
+- Hosting: Vercel / Netlify (frontend), IIS / Docker / Cloud Run (API)
 
 ## 8. Dependencies
 
+### Frontend
 | Dependency | Version | Purpose |
 |------------|---------|---------|
-| Supabase | ^2.103.1 | Backend-as-a-Service |
 | React | ^18.3.1 | UI framework |
 | Vite | ^5.4.19 | Build tool |
 | Zustand | ^5.0.12 | Client state management |
@@ -116,3 +116,14 @@ Xay dung he thong noi bo thay the quy trinh xin nghi phep thu cong (giay to, ema
 | React Hook Form | ^7.72.1 | Form handling |
 | Zod | ^4.3.6 | Schema validation |
 | date-fns | ^4.1.0 | Date utilities |
+
+### Backend
+| Dependency | Version | Purpose |
+|------------|---------|---------|
+| .NET SDK | 9.0 | Runtime |
+| FastEndpoints | 5.x | REPR pattern API framework |
+| Dapper | 2.x | SQL micro-ORM |
+| FluentValidation | 11.x | Request validation |
+| BCrypt.Net-Next | 4.x | Password hashing |
+| Microsoft.Data.SqlClient | 5.x | SQL Server driver |
+| System.IdentityModel.Tokens.Jwt | 8.x | JWT generation & validation |

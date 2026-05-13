@@ -1,6 +1,6 @@
 # System Architecture - QLNP-TTCDS
 
-## High-Level Architecture
+## Current Architecture (AS-IS)
 
 ```
 Browser (React SPA)
@@ -12,6 +12,69 @@ Supabase (Backend-as-a-Service)
     |--- Row Level Security (RLS)
     |--- SECURITY DEFINER RPC Functions
 ```
+
+## Target Architecture (TO-BE): FastEndpoints + Vertical Slice Architecture
+
+### High-Level
+
+```
+Host Website (optional)
+  └─ iframe ─ React SPA (Vite)
+       ├─ AuthContext (JWT: own + host)
+       ├─ Zustand Store
+       └─ api/client.ts (fetch + JWT intercept)
+            │
+            ▼ POST/GET /api/*
+ASP.NET 9 FastEndpoints API
+  ├─ JwtMiddleware (own issuer HS256 + host issuer RS256)
+  ├─ Features/                 ← Vertical Slices
+  │   ├─ Auth/Login/           LoginEndpoint + Request + Response + Validator
+  │   ├─ Auth/Exchange/        ExchangeEndpoint
+  │   ├─ Auth/Me/              MeEndpoint
+  │   ├─ Employees/            List/Create/Update/Delete
+  │   ├─ Departments/          List/Create/Update/Delete
+  │   ├─ LeaveRequests/        List/Create/Update/Approve/Reject/Cancel
+  │   ├─ LeaveBalances/        List/My
+  │   └─ Config/               Get/Update
+  ├─ Data/DbConnectionFactory  (SQL Server IDbConnection)
+  └─ SQL Server
+```
+
+### Vertical Slice Architecture Pattern
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  Traditional Layered (N-tier)    │  Vertical Slice      │
+│                                  │                      │
+│  Controllers/                    │  Features/           │
+│    AuthController.cs             │    Auth/             │
+│    EmployeeController.cs         │      Login/          │
+│    LeaveController.cs            │        LoginEndpoint │
+│  Services/                       │        LoginRequest  │
+│    AuthService.cs                │        LoginResponse │
+│    EmployeeService.cs            │        LoginValidator│
+│    LeaveService.cs               │      Exchange/       │
+│  Repositories/                   │        ...           │
+│    AuthRepo.cs                   │      Me/             │
+│    EmployeeRepo.cs               │        ...           │
+│    LeaveRepo.cs                  │    Employees/        │
+│                                  │      List/           │
+│  Cross-cutting changes touch     │        ...           │
+│  all layers → high coupling      │      Create/         │
+│                                  │        ...           │
+│                                  │                      │
+│                                  │  Each slice is self- │
+│                                  │  contained → low     │
+│                                  │  coupling, easy to   │
+│                                  │  change independently│
+└─────────────────────────────────────────────────────────┘
+```
+
+**Nguyên tắc chính**:
+- Mỗi feature là một vertical slice khép kín: Endpoint + Request DTO + Response DTO + Validator + Handler logic + Data access
+- Không có Controllers, Services, Repositories layer dùng chung — mỗi slice tự quản lý data access qua Dapper
+- Cross-cutting concerns (JWT validation, DB connection, logging) nằm trong middleware hoặc shared utilities
+- Thêm feature mới = thêm 1 folder trong Features/, không đụng đến code hiện có
 
 ## Component Tree
 
@@ -43,27 +106,34 @@ graph TD
     AH --> UserMenu[User Avatar + Dropdown]
 ```
 
-## Data Flow
+## Data Flow (TO-BE)
 
 ```mermaid
 sequenceDiagram
     participant User as User (Browser)
     participant Component as React Component
     participant Store as Zustand Store
-    participant Supabase as Supabase Client
-    participant PG as PostgreSQL
+    participant API as api/client.ts
+    participant FE as FastEndpoints Endpoint
+    participant DB as SQL Server
 
     User->>Component: Form submit
     Component->>Store: action(payload)
-    Store->>Supabase: supabase.from("table").insert(data)
-    Supabase->>PG: SQL INSERT/UPDATE/SELECT
-    PG-->>Supabase: Result row
-    Supabase-->>Store: { data, error }
+    Store->>API: fetch("/api/leave-requests", { method: POST, body })
+    API->>API: Attach JWT Authorization header
+    API->>FE: HTTP Request
+    FE->>FE: FluentValidation (auto)
+    FE->>FE: PreProcessor (optional)
+    FE->>DB: Dapper query
+    DB-->>FE: Result rows
+    FE->>FE: PostProcessor (optional)
+    FE-->>API: JSON Response
+    API-->>Store: Response data
     Store->>Store: set(state => newState)
     Store-->>Component: Re-render with new state
     Component-->>User: Updated UI
 
-    Note over Store,PG: RPC for verify_login bypasses REST, calls SQL function directly
+    Note over FE,DB: Mỗi endpoint handler tự quản lý data access qua Dapper
 ```
 
 ## Database ERD
@@ -136,30 +206,49 @@ erDiagram
     }
 ```
 
-## Authentication Flow
+## Authentication Flow (TO-BE)
 
 ```mermaid
 sequenceDiagram
     participant User as User Browser
     participant Login as LoginPage
-    participant Store as useStore
-    participant RPC as Supabase RPC
-    participant DB as PostgreSQL
+    participant API as api/client.ts
+    participant FE as FastEndpoints LoginEndpoint
+    participant DB as SQL Server
 
     User->>Login: Enter username + password
-    Login->>Store: login(username, password)
-    Store->>RPC: supabase.rpc("verify_login", {p_username, p_password})
-    RPC->>DB: SELECT * FROM employees WHERE username=$1 AND password_hash=hash($2)
-    DB-->>RPC: Employee row
-    RPC-->>Store: [{ employee_id, emp_full_name, emp_role, ... }]
-    Store->>DB: SELECT department_id FROM employees WHERE id = employee_id
-    DB-->>Store: department_id
-    Store->>Store: set({ currentUser })
-    Store->>DB: loadData() - fetch all reference data
-    Store-->>Login: return true
+    Login->>API: POST /api/auth/login { username, password }
+    API->>FE: HTTP Request
+    FE->>FE: LoginValidator (FluentValidation)
+    FE->>DB: SELECT * FROM employees WHERE username=@user
+    DB-->>FE: Employee row (password_hash)
+    FE->>FE: BCrypt.Verify(password, password_hash)
+    FE->>FE: Generate JWT (HS256, exp=8h)
+    FE-->>API: { token, profile }
+    API->>API: AuthContext.setToken(token)
+    API-->>Login: Success
     Login->>User: navigate("/")
 
-    Note over RPC,DB: verify_login is SECURITY DEFINER function - runs with owner privileges
+    Note over FE,DB: BCrypt hash verification + JWT generation replaces plaintext comparison
+```
+
+### Embed Auth Flow (TO-BE)
+
+```mermaid
+sequenceDiagram
+    participant Host as Host Website
+    participant R as React SPA (iframe)
+    participant FE as FastEndpoints ExchangeEndpoint
+
+    Host->>R: postMessage({ type: "auth", token: hostJWT })
+    R->>R: AuthContext listener receives token
+    R->>FE: POST /api/auth/exchange { hostJWT }
+    FE->>FE: Validate host JWT (RS256 public key)
+    FE->>FE: Find/verify employee by host claims
+    FE->>FE: Generate app JWT (HS256)
+    FE-->>R: { token, profile }
+    R->>R: AuthContext.setToken(token)
+    R-->>R: Auto-authenticated, no login form
 ```
 
 ## Approval Workflow
@@ -181,17 +270,22 @@ stateDiagram-v2
     note right of pending: Status set to "pending"
 ```
 
-## Deployment Architecture
+## Deployment Architecture (TO-BE)
 
 ```mermaid
 graph TD
-    subgraph "Hosting (Vercel / Netlify / Static)"
-        SPA[Static SPA files]
+    subgraph "Static Hosting (Vercel / Netlify / Nginx)"
+        SPA[React SPA static files]
     end
-    subgraph "Supabase Cloud"
-        PG[PostgreSQL 15]
-        API[REST API]
-        Auth[Auth Service]
+    subgraph "Application Server (IIS / Docker / Cloud Run)"
+        API[ASP.NET 9 + FastEndpoints]
+        MW[JwtMiddleware]
+    end
+    subgraph "Database Server"
+        DB[SQL Server]
+    end
+    subgraph "External"
+        Host[Host Website with iframe]
     end
     subgraph "User"
         Browser[Browser]
@@ -199,18 +293,21 @@ graph TD
 
     Browser -->|HTTPS| SPA
     Browser -->|HTTPS| API
-    API --> PG
-    SPA -->|VITE_SUPABASE_URL env var| API
+    Host -->|postMessage JWT| SPA
+    API --> MW
+    MW --> DB
 ```
 
 ## Key Architectural Decisions
 
 | Decision | Rationale |
 |----------|-----------|
+| **FastEndpoints** thay vì Minimal API | Mỗi endpoint là 1 class riêng (REPR pattern) → dễ test, dễ maintain, pipeline behaviors rõ ràng (Validator → PreProcessor → Handler → PostProcessor) |
+| **Vertical Slice Architecture** thay vì N-tier | Code tổ chức theo feature, không theo layer kỹ thuật. Thêm/sửa feature = làm việc trong 1 folder, không lan sang các layer khác → giảm coupling, tăng cohesion |
+| Dapper thay vì EF Core | Viết SQL thuần, kiểm soát hiệu năng truy vấn. Phù hợp với team quen SQL |
 | Single Zustand store | Simple app, limited state surface area. Avoids prop drilling and context explosion |
-| Supabase as sole backend | No dedicated API server needed. PostgreSQL + RLS + RPC handles all business logic |
 | Role-based sidebar (not route guards) | SPA UX: all routes mounted, navigation elements hidden by role. Simple and effective for intranet |
-| Business days calculation (date-fns) | Standard for government/education leave tracking. differenceInBusinessDays handles Vietnamese weekends automatically if locale configured |
+| Business days calculation (date-fns) | Standard for government/education leave tracking |
 | shadcn/ui (Radix primitives) | Production-ready accessible components, customizable via CSS variables |
 | No SSR | Intranet app behind auth, no SEO needed. SPA is simpler to deploy and maintain |
-| Password stored as hash in employees table | Custom auth via SECURITY DEFINER RPC. Not using Supabase Auth for simplicity in internal context |
+| BCrypt hash + JWT auth | Replaces plaintext Supabase auth. JWT với 2 issuer (own + host) hỗ trợ cả standalone và embed mode |
