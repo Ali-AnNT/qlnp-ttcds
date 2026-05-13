@@ -3,182 +3,139 @@
 ## Prerequisites
 
 - Node.js 18+ or Bun 1.x
-- Supabase account (free tier works)
+- .NET SDK 9.0
+- SQL Server (existing VI_NGHIPHEP database with USER_MASTER, DM_DONVI)
 - Git
 
-## 1. Supabase Project Setup
+## 1. Database Setup
 
-### Create Project
-1. Go to [app.supabase.com](https://app.supabase.com) and create a new project
-2. Note the project URL and anon/public key from Settings > API
+The app expects an existing SQL Server database `VI_NGHIPHEP` with system tables:
+- `USER_MASTER` (user accounts from existing system)
+- `DM_DONVI` (department/unit hierarchy)
 
-### Run Migration
-The migration file at `supabase/migrations/20260416034940_xxx.sql` contains the full schema.
+### Run EF Core Migrations
+Create the QLNP application tables:
 
-**Option A: Via Supabase Dashboard (SQL Editor)**
-- Copy contents of the migration file
-- Paste into SQL Editor and run
-
-**Option B: Via Supabase CLI**
 ```bash
-npx supabase login
-npx supabase link --project-ref <your-project-ref>
-npx supabase db push
+cd packages/api
+dotnet ef database update
 ```
 
-### Seed Data (Manual)
-After migration, seed the database via Supabase Dashboard SQL Editor:
+This creates: UserRoles, LeaveTypes, LeaveBalances, LeaveRequests, LeaveConfigs.
 
-```sql
--- Insert departments
-INSERT INTO departments (name, code) VALUES
-  ('Phong Hanh chinh Tong hop', 'P.HCTH'),
-  ('Phong Chuyen mon 1', 'P.CM1');
-
--- Insert employee accounts (password_hash should be proper hash in production)
-INSERT INTO employees (username, password_hash, full_name, role, department_id, is_active)
-SELECT
-  'admin', 'admin123', 'Quan tri vien', 'QTHT', id, true
-FROM departments WHERE code = 'P.HCTH';
-
--- Insert leave types
-INSERT INTO leave_types (name, code, default_days) VALUES
-  ('Nghi phep nam', 'YEARLY', 12),
-  ('Nghi om', 'SICK', 5),
-  ('Nghi viec rieng', 'PERSONAL', 3);
-```
+### Seed Data (automatic)
+EF Core seeds 3 leave types + 1 user role on first migration:
+- annual (12 days), sick (0 days), personal (3 days)
+- userId=1, role="quantri"
 
 ## 2. Environment Variables
 
-Create `.env.local` (or set in hosting dashboard):
+### Frontend (packages/web)
+Create `.env`:
 
 ```bash
-VITE_SUPABASE_URL=https://<your-project-id>.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=<your-anon-key>
+VITE_API_URL=http://localhost:5000/api
 ```
 
-- `VITE_SUPABASE_URL`: your Supabase project URL
-- `VITE_SUPABASE_PUBLISHABLE_KEY`: the `anon` public key (not the service_role secret)
+- `VITE_API_URL`: base URL for the .NET API (default: `http://localhost:5000/api`)
 
-These MUST be prefixed with `VITE_` for Vite to expose them to the client bundle.
+### Backend (packages/api)
+Configure `appsettings.json` or `appsettings.Development.json`:
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=HOST,1439;Database=VI_NGHIPHEP;User Id=USER;Password=PASS;TrustServerCertificate=True"
+  },
+  "GatewayHeaders": {
+    "UserId": "X-User-Id",
+    "UserName": "X-User-Name",
+    "UserFullName": "X-User-FullName"
+  },
+  "DevMode": {
+    "Enabled": true
+  }
+}
+```
+
+- `DevMode.Enabled`: when true, CurrentUserMiddleware falls back to admin user (userId=1, role=quantri)
 
 ## 3. Local Development
 
 ```bash
-# Install dependencies
-bun install
-# or: pnpm install
+# From monorepo root
+pnpm install
 
-# Start dev server (http://localhost:8080)
-bun run dev
+# Start API (http://localhost:5000)
+cd packages/api && dotnet run
+
+# Start frontend (http://localhost:8080)
+cd packages/web && vite
 # or: pnpm dev
 ```
 
-Visit `http://localhost:8080` to access the app. Login page at `/login`.
+Visit `http://localhost:8080` to access the app. With DevMode enabled, auto-authenticated as admin.
 
 ## 4. Build for Production
 
+### Frontend
 ```bash
-bun run build
-# or: pnpm build
+cd packages/web
+pnpm build
 ```
 
-Output goes to `dist/` directory. This is a fully static build (SPA) - no server-side rendering.
+Output: `packages/web/dist/` (static SPA).
 
-### Build Output Structure
-```
-dist/
-  index.html
-  assets/
-    index-{hash}.js
-    index-{hash}.css
+### Backend
+```bash
+cd packages/api
+dotnet publish -c Release -o publish
 ```
 
-## 5. Deployment Options
+Output: `packages/api/publish/` (self-contained web app).
 
-### Vercel (Recommended)
+## 5. Deployment
 
-1. Push code to GitHub/GitLab/Bitbucket
-2. Import project in Vercel dashboard
-3. Configure build settings:
-   - Framework Preset: Vite
-   - Build Command: `bun run build` or `pnpm build`
-   - Output Directory: `dist`
-4. Add environment variables in Vercel project settings
-5. Deploy
+### IIS (Recommended for on-premise intranet)
 
-For SPA routing, add `vercel.json`:
-```json
-{
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
-}
-```
+**API** (IIS Application):
+1. Create IIS site/app pointing to `packages/api/publish/`
+2. Configure Application Pool: .NET CLR v4.0, Integrated pipeline
+3. Set `DevMode.Enabled` to `false` in `appsettings.json`
+4. Ensure IIS ARR/reverse proxy sets gateway headers:
+   - `X-User-Id` (from SSO Portal)
+   - `X-User-Name`
+   - `X-User-FullName`
 
-### Netlify
+**Frontend** (IIS / Nginx):
+1. Copy `packages/web/dist/` to web root
+2. Configure SPA rewrite rules (all paths -> index.html)
+3. Set `VITE_API_URL` to production API URL at build time
 
-1. Push code to Git provider
-2. Import project in Netlify
-3. Build settings:
-   - Build command: `bun run build`
-   - Publish directory: `dist`
-4. Add environment variables
-5. For SPA routing, add `netlify.toml`:
-```toml
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-```
+### Vercel / Netlify (Frontend only)
 
-### Static Hosting (Nginx, Apache, S3+CloudFront)
-
-Copy `dist/` contents to web root. Configure server to rewrite all paths to `index.html`:
-
-**Nginx:**
-```nginx
-location / {
-  try_files $uri $uri/ /index.html;
-}
-```
-
-**Apache (.htaccess):**
-```apache
-RewriteEngine On
-RewriteBase /
-RewriteRule ^index\.html$ - [L]
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule . /index.html [L]
-```
+1. Set root directory to `packages/web`
+2. Build command: `pnpm build`
+3. Output directory: `dist`
+4. Add env var `VITE_API_URL` pointing to production API
+5. SPA rewrite: all paths -> index.html
 
 ## 6. Post-Deployment Verification
 
-- [ ] Landing page at route `/` redirects to `/login` (if not authenticated)
-- [ ] Login with seeded account works
-- [ ] Role-based sidebar shows correct menu items
+- [ ] Landing page `/` auto-authenticates (dev mode) or shows SSO waiting screen
+- [ ] Role-based sidebar shows correct menu items for current user role
 - [ ] Create leave request -> approve -> verify in calendar
 - [ ] Charts render on Reports, Summary, Violations pages
 - [ ] Mobile responsive: sidebar toggle works on narrow viewport
 
-## 7. Environment Validation (Recommended)
-
-The app currently does not validate environment variables at startup. Missing `VITE_SUPABASE_URL` causes cryptic runtime errors. Consider adding validation in `src/integrations/supabase/client.ts`:
-
-```typescript
-if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  throw new Error(
-    "Thieu bien moi truong Supabase. Vui long kiem tra VITE_SUPABASE_URL va VITE_SUPABASE_PUBLISHABLE_KEY."
-  );
-}
-```
-
-## 8. Troubleshooting
+## 7. Troubleshooting
 
 | Issue | Solution |
 |-------|----------|
-| "Invalid URL" on Supabase client init | Check `VITE_SUPABASE_URL` includes `https://` |
-| Login always fails | Seed employee accounts in Supabase SQL Editor. Check password matches `password_hash` column value |
-| Blank page on route | SPA routing not configured on host. Add rewrite rules to serve `index.html` for all paths |
-| Charts not rendering | Check Recharts imported correctly. Ensure container has explicit width/height |
-| CORS errors | Supabase API allows browser requests by default. If errors, check Supabase project API settings |
-| build command fails | Run `bun install` / `pnpm install` first. Check Node.js / Bun version compatibility |
+| "Cannot connect to database" | Verify SQL Server is accessible, check ConnectionStrings in appsettings.json |
+| API returns 401 Unauthorized | Check DevMode.Enabled (dev) or gateway headers (production). Ensure IIS sets X-User-Id header |
+| Blank page on route | SPA routing not configured. Add rewrite rules to serve index.html for all paths |
+| "Waiting for SSO" stuck | In dev, set DevMode.Enabled=true. In prod, verify SSO Portal is sending postMessage auth |
+| CORS errors | Add CORS policy in Program.cs. Ensure frontend origin matches API origin |
+| EF migration fails | Ensure system tables (USER_MASTER, DM_DONVI) exist in database before running migrations |
+| build fails | Run `pnpm install` at monorepo root first. For API, ensure .NET SDK 9.0 is installed |

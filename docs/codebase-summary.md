@@ -25,7 +25,7 @@ User Action -> Component -> useStore action -> api module -> fetch("/api/...")
 
 | File | Purpose |
 |------|---------|
-| `package.json` | Dependencies: React 18, shadcn/ui Radix primitives, Supabase, Zustand 5, TanStack Query 5, Recharts, react-hook-form, zod, date-fns. Dev deps: Vite 5, TypeScript 5, Tailwind 3, Vitest 3, ESLint 9 |
+| `package.json` | Dependencies: React 18, shadcn/ui Radix primitives, Zustand 5, TanStack Query 5, Recharts, react-hook-form, zod, date-fns. Dev deps: Vite 5, TypeScript 5, Tailwind 3, Vitest 3, ESLint 9. Supabase removed |
 | `vite.config.ts` | Dev server port 8080, @ path alias to ./src, SWC React plugin, lovable-tagger (dev only). Dependencies deduped for React/Query |
 | `components.json` | shadcn/ui config: baseColor slate, cssVariables true, tsx true |
 | `tailwind.config.ts` | Custom theme: Be Vietnam Pro font, CSS var colors (HSL), shadcn sidebar tokens, accordion animations |
@@ -40,16 +40,29 @@ User Action -> Component -> useStore action -> api module -> fetch("/api/...")
 | `src/App.tsx` | Root component. QueryClientProvider + TooltipProvider + Toaster + BrowserRouter. AuthGuard wraps AppLayout (redirects to /login if not authenticated). Defines all routes |
 | `src/index.css` | Tailwind directives, CSS custom properties for shadcn theme (HSL values: blue primary #1e3a5f, blue accent #2563eb), Be Vietnam Pro Google Font import, custom scrollbar styles |
 
+### Auth (Context)
+
+| File | Purpose |
+|------|---------|
+| `src/contexts/AuthContext.tsx` | React Context for auth state (user, loading, isEmbed). Calls GET /api/auth/me on mount. Listens for postMessage in iframe mode. JWT stored in localStorage |
+
 ### Store (State Management)
 
 | File | Purpose |
 |------|---------|
-| `src/store/useStore.ts` | Single Zustand store. State: currentUser (AuthUser), departments, employees, leaveTypes, leaveRequests, approvalConfigs. Actions: login (calls verify_login RPC), logout, loadData (role-based data fetching), addLeaveRequest, updateLeaveRequest, getters (getEmployee, getDepartment, getLeaveType) |
+| `src/store/useStore.ts` | Zustand store (data only, no auth). State: departments, leaveTypes, leaveRequests, approvalConfigs. Actions: loadData (parallel API calls), addLeaveRequest, updateLeaveRequest. Getters: getDepartment, getLeaveType |
 
-**Role-based data scoping in loadData:**
-- CB.PCM: only own leave_requests
-- LD.PCM: leave_requests from employees in same department
-- GD.PGD / QTHT: all leave_requests
+### API Layer
+
+| File | Purpose |
+|------|---------|
+| `src/api/client.ts` | Fetch wrapper: JWT from localStorage, Bearer auth header, ApiResponse<T> envelope, error handling |
+| `src/api/auth.api.ts` | AuthUser type + authApi.me() |
+| `src/api/departments.api.ts` | DepartmentDto + departmentsApi.list() |
+| `src/api/leave-types.api.ts` | LeaveTypeDto + leaveTypesApi.list/create/update/delete() |
+| `src/api/leave-requests.api.ts` | LeaveRequestDto, CreateLeaveRequestDto + leaveRequestsApi.list/create/update/approve/reject/cancel() |
+| `src/api/leave-balances.api.ts` | LeaveBalanceDto + leaveBalancesApi.list/my() |
+| `src/api/config.api.ts` | ConfigDto + configApi.get/update() |
 
 ### Library / Shared Code
 
@@ -58,13 +71,6 @@ User Action -> Component -> useStore action -> api module -> fetch("/api/...")
 | `src/lib/leave-data.ts` | Core types: UserRole (union), LeaveStatus (union), Department, Employee, LeaveType, LeaveRequest, LeaveBalance, ApprovalConfig. Label maps: roleLabels, leaveStatusLabels |
 | `src/lib/utils.ts` | cn() utility: merges Tailwind classes via clsx + tailwind-merge |
 | `src/lib/date-utils.ts` | formatDate(): parses ISO/date strings, formats to dd-MM-yyyy via date-fns |
-
-### Supabase Integration
-
-| File | Purpose |
-|------|---------|
-| `src/integrations/supabase/client.ts` | Supabase client singleton (createClient with env vars VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY). Auto-generated file |
-| `src/integrations/supabase/types.ts` | Full Database type definition: Tables (departments, employees, leave_types, leave_balances, leave_requests, leave_config, approval_config), Functions (verify_login), Enums (app_role). Includes helper types: Tables, TablesInsert, TablesUpdate |
 
 ### Layout Components
 
@@ -105,22 +111,23 @@ User Action -> Component -> useStore action -> api module -> fetch("/api/...")
 ## Key Patterns
 
 ### Auth Flow
-1. User submits credentials -> `useStore.login(username, password)`
-2. Store calls `supabase.rpc("verify_login", { p_username, p_password })` (SECURITY DEFINER)
-3. On success: queries employee's department_id, sets currentUser in Zustand
-4. `AuthGuard` in App.tsx checks `currentUser` on every render; redirects to /login if null
-5. Logout clears currentUser from state (no server-side session invalidation)
+1. If embed mode (iframe): listens for `postMessage({ type: "auth", token })` from host SSO Portal
+2. If standalone + dev mode: CurrentUserMiddleware fallback to userId=1, role="quantri"
+3. Production: gateway headers (X-User-Id, X-User-Name, X-User-FullName) set by IIS reverse proxy
+4. `AuthProvider` calls `GET /api/auth/me` on mount to resolve user profile
+5. `AuthGuard` in App.tsx checks `user` from AuthContext; redirects to /login if null
+6. LoginPage shows "waiting for SSO" or loading spinner (no username/password form)
 
 ### Role-Based UI
-All authorization is client-side based on `currentUser.role`:
+Authorization via `CurrentUser.Role` from AuthContext:
 - `AppSidebar.tsx`: filters menuItems by visible roles
-- `App.tsx`: routes are always mounted (no route-level guard), but sidebar hides links that user should not see
-- Access control is NOT enforced server-side beyond basic RLS
+- `App.tsx`: routes are always mounted (no route-level guard), sidebar hides unauthorized links
+- Server-side: Endpoints check `CurrentUser.Role` in handler or PreProcessor
 
-### Optimistic Updates
-- `addLeaveRequest`: inserts via Supabase, prepends to store on success
-- `updateLeaveRequest`: updates via Supabase, patches local state on success
-- No optimistic/pessimistic toggle; local state always updated after server confirmation
+### Data Updates
+- `addLeaveRequest`: calls API, prepends to store on success
+- `updateLeaveRequest`: calls API, patches local state on success
+- Local state always updated after server confirmation
 
 ### Date Calculations
 - Leave days calculated as `differenceInBusinessDays(start, end) + 1` (date-fns)
@@ -128,28 +135,23 @@ All authorization is client-side based on `currentUser.role`:
 - Year/quarter/month filters use date-fns sub-months/start-of-year etc.
 
 ### Data Loading
-- `loadData()` fetches all reference data in parallel (Promise.all) on login
+- `loadData()` fetches all reference data in parallel (Promise.all) via API modules
 - Individual pages call loadData() on mount (useEffect) to refresh
-- CB.PCM and LD.PCM get scoped leave_requests based on department
-- No TanStack React Query used in pages currently (client exists but pages use Zustand directly)
+- Data scoping: API endpoint returns role-appropriate data based on CurrentUser
 
-## Database (Supabase PostgreSQL)
+## Database (SQL Server - VI_NGHIPHEP)
 
-### Tables
-- `departments` - id, name, code, created_at
-- `employees` - id, username, password_hash, full_name, department_id, job_title, role, phone, email, is_active
-- `leave_types` - id, name, code (unique), default_days, description, is_active
-- `leave_balances` - id, employee_id, leave_type_id, year, total_days, used_days. UNIQUE(employee_id, leave_type_id, year)
-- `leave_requests` - id, employee_id, leave_type_id, start_date, end_date, total_days, reason, status, approved_by, approved_at, rejected_reason
-- `leave_config` - id, config_key (unique), config_value, description
-- `approval_config` - id, leave_type_id, approval_level, approver_role
+### System Tables (read-only, ExcludeFromMigrations)
+- `USER_MASTER` - UserMasterId, UserName, HoTen, PhongBanId, DonViId, UserPortalId, CanBoId, LaDonViChinh, Used
+- `DM_DONVI` - DonViId, MaDonVi, TenDonVi, TenVietTat, DonViCapChaId, Cap, CapDonViId, LoaiDonViId, ... (22 props total)
 
-### Functions
-- `verify_login(p_username, p_password)` - SECURITY DEFINER RPC. Returns employee info (id, name, role, position, department_name)
-- `update_updated_at_column()` - trigger function auto-updating updated_at
+### QLNP Tables (Code First, managed by EF Core migrations)
+- `UserRoles` - UserId (PK/FK to USER_MASTER), Role (max 10)
+- `LeaveTypes` - Id, Name, Code (unique), DefaultDays, Description, IsActive
+- `LeaveBalances` - Id, UserId, LeaveTypeId, Year, TotalDays, UsedDays. UNIQUE(UserId, LeaveTypeId, Year)
+- `LeaveRequests` - Id, UserId, LeaveTypeId, StartDate, EndDate, TotalDays, Reason, Status, ApprovedBy, ApprovedAt, RejectedReason, CreatedAt, UpdatedAt
+- `LeaveConfigs` - Id, LeaveTypeId, ApprovalLevel (CK >= 1), ApproverRole
 
-### RLS
-All tables: SELECT policies (public). leave_requests: INSERT/UPDATE policies (public). Simple RLS model suited for intranet/internal use.
-
-### Migration
-Single migration file at `supabase/migrations/20260416034940_xxx.sql` containing full schema DDL including tables, enums, functions, triggers, RLS policies.
+### Seed Data
+- 3 LeaveTypes: annual (12d), sick (0d), personal (3d)
+- 1 UserRole: userId=1, role="quantri"
