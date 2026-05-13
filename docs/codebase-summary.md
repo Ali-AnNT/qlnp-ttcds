@@ -2,15 +2,21 @@
 
 ## Architecture Overview
 
-Single-page React application with Supabase backend (PostgreSQL + RPC). Client state managed by Zustand, server state cached by TanStack React Query. UI built with shadcn/ui components on Tailwind CSS.
+**pnpm monorepo**: `packages/api` (.NET 9 backend) + `packages/web` (React SPA frontend).
 
-**Data flow**: React Component -> Zustand Store (useStore) -> Supabase JS Client -> PostgreSQL (via REST API / RPC)
+### Frontend (packages/web)
+React SPA with fetch-based API client, Zustand data store, AuthContext (SSO gateway auth). UI built with shadcn/ui components on Tailwind CSS.
+
+### Backend (packages/api)
+.NET 9 + FastEndpoints v8.1.0 + EF Core 9.0.0 + SQL Server. Vertical slice architecture. CurrentUserMiddleware reads gateway headers from SSO Portal.
+
+**Data flow**: React Component -> Zustand Store -> api/client.ts (fetch + JWT) -> FastEndpoints Endpoint -> AppDbContext (EF Core) -> SQL Server
 
 ```
-User Action -> Component -> useStore action -> supabase.from("table").insert/select/update
-                                |
-                                v
-                          set() -> re-render all subscribers
+User Action -> Component -> useStore action -> api module -> fetch("/api/...")
+                                |                              |
+                                v                              v
+                          set() -> re-render            AppDbContext -> SQL
 ```
 
 ## File-by-File Summary

@@ -1,6 +1,6 @@
 # System Architecture - QLNP-TTCDS
 
-## Current Architecture (AS-IS)
+## Supabase Prototype (DEPRECATED)
 
 ```
 Browser (React SPA)
@@ -13,31 +13,33 @@ Supabase (Backend-as-a-Service)
     |--- SECURITY DEFINER RPC Functions
 ```
 
-## Target Architecture (TO-BE): FastEndpoints + Vertical Slice Architecture
+**Status**: Removed. Replaced by .NET API + SQL Server in Phase 1 migration.
+
+## Current Architecture (Phase 1): .NET 9 + EF Core + Gateway Auth
 
 ### High-Level
 
 ```
-Host Website (optional)
+Host Website (SSO Portal)
   └─ iframe ─ React SPA (Vite)
-       ├─ AuthContext (JWT: own + host)
-       ├─ Zustand Store
-       └─ api/client.ts (fetch + JWT intercept)
+       ├─ AuthContext (JWT in localStorage + postMessage)
+       ├─ Zustand Store (data only, no auth)
+       └─ api/client.ts (fetch + Bearer JWT)
             │
-            ▼ POST/GET /api/*
+            ▼ GET/POST/PUT/DELETE /api/*
 ASP.NET 9 FastEndpoints API
-  ├─ JwtMiddleware (own issuer HS256 + host issuer RS256)
-  ├─ Features/                 ← Vertical Slices
-  │   ├─ Auth/Login/           LoginEndpoint + Request + Response + Validator
-  │   ├─ Auth/Exchange/        ExchangeEndpoint
-  │   ├─ Auth/Me/              MeEndpoint
-  │   ├─ Employees/            List/Create/Update/Delete
-  │   ├─ Departments/          List/Create/Update/Delete
-  │   ├─ LeaveRequests/        List/Create/Update/Approve/Reject/Cancel
-  │   ├─ LeaveBalances/        List/My
-  │   └─ Config/               Get/Update
-  ├─ Data/DbConnectionFactory  (SQL Server IDbConnection)
-  └─ SQL Server
+  ├─ CurrentUserMiddleware (gateway headers: X-User-Id, X-User-Name, X-User-FullName)
+  │   └─ Dev mode fallback (userId=1, role=quantri)
+  ├─ Features/                     ← Vertical Slices (endpoints WIP)
+  │   ├─ Auth/Me/                  MeEndpoint (scaffolded)
+  │   ├─ Config/Get, Update, UserRole/
+  │   ├─ LeaveBalances/List, My/
+  │   ├─ LeaveRequests/List, Create, Update, Approve, Reject, Cancel/
+  │   └─ LeaveTypes/List, Create, Update, Delete/
+  ├─ Data/AppDbContext              (EF Core 9 + SQL Server)
+  │   ├─ System tables: USER_MASTER, DM_DONVI (ExcludeFromMigrations)
+  │   └─ App tables: UserRoles, LeaveTypes, LeaveBalances, LeaveRequests, LeaveConfigs
+  └─ SQL Server (existing `VI_NGHIPHEP` database)
 ```
 
 ### Vertical Slice Architecture Pattern
@@ -71,9 +73,9 @@ ASP.NET 9 FastEndpoints API
 ```
 
 **Nguyên tắc chính**:
-- Mỗi feature là một vertical slice khép kín: Endpoint + Request DTO + Response DTO + Validator + Handler logic + Data access
-- Không có Controllers, Services, Repositories layer dùng chung — mỗi slice tự quản lý data access qua Dapper
-- Cross-cutting concerns (JWT validation, DB connection, logging) nằm trong middleware hoặc shared utilities
+- Mỗi feature là một vertical slice khép kín: Endpoint + Request DTO + Response DTO + Validator + Handler logic
+- Data access qua EF Core DbContext (DI inject), không có repository layer riêng
+- Cross-cutting concerns (current user resolution, DB connection, logging) nằm trong middleware hoặc shared utilities
 - Thêm feature mới = thêm 1 folder trong Features/, không đụng đến code hiện có
 
 ## Component Tree
@@ -83,7 +85,8 @@ graph TD
     App[App.tsx]
     App --> QCP[QueryClientProvider]
     QCP --> TP[TooltipProvider]
-    TP --> BR[BrowserRouter]
+    TP --> AP[AuthProvider - AuthContext]
+    AP --> BR[BrowserRouter]
     BR --> LP[LoginPage /login]
     BR --> AG[AuthGuard /]
     AG --> AL[AppLayout]
@@ -93,7 +96,7 @@ graph TD
     OUT --> DP[DashboardPage]
     OUT --> LNP[LeaveNewPage]
     OUT --> LMP[LeaveMyPage]
-    OUT --> AP[ApprovalPage]
+    OUT --> APV[ApprovalPage]
     OUT --> CP[CalendarPage]
     OUT --> SP[SummaryPage]
     OUT --> RP[ReportsPage]
@@ -106,7 +109,7 @@ graph TD
     AH --> UserMenu[User Avatar + Dropdown]
 ```
 
-## Data Flow (TO-BE)
+## Data Flow
 
 ```mermaid
 sequenceDiagram
@@ -115,6 +118,7 @@ sequenceDiagram
     participant Store as Zustand Store
     participant API as api/client.ts
     participant FE as FastEndpoints Endpoint
+    participant DbCtx as AppDbContext
     participant DB as SQL Server
 
     User->>Component: Form submit
@@ -122,134 +126,123 @@ sequenceDiagram
     Store->>API: fetch("/api/leave-requests", { method: POST, body })
     API->>API: Attach JWT Authorization header
     API->>FE: HTTP Request
+    FE->>FE: Resolve CurrentUser from HttpContext.Items
     FE->>FE: FluentValidation (auto)
-    FE->>FE: PreProcessor (optional)
-    FE->>DB: Dapper query
-    DB-->>FE: Result rows
-    FE->>FE: PostProcessor (optional)
+    FE->>DbCtx: EF Core query (LINQ)
+    DbCtx->>DB: SQL
+    DB-->>DbCtx: Result rows
+    DbCtx-->>FE: Entities
     FE-->>API: JSON Response
     API-->>Store: Response data
     Store->>Store: set(state => newState)
     Store-->>Component: Re-render with new state
     Component-->>User: Updated UI
 
-    Note over FE,DB: Mỗi endpoint handler tự quản lý data access qua Dapper
+    Note over FE,DB: Mỗi endpoint handler dùng AppDbContext qua DI injection
 ```
 
 ## Database ERD
 
+### System Tables (scaffolded, read-only, ExcludeFromMigrations)
+
+**DM_DONVI** (22 properties): DonViId (PK), MaDonVi, TenDonVi, TenVietTat, DonViCapChaId, Cap, CapDonViId, LoaiDonViId, SoNha, DuongId, TinhThanhId, QuanHuyenId, PhuongXaId, DiaChiDayDu, DienThoai, Fax, Email, Website, MoTa, Used, Latitude, Longitude
+
+**USER_MASTER** (9 properties): UserMasterId (PK), UserName, HoTen, PhongBanId, DonViId, UserPortalId, CanBoId, LaDonViChinh, Used
+
+### QLNP Tables (Code First, managed by EF Core migrations)
+
 ```mermaid
 erDiagram
-    departments ||--o{ employees : "has"
-    departments {
-        uuid id PK
-        string name
-        string code
+    USER_MASTER ||--o{ UserRoles : "has role"
+    USER_MASTER ||--o{ LeaveRequests : "creates"
+    USER_MASTER ||--o{ LeaveBalances : "has"
+    DM_DONVI ||--o{ USER_MASTER : "belongs to"
+
+    UserRoles {
+        bigint UserId PK_FK
+        string Role "max 10"
     }
-    employees ||--o{ leave_requests : "creates"
-    employees ||--o{ leave_balances : "has"
-    employees {
-        uuid id PK
-        uuid department_id FK
-        string username UK
-        string password_hash
-        string full_name
-        string job_title
-        app_role role
-        string phone
-        string email
-        bool is_active
+    LeaveTypes ||--o{ LeaveRequests : "categorizes"
+    LeaveTypes ||--o{ LeaveBalances : "tracks"
+    LeaveTypes ||--o{ LeaveConfigs : "configured"
+    LeaveTypes {
+        bigint Id PK
+        string Name "max 100"
+        string Code UK "max 20"
+        decimal DefaultDays "5,1"
+        string Description
+        bool IsActive
     }
-    leave_types ||--o{ leave_requests : "categorizes"
-    leave_types ||--o{ leave_balances : "tracks"
-    leave_types ||--o{ approval_config : "configured"
-    leave_types {
-        uuid id PK
-        string name
-        string code UK
-        number default_days
-        string description
-        bool is_active
+    LeaveRequests {
+        bigint Id PK
+        bigint UserId FK
+        bigint LeaveTypeId FK
+        date StartDate
+        date EndDate
+        decimal TotalDays "5,1"
+        string Reason
+        string Status "max 20"
+        bigint ApprovedBy FK_nullable
+        datetime2 ApprovedAt_nullable
+        string RejectedReason_nullable
+        datetime2 CreatedAt "default SYSUTCDATETIME"
+        datetime2 UpdatedAt_nullable
     }
-    leave_requests {
-        uuid id PK
-        uuid employee_id FK
-        uuid leave_type_id FK
-        date start_date
-        date end_date
-        number total_days
-        string reason
-        string status
-        uuid approved_by FK
-        timestamp approved_at
-        string rejected_reason
+    LeaveBalances {
+        bigint Id PK
+        bigint UserId FK
+        bigint LeaveTypeId FK
+        int Year
+        decimal TotalDays "5,1"
+        decimal UsedDays "5,1"
     }
-    leave_balances {
-        uuid id PK
-        uuid employee_id FK
-        uuid leave_type_id FK
-        number year
-        number total_days
-        number used_days
-    }
-    approval_config {
-        uuid id PK
-        uuid leave_type_id FK
-        number approval_level
-        app_role approver_role
-    }
-    leave_config {
-        uuid id PK
-        string config_key UK
-        string config_value
-        string description
+    LeaveConfigs {
+        bigint Id PK
+        bigint LeaveTypeId FK
+        int ApprovalLevel "CK >= 1"
+        string ApproverRole "max 10"
     }
 ```
 
-## Authentication Flow (TO-BE)
+### Seed Data
+- LeaveTypes: `annual` (12 days), `sick` (0 days), `personal` (3 days)
+- UserRoles: userId=1, role="quantri"
+
+## Authentication Flow
+
+### Gateway Auth via SSO Portal (current)
 
 ```mermaid
 sequenceDiagram
-    participant User as User Browser
-    participant Login as LoginPage
-    participant API as api/client.ts
-    participant FE as FastEndpoints LoginEndpoint
+    participant Host as SSO Portal (host)
+    participant R as React SPA (iframe)
+    participant API as FastEndpoints API
     participant DB as SQL Server
 
-    User->>Login: Enter username + password
-    Login->>API: POST /api/auth/login { username, password }
-    API->>FE: HTTP Request
-    FE->>FE: LoginValidator (FluentValidation)
-    FE->>DB: SELECT * FROM employees WHERE username=@user
-    DB-->>FE: Employee row (password_hash)
-    FE->>FE: BCrypt.Verify(password, password_hash)
-    FE->>FE: Generate JWT (HS256, exp=8h)
-    FE-->>API: { token, profile }
-    API->>API: AuthContext.setToken(token)
-    API-->>Login: Success
-    Login->>User: navigate("/")
-
-    Note over FE,DB: BCrypt hash verification + JWT generation replaces plaintext comparison
+    Note over Host,DB: User already authenticated on SSO Portal
+    Host->>R: postMessage({ type: "auth", token: jwt })
+    R->>R: AuthContext stores JWT in localStorage
+    R->>API: GET /api/auth/me (Bearer JWT)
+    API->>API: CurrentUserMiddleware reads gateway headers
+    API->>DB: Lookup USER_MASTER + UserRoles
+    API-->>R: { userId, userName, fullName, donViId, role }
+    R->>R: AuthState updated, app rendered
 ```
 
-### Embed Auth Flow (TO-BE)
+### Dev Mode (standalone)
 
 ```mermaid
 sequenceDiagram
-    participant Host as Host Website
-    participant R as React SPA (iframe)
-    participant FE as FastEndpoints ExchangeEndpoint
+    participant Dev as Developer Browser
+    participant API as FastEndpoints API
 
-    Host->>R: postMessage({ type: "auth", token: hostJWT })
-    R->>R: AuthContext listener receives token
-    R->>FE: POST /api/auth/exchange { hostJWT }
-    FE->>FE: Validate host JWT (RS256 public key)
-    FE->>FE: Find/verify employee by host claims
-    FE->>FE: Generate app JWT (HS256)
-    FE-->>R: { token, profile }
-    R->>R: AuthContext.setToken(token)
-    R-->>R: Auto-authenticated, no login form
+    Note over Dev,API: DevMode:Enabled = true, no gateway headers
+    Dev->>API: GET /api/auth/me (any/no JWT)
+    API->>API: CurrentUserMiddleware fallback (userId=1, role=quantri)
+    API-->>Dev: { userId: 1, userName: "admin", fullName: "Administrator", role: "quantri" }
 ```
+
+**Note**: Login form removed. Authentication delegated to SSO Portal. The API trusts gateway headers from the reverse proxy/IIS (X-User-Id, X-User-Name, X-User-FullName).
 
 ## Approval Workflow
 
@@ -270,29 +263,31 @@ stateDiagram-v2
     note right of pending: Status set to "pending"
 ```
 
-## Deployment Architecture (TO-BE)
+## Deployment Architecture
 
 ```mermaid
 graph TD
     subgraph "Static Hosting (Vercel / Netlify / Nginx)"
         SPA[React SPA static files]
     end
-    subgraph "Application Server (IIS / Docker / Cloud Run)"
+    subgraph "Application Server (IIS)"
+        RP[Reverse Proxy / IIS ARR]
         API[ASP.NET 9 + FastEndpoints]
-        MW[JwtMiddleware]
+        MW[CurrentUserMiddleware]
     end
     subgraph "Database Server"
-        DB[SQL Server]
+        DB[SQL Server - VI_NGHIPHEP]
     end
     subgraph "External"
-        Host[Host Website with iframe]
+        Host[SSO Portal with iframe]
     end
     subgraph "User"
         Browser[Browser]
     end
 
     Browser -->|HTTPS| SPA
-    Browser -->|HTTPS| API
+    Browser -->|HTTPS| RP
+    RP -->|gateway headers| API
     Host -->|postMessage JWT| SPA
     API --> MW
     MW --> DB
@@ -303,11 +298,13 @@ graph TD
 | Decision | Rationale |
 |----------|-----------|
 | **FastEndpoints** thay vì Minimal API | Mỗi endpoint là 1 class riêng (REPR pattern) → dễ test, dễ maintain, pipeline behaviors rõ ràng (Validator → PreProcessor → Handler → PostProcessor) |
+| **EF Core** thay vì Dapper | Type-safe LINQ queries, migrations built-in, change tracking. Phù hợp khi làm việc với DB có sẵn (scaffold system tables + Code First app tables) |
+| **Gateway Header Auth** thay vì JWT login | Hệ thống đã có SSO Portal. API đọc gateway headers (X-User-Id, X-User-Name, X-User-FullName) từ reverse proxy → không cần quản lý password hay JWT generation |
+| **ExcludeFromMigrations** cho system tables | USER_MASTER, DM_DONVI là các bảng có sẵn của hệ thống khác. Không được phép thay đổi schema. EF Core chỉ đọc dữ liệu |
 | **Vertical Slice Architecture** thay vì N-tier | Code tổ chức theo feature, không theo layer kỹ thuật. Thêm/sửa feature = làm việc trong 1 folder, không lan sang các layer khác → giảm coupling, tăng cohesion |
-| Dapper thay vì EF Core | Viết SQL thuần, kiểm soát hiệu năng truy vấn. Phù hợp với team quen SQL |
-| Single Zustand store | Simple app, limited state surface area. Avoids prop drilling and context explosion |
+| Single Zustand store | Data-only state management. Auth state moved to React Context. Limited state surface area for intranet app |
 | Role-based sidebar (not route guards) | SPA UX: all routes mounted, navigation elements hidden by role. Simple and effective for intranet |
 | Business days calculation (date-fns) | Standard for government/education leave tracking |
 | shadcn/ui (Radix primitives) | Production-ready accessible components, customizable via CSS variables |
 | No SSR | Intranet app behind auth, no SEO needed. SPA is simpler to deploy and maintain |
-| BCrypt hash + JWT auth | Replaces plaintext Supabase auth. JWT với 2 issuer (own + host) hỗ trợ cả standalone và embed mode |
+| pnpm monorepo | `packages/api` (.NET 9) + `packages/web` (React SPA). Shared tooling, single repo |

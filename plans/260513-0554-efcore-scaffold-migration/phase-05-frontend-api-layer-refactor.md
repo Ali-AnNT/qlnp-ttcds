@@ -1,7 +1,7 @@
 ---
 phase: 5
 title: "Frontend API Layer Refactor"
-status: pending
+status: completed
 priority: P1
 effort: "3h"
 dependencies: ["4"]

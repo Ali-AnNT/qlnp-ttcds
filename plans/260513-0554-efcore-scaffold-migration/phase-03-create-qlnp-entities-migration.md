@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Create QLNP Entities & Migration"
-status: pending
+status: completed
 priority: P0
 effort: "2h"
 dependencies: ["2"]

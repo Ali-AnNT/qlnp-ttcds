@@ -14,23 +14,25 @@
 | TypeScript types / interfaces | PascalCase | `UserRole`, `LeaveRequest`, `AppState` |
 | Zod schemas | camelCase, suffix `Schema` | `leaveRequestSchema` |
 | Constants / labels | camelCase + `Labels` suffix | `roleLabels`, `leaveStatusLabels` |
-| Env variables | UPPER_SNAKE_CASE, prefix `VITE_` | `VITE_SUPABASE_URL` |
-| Database tables | snake_case | `leave_requests`, `approval_config` |
-| Database columns | snake_case | `employee_id`, `full_name`, `start_date` |
-| Supabase RPC functions | snake_case | `verify_login` |
+| Env variables | UPPER_SNAKE_CASE, prefix `VITE_` | `VITE_API_URL` |
+| C# classes/entities | PascalCase | `UserMaster`, `LeaveRequest`, `AppDbContext` |
+| C# properties | PascalCase | `UserId`, `FullName`, `LeaveTypeId` |
+| Database tables (system) | UPPER_SNAKE_CASE | `USER_MASTER`, `DM_DONVI` |
+| Database tables (app) | PascalCase (EF Core default) | `LeaveRequests`, `LeaveBalances` |
+| Database columns | PascalCase (EF Core default) | `UserId`, `StartDate`, `LeaveTypeId` |
 
 ## TypeScript
 
 ### Strictness
 - TypeScript 5.8, strict mode in tsconfig
 - All props, state, and function signatures typed explicitly
-- Avoid `any` - use proper types from `@/lib/leave-data.ts`
-- Database types generated via Supabase CLI in `@/integrations/supabase/types.ts`
+- Avoid `any` - use proper types from `@/lib/leave-data.ts` and `@/api/*.api.ts`
 
 ### Type Imports
-Always import types from shared `@/lib/leave-data.ts`:
+Import domain types from shared `@/lib/leave-data.ts`, API DTOs from respective API modules:
 ```typescript
-import type { UserRole, LeaveRequest, LeaveStatus } from "@/lib/leave-data";
+import type { UserRole, LeaveStatus } from "@/lib/leave-data";
+import type { DepartmentDto } from "@/api/departments.api";
 ```
 
 ### Union Types
@@ -73,15 +75,18 @@ export const roleLabels: Record<UserRole, string> = {
 ## Import Order
 
 1. React / React Router imports
-2. Store imports (`@/store/useStore`)
-3. Library / utility imports (`@/lib/...`, `@/integrations/...`)
-4. UI component imports (`@/components/ui/...`)
-5. Shared component imports (`@/components/...`)
-6. Icon imports (lucide-react)
-7. Type imports (last)
+2. Context imports (`@/contexts/AuthContext`)
+3. Store imports (`@/store/useStore`)
+4. API module imports (`@/api/...`)
+5. Library / utility imports (`@/lib/...`)
+6. UI component imports (`@/components/ui/...`)
+7. Shared component imports (`@/components/...`)
+8. Icon imports (lucide-react)
+9. Type imports (last)
 
 Use `@/` path alias for all internal imports:
 ```typescript
+import { useAuth } from "@/contexts/AuthContext";
 import { useStore } from "@/store/useStore";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -90,11 +95,19 @@ import { CalendarDays } from "lucide-react";
 
 ## State Management
 
+### AuthContext (`src/contexts/AuthContext.tsx`)
+- Manages auth state: `user` (AuthUser | null), `loading`, `isEmbed`
+- On mount: calls `GET /api/auth/me` to resolve current user
+- Embed mode: listens for `postMessage({ type: "auth", token })` from host
+- JWT stored in `localStorage` under key `"jwt"`
+- Access via `useAuth()` hook
+
 ### Zustand Store (`src/store/useStore.ts`)
-- Single store for all app state
-- State: currentUser + all lookup data (departments, employees, leaveTypes, leaveRequests, approvalConfigs)
-- Actions: login, logout, loadData, addLeaveRequest, updateLeaveRequest
-- Access via selector pattern: `useStore(s => s.currentUser)`
+- Data-only store (no auth state)
+- State: departments, leaveTypes, leaveRequests, approvalConfigs
+- Actions: loadData, addLeaveRequest, updateLeaveRequest
+- getters: getDepartment, getLeaveType
+- Access via selector pattern: `useStore(s => s.departments)`
 - Never mutate state directly; always use set()
 
 ### TanStack React Query
@@ -106,13 +119,14 @@ import { CalendarDays } from "lucide-react";
 
 ```typescript
 import { useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useStore } from "@/store/useStore";
 import { leaveStatusLabels, type LeaveStatus } from "@/lib/leave-data";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 const MyComponent = () => {
-  const currentUser = useStore((s) => s.currentUser);
+  const { user } = useAuth();
   const leaveRequests = useStore((s) => s.leaveRequests);
   const loadData = useStore((s) => s.loadData);
 
@@ -128,11 +142,11 @@ export default MyComponent;
 
 ## Error Handling
 
-- Wrap async operations in try/catch
+- API calls return `ApiResponse<T>` = `{ data: T | null, error: string | null }`
 - Display errors via Sonner toast: `toast.error("message")`
-- Supabase errors: check `{ error }` from query responses
 - Form validation: React Hook Form + Zod schema
-- Network failures: show generic "Loi ket noi" message
+- Network failures: client.ts catches exceptions, returns error string
+- Entity validation: EF Core attributes ([MaxLength], [Required]) + FluentValidation per endpoint
 
 ## Formatting & Linting
 
@@ -150,35 +164,33 @@ export default MyComponent;
 - Status colors: semantic CSS classes (bg-warning, text-success, etc.)
 - Responsive: mobile-first with md: breakpoint for desktop
 
-## Backend (.NET 9 + FastEndpoints + Vertical Slice Architecture)
+## Backend (.NET 9 + FastEndpoints + EF Core + Vertical Slice Architecture)
 
 ### Project Structure
 
 ```
-src/Server/
-├── Program.cs                      # FastEndpoints registration + middleware
-├── Features/                       # Vertical slices
-│   ├── Auth/
-│   │   ├── Login/
-│   │   │   ├── LoginEndpoint.cs
-│   │   │   ├── LoginRequest.cs
-│   │   │   ├── LoginResponse.cs
-│   │   │   └── LoginValidator.cs
-│   │   ├── Exchange/
-│   │   └── Me/
-│   ├── Employees/
-│   │   ├── List/ListEmployeesEndpoint.cs
-│   │   ├── Create/CreateEmployeeEndpoint.cs + Request + Validator
-│   │   ├── Update/UpdateEmployeeEndpoint.cs + Request + Validator
-│   │   └── Delete/DeleteEmployeeEndpoint.cs
-│   ├── Departments/
-│   ├── LeaveRequests/
-│   ├── LeaveBalances/
-│   └── Config/
+packages/api/
+├── Program.cs                        # FastEndpoints + EF Core DI registration
+├── Entities/                         # Domain entities
+│   ├── UserMaster.cs                 # Scaffolded from USER_MASTER
+│   ├── DmDonvi.cs                    # Scaffolded from DM_DONVI
+│   ├── UserRole.cs                   # Code First
+│   ├── LeaveType.cs                  # Code First
+│   ├── LeaveBalance.cs               # Code First
+│   ├── LeaveRequest.cs               # Code First
+│   └── LeaveConfig.cs                # Code First
 ├── Data/
-│   └── DbConnectionFactory.cs      # SQL Server IDbConnection factory
+│   ├── AppDbContext.cs               # EF Core context + OnModelCreating + seed data
+│   ├── AppDbContextFactory.cs        # Design-time factory for migrations
+│   └── Migrations/                   # EF Core migrations
+├── Features/                         # Vertical slices (endpoints WIP)
+│   ├── Auth/Me/                      # MeEndpoint
+│   ├── Config/Get, Update, UserRole/ # Config endpoints
+│   ├── LeaveBalances/List, My/
+│   ├── LeaveRequests/List, Create, Update, Approve, Reject, Cancel/
+│   └── LeaveTypes/List, Create, Update, Delete/
 └── Middleware/
-    └── JwtMiddleware.cs            # JWT validation for both issuers
+    └── CurrentUserMiddleware.cs      # Read gateway headers, resolve current user
 ```
 
 ### Naming Conventions
@@ -189,52 +201,39 @@ src/Server/
 | Request DTOs | PascalCase, suffix `Request` | `LoginRequest`, `CreateEmployeeRequest` |
 | Response DTOs | PascalCase, suffix `Response` | `LoginResponse`, `EmployeeResponse` |
 | Validator classes | PascalCase, suffix `Validator` | `LoginValidator` |
-| Feature folders | PascalCase | `Auth/`, `Employees/`, `LeaveRequests/` |
-| SQL tables/columns | snake_case | `leave_requests`, `employee_id` |
-| SQL stored procedures | snake_case, prefix `usp_` | `usp_get_leave_balance` |
+| Feature folders | PascalCase | `Auth/`, `LeaveRequests/`, `Config/` |
+| SQL tables (system) | UPPER_SNAKE_CASE | `USER_MASTER`, `DM_DONVI` |
+| SQL tables (app) | PascalCase (EF default) | `LeaveRequests`, `LeaveBalances` |
 
-### Endpoint Pattern (REPR)
+### Endpoint Pattern (REPR + EF Core)
 
 ```csharp
-// LoginRequest.cs
-public record LoginRequest(string Username, string Password);
+// {Feature}/Request.cs
+public record MeRequest();
 
-// LoginResponse.cs
-public record LoginResponse(string Token, EmployeeProfile Profile);
+// {Feature}/Response.cs
+public record MeResponse(long UserId, string UserName, string FullName, long? DonViId, string Role);
 
-// LoginValidator.cs
-public class LoginValidator : Validator<LoginRequest>
+// {Feature}/{Feature}Endpoint.cs
+public class MeEndpoint : Endpoint<MeRequest, MeResponse>
 {
-    public LoginValidator()
-    {
-        RuleFor(x => x.Username).NotEmpty();
-        RuleFor(x => x.Password).NotEmpty().MinimumLength(6);
-    }
-}
+    private readonly AppDbContext _db;
 
-// LoginEndpoint.cs
-public class LoginEndpoint : Endpoint<LoginRequest, LoginResponse>
-{
-    private readonly IDbConnection _db;
-
-    public LoginEndpoint(IDbConnectionFactory dbFactory)
+    public MeEndpoint(AppDbContext db)
     {
-        _db = dbFactory.CreateConnection();
+        _db = db;
     }
 
     public override void Configure()
     {
-        Post("/api/auth/login");
-        AllowAnonymous();
+        Get("/api/auth/me");
     }
 
-    public override async Task HandleAsync(LoginRequest req, CancellationToken ct)
+    public override async Task HandleAsync(MeRequest req, CancellationToken ct)
     {
-        // 1. Query user
-        // 2. BCrypt verify
-        // 3. Generate JWT
-        // 4. Return response
-        await SendAsync(response, cancellation: ct);
+        var cu = HttpContext.Items["CurrentUser"] as CurrentUser;
+        if (cu == null) { await SendUnauthorizedAsync(ct); return; }
+        await SendAsync(new MeResponse(cu.UserId, cu.UserName, cu.FullName, cu.DonViId, cu.Role), cancellation: ct);
     }
 }
 ```
@@ -243,27 +242,30 @@ public class LoginEndpoint : Endpoint<LoginRequest, LoginResponse>
 
 ```
 HTTP Request
+  → CurrentUserMiddleware    [resolve current user from gateway headers]
   → Validator.ValidateAsync()     [FluentValidation, auto]
-  → PreProcessor.PreProcessAsync() [optional: auth check, rate limiting]
-  → Endpoint.HandleAsync()         [business logic + Dapper query]
+  → PreProcessor.PreProcessAsync() [optional: role check, rate limiting]
+  → Endpoint.HandleAsync()         [business logic + EF Core queries]
   → PostProcessor.PostProcessAsync() [optional: audit log, cleanup]
   → HTTP Response
 ```
 
-### Data Access (Dapper)
+### Data Access (EF Core)
 
-- Mỗi slice tự quản lý data access — không tách repository layer
-- SQL query viết trực tiếp trong handler hoặc trong constants gần handler
-- Dùng Dapper parameterized queries để chống SQL injection
-- Không dùng stored procedures mặc định, ưu tiên SQL inline trong handler (dễ đọc context)
+- Endpoint nhận `AppDbContext` qua constructor DI injection
+- System tables (USER_MASTER, DM_DONVI): read-only, `ExcludeFromMigrations()`
+- App tables (LeaveRequests, LeaveBalances, ...): Code First, managed by migrations
+- LINQ queries thay vì SQL thuần, type-safe compile-time check
+- Seed data configured trong `OnModelCreating`
 
 ### API Conventions
 
 - Request/Response dùng C# `record` types
-- Tất cả endpoint đều có `[Authorize]` trừ `LoginEndpoint` và `ExchangeEndpoint`
-- Role check: `Roles("GD.PGD", "QTHT")` hoặc check trong handler
+- CurrentUser resolved từ HttpContext.Items["CurrentUser"] (set by middleware)
+- Role check: so sánh `CurrentUser.Role` trong handler hoặc PreProcessor
 - Response format nhất quán: `{ data, error }` envelope
 - Error response dùng `AddError()` hoặc `ThrowError()` của FastEndpoints
+- Dev mode: CurrentUserMiddleware fallback to userId=1, role="quantri" khi không có gateway headers
 
 ## Git Practices
 

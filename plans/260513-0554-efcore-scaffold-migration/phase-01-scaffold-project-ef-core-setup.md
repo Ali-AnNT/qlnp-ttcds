@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Scaffold Project & EF Core Setup"
-status: pending
+status: completed
 priority: P0
 effort: "1h"
 dependencies: []

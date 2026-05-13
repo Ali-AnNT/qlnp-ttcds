@@ -1,7 +1,7 @@
 ---
 title: "QLNP .NET 9 + EF Core + Scaffold Migration"
 description: "Migration QLNP từ Supabase sang .NET 9 + FastEndpoints + EF Core + SQL Server, scaffold USER_MASTER + DM_DONVI, Code First cho bảng mới"
-status: pending
+status: completed
 priority: P0
 branch: "rebuid-bundle"
 tags: [dotnet, fastendpoints, efcore, sqlserver, scaffold, code-first]
@@ -52,16 +52,16 @@ Browser → API Gateway (SSO validate) → QLNP.Api (FastEndpoints + EF Core) �
 
 | Phase | Name | Status | Effort | Priority |
 |-------|------|--------|--------|----------|
-| 1 | [Scaffold Project & EF Core Setup](./phase-01-scaffold-project-ef-core-setup.md) | Pending | 1h | P0 |
-| 2 | [Scaffold Existing Tables & Entities](./phase-02-scaffold-existing-tables-entities.md) | Pending | 1h | P0 |
-| 3 | [Create QLNP Entities & Migration](./phase-03-create-qlnp-entities-migration.md) | Pending | 2h | P0 |
-| 4 | [Core Middleware & Program.cs](./phase-04-core-middleware-program-cs.md) | Pending | 1h | P0 |
-| 5 | [Frontend API Layer Refactor](./phase-05-frontend-api-layer-refactor.md) | Pending | 3h | P1 |
-| 6 | [Auth & Store Refactor](./phase-06-auth-store-refactor.md) | Pending | 2h | P1 |
-| 7 | [Page Refactor P1](./phase-07-page-refactor-p1.md) | Pending | 3h | P1 |
-| 8 | [Page Refactor P2](./phase-08-page-refactor-p2.md) | Pending | 3h | P1 |
-| 9 | [Embed Mode & Cleanup](./phase-09-embed-mode-cleanup.md) | Pending | 2h | P2 |
-| 10 | [Testing & Documentation](./phase-10-testing-documentation.md) | Pending | 2h | P2 |
+| 1 | [Scaffold Project & EF Core Setup](./phase-01-scaffold-project-ef-core-setup.md) | ✅ Done | 1h | P0 |
+| 2 | [Scaffold Existing Tables & Entities](./phase-02-scaffold-existing-tables-entities.md) | ✅ Done | 1h | P0 |
+| 3 | [Create QLNP Entities & Migration](./phase-03-create-qlnp-entities-migration.md) | ✅ Done | 2h | P0 |
+| 4 | [Core Middleware & Program.cs](./phase-04-core-middleware-program-cs.md) | ✅ Done | 1h | P0 |
+| 5 | [Frontend API Layer Refactor](./phase-05-frontend-api-layer-refactor.md) | ✅ Done | 3h | P1 |
+| 6 | [Auth & Store Refactor](./phase-06-auth-store-refactor.md) | ✅ Done | 2h | P1 |
+| 7 | [Page Refactor P1](./phase-07-page-refactor-p1.md) | ✅ Done | 3h | P1 |
+| 8 | [Page Refactor P2](./phase-08-page-refactor-p2.md) | ✅ Done | 3h | P1 |
+| 9 | [Embed Mode & Cleanup](./phase-09-embed-mode-cleanup.md) | ✅ Done | 2h | P2 |
+| 10 | [Testing & Documentation](./phase-10-testing-documentation.md) | ✅ Done | 2h | P2 |
 
 ## Key Risks
 

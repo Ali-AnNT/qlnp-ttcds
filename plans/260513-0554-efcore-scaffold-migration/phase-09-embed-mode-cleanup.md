@@ -1,7 +1,7 @@
 ---
 phase: 9
 title: "Embed Mode & Cleanup"
-status: pending
+status: completed
 priority: P2
 effort: "2h"
 dependencies: ["8"]

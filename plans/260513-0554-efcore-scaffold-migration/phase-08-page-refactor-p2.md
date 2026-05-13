@@ -1,7 +1,7 @@
 ---
 phase: 8
 title: "Page Refactor P2"
-status: pending
+status: completed
 priority: P1
 effort: "3h"
 dependencies: ["7"]

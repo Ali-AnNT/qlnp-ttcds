@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "Core Middleware & Program.cs"
-status: pending
+status: completed
 priority: P0
 effort: "1h"
 dependencies: ["3"]

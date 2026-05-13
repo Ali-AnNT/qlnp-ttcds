@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useStore } from "@/store/useStore";
-import { leaveStatusLabels, LeaveStatus } from "@/lib/leave-data";
 import { formatDate } from "@/lib/date-utils";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +10,14 @@ import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, isWithin
 import { vi } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, CalendarDays, List } from "lucide-react";
+
+const statusLabels: Record<string, string> = {
+  pending: "Chờ duyệt",
+  approved_leader: "TP đã duyệt",
+  approved_director: "BGĐ đã duyệt",
+  rejected: "Từ chối",
+  cancelled: "Đã hủy",
+};
 
 const statusColor: Record<string, string> = {
   pending: "bg-warning/10 text-warning border-warning/30",
@@ -23,9 +30,7 @@ const statusColor: Record<string, string> = {
 const CalendarPage = () => {
   const leaveRequests = useStore((s) => s.leaveRequests);
   const departments = useStore((s) => s.departments);
-  const getEmployee = useStore((s) => s.getEmployee);
-  const getDepartment = useStore((s) => s.getDepartment);
-  const getLeaveType = useStore((s) => s.getLeaveType);
+  const leaveTypes = useStore((s) => s.leaveTypes);
   const [viewMode, setViewMode] = useState<"calendar" | "list">("list");
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [filterDept, setFilterDept] = useState("all");
@@ -34,8 +39,7 @@ const CalendarPage = () => {
 
   const filteredRequests = activeRequests.filter((r) => {
     if (filterDept === "all") return true;
-    const emp = getEmployee(r.employee_id);
-    return emp?.department_id === filterDept;
+    return String(r.donViId) === filterDept;
   });
 
   const monthStart = startOfMonth(currentMonth);
@@ -44,8 +48,8 @@ const CalendarPage = () => {
 
   const getLeaveForDay = (day: Date) =>
     filteredRequests.filter((r) => {
-      const start = parseISO(r.start_date);
-      const end = parseISO(r.end_date);
+      const start = parseISO(r.startDate);
+      const end = parseISO(r.endDate);
       return isWithinInterval(day, { start, end });
     });
 
@@ -58,7 +62,9 @@ const CalendarPage = () => {
             <SelectTrigger className="w-48"><SelectValue placeholder="Phòng ban" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tất cả phòng ban</SelectItem>
-              {departments.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+              {departments.map((d) => (
+                <SelectItem key={d.donViId} value={String(d.donViId)}>{d.tenDonVi}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <div className="flex border rounded-md">
@@ -88,14 +94,11 @@ const CalendarPage = () => {
                 return (
                   <div key={day.toISOString()} className={cn("min-h-[60px] border rounded p-1 text-xs", leaves.length > 0 && "bg-accent/5")}>
                     <div className="font-medium text-right">{format(day, "d")}</div>
-                    {leaves.slice(0, 2).map((l) => {
-                      const e = getEmployee(l.employee_id);
-                      return (
-                        <div key={l.id} className={cn("truncate text-[10px] rounded px-1 mt-0.5", l.status.includes("approved") ? "bg-success/20 text-success" : "bg-warning/20 text-warning")}>
-                          {e?.full_name.split(" ").pop()}
-                        </div>
-                      );
-                    })}
+                    {leaves.slice(0, 2).map((l) => (
+                      <div key={l.id} className={cn("truncate text-[10px] rounded px-1 mt-0.5", l.status.includes("approved") ? "bg-success/20 text-success" : "bg-warning/20 text-warning")}>
+                        {l.userName?.split(" ").pop()}
+                      </div>
+                    ))}
                     {leaves.length > 2 && <div className="text-[10px] text-muted-foreground">+{leaves.length - 2}</div>}
                   </div>
                 );
@@ -119,20 +122,20 @@ const CalendarPage = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredRequests.sort((a, b) => a.start_date.localeCompare(b.start_date)).map((r, i) => {
-                  const emp = getEmployee(r.employee_id);
-                  const dept = emp?.department_id ? getDepartment(emp.department_id) : undefined;
+                {filteredRequests.sort((a, b) => a.startDate.localeCompare(b.startDate)).map((r, i) => {
+                  const lt = leaveTypes.find((t) => t.id === r.leaveTypeId);
+                  const dept = departments.find((d) => d.donViId === r.donViId);
                   return (
                     <TableRow key={r.id} className={i % 2 === 1 ? "bg-muted/20" : ""}>
-                      <TableCell className="font-medium">{emp?.full_name}</TableCell>
-                      <TableCell>{dept?.name}</TableCell>
-                      <TableCell>{getLeaveType(r.leave_type_id)?.name}</TableCell>
-                      <TableCell>{formatDate(r.start_date)}</TableCell>
-                      <TableCell>{formatDate(r.end_date)}</TableCell>
-                      <TableCell className="text-center">{r.total_days}</TableCell>
+                      <TableCell className="font-medium">{r.userName}</TableCell>
+                      <TableCell>{dept?.tenDonVi}</TableCell>
+                      <TableCell>{lt?.name}</TableCell>
+                      <TableCell>{formatDate(r.startDate)}</TableCell>
+                      <TableCell>{formatDate(r.endDate)}</TableCell>
+                      <TableCell className="text-center">{r.totalDays}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className={cn("text-[11px]", statusColor[r.status])}>
-                          {leaveStatusLabels[r.status as LeaveStatus]}
+                          {statusLabels[r.status] || r.status}
                         </Badge>
                       </TableCell>
                     </TableRow>

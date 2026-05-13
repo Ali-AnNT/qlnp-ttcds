@@ -1,135 +1,61 @@
 import { create } from "zustand";
-import { supabase } from "@/integrations/supabase/client";
-import type { UserRole, Department, Employee, LeaveType, LeaveRequest, ApprovalConfig } from "@/lib/leave-data";
-
-interface AuthUser {
-  employeeId: string;
-  role: UserRole;
-  username: string;
-  fullName: string;
-  departmentName: string;
-  departmentId: string;
-  position: string;
-}
+import { departmentsApi, type DepartmentDto } from "@/api/departments.api";
+import { leaveTypesApi, type LeaveTypeDto } from "@/api/leave-types.api";
+import { leaveRequestsApi, type LeaveRequestDto, type CreateLeaveRequestDto } from "@/api/leave-requests.api";
+import { configApi, type ConfigDto } from "@/api/config.api";
 
 interface AppState {
-  currentUser: AuthUser | null;
-  login: (username: string, password: string) => Promise<boolean>;
-  logout: () => void;
-
-  departments: Department[];
-  employees: Employee[];
-  leaveTypes: LeaveType[];
-  leaveRequests: LeaveRequest[];
-  approvalConfigs: ApprovalConfig[];
+  departments: DepartmentDto[];
+  leaveTypes: LeaveTypeDto[];
+  leaveRequests: LeaveRequestDto[];
+  approvalConfigs: ConfigDto[];
 
   loadData: () => Promise<void>;
-  getEmployee: (id: string) => Employee | undefined;
-  getDepartment: (id: string) => Department | undefined;
-  getLeaveType: (id: string) => LeaveType | undefined;
+  getDepartment: (id: number) => DepartmentDto | undefined;
+  getLeaveType: (id: number) => LeaveTypeDto | undefined;
 
-  addLeaveRequest: (req: Omit<LeaveRequest, "id" | "created_at" | "updated_at">) => Promise<void>;
-  updateLeaveRequest: (id: string, updates: Partial<LeaveRequest>) => Promise<void>;
+  addLeaveRequest: (req: CreateLeaveRequestDto) => Promise<void>;
+  updateLeaveRequest: (id: number, updates: Partial<CreateLeaveRequestDto>) => Promise<void>;
 }
 
 export const useStore = create<AppState>((set, get) => ({
-  currentUser: null,
-
-  login: async (username, password) => {
-    const { data, error } = await supabase.rpc("verify_login", {
-      p_username: username,
-      p_password: password,
-    });
-    if (error || !data || (data as any[]).length === 0) return false;
-    const user = (data as any[])[0];
-
-    // Find employee to get department_id
-    const { data: empData } = await supabase
-      .from("employees")
-      .select("department_id")
-      .eq("id", user.employee_id)
-      .single();
-
-    set({
-      currentUser: {
-        employeeId: user.employee_id,
-        role: user.emp_role,
-        username: user.emp_username,
-        fullName: user.emp_full_name,
-        departmentName: user.department_name || "",
-        departmentId: empData?.department_id || "",
-        position: user.emp_position || "",
-      },
-    });
-    await get().loadData();
-    return true;
-  },
-
-  logout: () => set({ currentUser: null }),
-
   departments: [],
-  employees: [],
   leaveTypes: [],
   leaveRequests: [],
   approvalConfigs: [],
 
   loadData: async () => {
-    const currentUser = get().currentUser;
-    const role = currentUser?.role;
-
-    const [deptRes, empRes, ltRes, acRes] = await Promise.all([
-      supabase.from("departments").select("*"),
-      supabase.from("employees").select("id, username, full_name, department_id, job_title, role, phone, email, is_active"),
-      supabase.from("leave_types").select("*").eq("is_active", true),
-      supabase.from("approval_config").select("*").order("approval_level", { ascending: true }),
+    const [deptRes, ltRes, lrRes, acRes] = await Promise.all([
+      departmentsApi.list(),
+      leaveTypesApi.list(),
+      leaveRequestsApi.list(),
+      configApi.get(),
     ]);
 
-    // Load leave requests based on role
-    let lrQuery = supabase.from("leave_requests").select("*").order("created_at", { ascending: false });
-
-    if (role === "CB.PCM" && currentUser) {
-      // CB.PCM: only own requests
-      lrQuery = lrQuery.eq("employee_id", currentUser.employeeId);
-    } else if (role === "LD.PCM" && currentUser) {
-      // LD.PCM: requests from their department
-      const deptEmployees = (empRes.data || []).filter(
-        (e: any) => e.department_id === currentUser.departmentId
-      );
-      const deptEmployeeIds = deptEmployees.map((e: any) => e.id);
-      if (deptEmployeeIds.length > 0) {
-        lrQuery = lrQuery.in("employee_id", deptEmployeeIds);
-      }
-    }
-    // GD.PGD and QTHT: load all (no filter)
-
-    const lrRes = await lrQuery;
-
     set({
-      departments: (deptRes.data || []) as Department[],
-      employees: (empRes.data || []) as Employee[],
-      leaveTypes: (ltRes.data || []) as LeaveType[],
-      leaveRequests: (lrRes.data || []) as LeaveRequest[],
-      approvalConfigs: (acRes.data || []) as ApprovalConfig[],
+      departments: deptRes.data || [],
+      leaveTypes: (ltRes.data || []).filter((t) => t.isActive),
+      leaveRequests: lrRes.data || [],
+      approvalConfigs: acRes.data || [],
     });
   },
 
-  getEmployee: (id) => get().employees.find((e) => e.id === id),
-  getDepartment: (id) => get().departments.find((d) => d.id === id),
+  getDepartment: (id) => get().departments.find((d) => d.donViId === id),
   getLeaveType: (id) => get().leaveTypes.find((t) => t.id === id),
 
   addLeaveRequest: async (req) => {
-    const { data, error } = await supabase.from("leave_requests").insert(req as any).select().single();
+    const { data, error } = await leaveRequestsApi.create(req);
     if (!error && data) {
-      set((s) => ({ leaveRequests: [data as LeaveRequest, ...s.leaveRequests] }));
+      set((s) => ({ leaveRequests: [data, ...s.leaveRequests] }));
     }
   },
 
   updateLeaveRequest: async (id, updates) => {
-    const { error } = await supabase.from("leave_requests").update(updates as any).eq("id", id);
+    const { error } = await leaveRequestsApi.update(id, updates);
     if (!error) {
       set((s) => ({
         leaveRequests: s.leaveRequests.map((r) =>
-          r.id === id ? { ...r, ...updates, updated_at: new Date().toISOString() } : r
+          r.id === id ? { ...r, ...updates } : r
         ),
       }));
     }

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useStore } from "@/store/useStore";
-import { leaveStatusLabels, LeaveStatus } from "@/lib/leave-data";
 import { formatDate } from "@/lib/date-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,14 @@ import { CalendarDays, Clock, CheckCircle, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+
+const statusLabels: Record<string, string> = {
+  pending: "Chờ duyệt",
+  approved_leader: "TP đã duyệt",
+  approved_director: "BGĐ đã duyệt",
+  rejected: "Từ chối",
+  cancelled: "Đã hủy",
+};
 
 const statusColor: Record<string, string> = {
   pending: "bg-warning/10 text-warning border-warning/30",
@@ -18,26 +26,23 @@ const statusColor: Record<string, string> = {
 };
 
 const DashboardPage = () => {
-  const currentUser = useStore((s) => s.currentUser);
+  const { user } = useAuth();
   const leaveRequests = useStore((s) => s.leaveRequests);
   const leaveTypes = useStore((s) => s.leaveTypes);
   const loadData = useStore((s) => s.loadData);
-  const getEmployee = useStore((s) => s.getEmployee);
-  const getLeaveType = useStore((s) => s.getLeaveType);
-  const role = currentUser?.role;
 
   useEffect(() => { loadData(); }, []);
 
-  const myRequests = leaveRequests.filter((r) => r.employee_id === currentUser?.employeeId);
+  const myRequests = leaveRequests.filter((r) => r.userId === user?.userId);
   const pendingApproval = leaveRequests.filter((r) => r.status === "pending");
   const approvedCount = myRequests.filter((r) => r.status === "approved_leader" || r.status === "approved_director").length;
   const totalDaysUsed = myRequests
     .filter((r) => r.status === "approved_leader" || r.status === "approved_director")
-    .reduce((s, r) => s + Number(r.total_days), 0);
+    .reduce((s, r) => s + r.totalDays, 0);
 
   const metrics = [
     { label: "Ngày phép còn lại", value: 12 - totalDaysUsed, icon: CalendarDays, color: "text-accent" },
-    { label: "Đơn đang chờ duyệt", value: role === "CB.PCM" ? myRequests.filter((r) => r.status === "pending").length : pendingApproval.length, icon: Clock, color: "text-warning" },
+    { label: "Đơn đang chờ duyệt", value: user?.role === "CB.PCM" ? myRequests.filter((r) => r.status === "pending").length : pendingApproval.length, icon: Clock, color: "text-warning" },
     { label: "Đơn đã duyệt", value: approvedCount, icon: CheckCircle, color: "text-success" },
     { label: "Tổng ngày đã nghỉ", value: totalDaysUsed, icon: FileText, color: "text-info" },
   ];
@@ -47,8 +52,8 @@ const DashboardPage = () => {
   return (
     <div className="space-y-6">
       <div className="bg-card rounded-lg border p-5">
-        <h1 className="text-xl font-bold">Xin chào, {currentUser?.fullName}!</h1>
-        <p className="text-sm text-muted-foreground mt-1">{currentUser?.departmentName} • {currentUser?.position} • {role}</p>
+        <h1 className="text-xl font-bold">Xin chào, {user?.fullName}!</h1>
+        <p className="text-sm text-muted-foreground mt-1">{user?.userName} • {user?.role}</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -68,10 +73,10 @@ const DashboardPage = () => {
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {(role === "CB.PCM" || role === "LD.PCM") && (
+        {(user?.role === "CB.PCM" || user?.role === "LD.PCM") && (
           <Link to="/leave/new"><Button className="bg-accent hover:bg-accent/90 text-accent-foreground">Tạo đơn nghỉ phép</Button></Link>
         )}
-        {(role === "LD.PCM" || role === "GD.PGD") && (
+        {(user?.role === "LD.PCM" || user?.role === "GD.PGD") && (
           <Link to="/approval"><Button variant="outline">Phê duyệt đơn ({pendingApproval.length})</Button></Link>
         )}
         <Link to="/calendar"><Button variant="outline">Xem lịch nghỉ phép</Button></Link>
@@ -84,16 +89,15 @@ const DashboardPage = () => {
         <CardContent>
           <div className="space-y-2">
             {recentRequests.map((r) => {
-              const emp = getEmployee(r.employee_id);
-              const lt = getLeaveType(r.leave_type_id);
+              const lt = leaveTypes.find((t) => t.id === r.leaveTypeId);
               return (
                 <div key={r.id} className="flex items-center justify-between py-2 border-b last:border-0 text-sm">
                   <div className="flex-1 min-w-0">
-                    <span className="font-medium">{emp?.full_name}</span>
-                    <span className="text-muted-foreground"> — {lt?.name}: {formatDate(r.start_date)} → {formatDate(r.end_date)} ({r.total_days} ngày)</span>
+                    <span className="font-medium">{r.userName}</span>
+                    <span className="text-muted-foreground"> — {lt?.name}: {formatDate(r.startDate)} → {formatDate(r.endDate)} ({r.totalDays} ngày)</span>
                   </div>
                   <Badge className={cn("text-[11px] ml-2 shrink-0", statusColor[r.status])} variant="outline">
-                    {leaveStatusLabels[r.status as LeaveStatus]}
+                    {statusLabels[r.status] || r.status}
                   </Badge>
                 </div>
               );

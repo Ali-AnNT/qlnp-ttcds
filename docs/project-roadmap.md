@@ -1,76 +1,49 @@
 # Project Roadmap - QLNP-TTCDS
 
-## Current State (v0.0.0 - Early Development)
+## v0.0.0 - Supabase Prototype (DEPRECATED)
 
-**Status**: Core features implemented, functional prototype.
+**Status**: Removed. Supabase architecture replaced in Phase 1 migration.
 
-### Implemented Features
-- [x] Login/logout with username/password (Supabase RPC verify_login)
-- [x] Role-based sidebar navigation (CB.PCM, LD.PCM, GD.PGD, QTHT)
-- [x] Dashboard with metric cards and recent activity
-- [x] Create leave request (type, dates, reason, business days calc)
-- [x] Overlap detection for leave requests
-- [x] My requests list with status filter, edit, cancel
-- [x] Two-level approval workflow (LD.PCM -> GD.PGD) configurable per leave type
-- [x] Calendar view (month grid + list)
-- [x] Summary view by department with drill-down, pie chart
-- [x] Reports with KPI cards, bar/pie charts, CSV export
-- [x] Violations tracking (12-day limit exceed detection) with per-period filter
-- [x] Config panel (general config, leave types CRUD, approval config CRUD)
-- [x] Mobile responsive sidebar
-- [x] Supabase PostgreSQL with RLS policies
+### Former Features (all migrated to new stack)
+- [x] Login/logout with username/password (Supabase RPC verify_login) -- removed
+- [x] All 11 pages: Dashboard, LeaveNew, LeaveMy, Approval, Calendar, Summary, Reports, Violations, Config, Login, NotFound
 
-### Known Technical Debt
+### Resolved Technical Debt
+All Supabase-related issues resolved by architecture migration:
+- Plain-text password comparison -> replaced by SSO gateway auth
+- Weak RLS policies -> replaced by server-side CurrentUserMiddleware
+- No server-side role enforcement -> enforced via CurrentUser.Role in endpoints
+- @supabase/supabase-js removed from package.json
+- src/integrations/supabase/ directory deleted
 
-| Issue | Severity | Description |
-|-------|----------|-------------|
-| Plain-text password comparison | **High** | verify_login currently compares plain-text passwords (no salt/hash). Must upgrade to proper hashing before production use |
-| Weak RLS policies | **Medium** | All tables have "public SELECT" policies. leave_requests INSERT/UPDATE unrestricted. Suitable for intranet prototype only |
-| No server-side role enforcement | **Medium** | All authorization is client-side (React). Server only has basic RLS. Malicious actor could call API directly |
-| TanStack Query unused | **Low** | QueryClient is set up but pages use Zustand directly. No caching, deduplication, or stale-while-revalidate |
-| No input sanitization | **Low** | Form inputs not sanitized before DB insert. SQL injection prevented by Supabase but XSS possible |
-| No rate limiting | **Low** | No protection against brute-force login or API abuse |
-| No audit logging | **Low** | No track of who changed what and when |
-| Single large migration file | **Low** | All schema in one migration. Should be split into logical migrations for maintainability |
-| No environment variable validation | **Low** | Missing VITE_SUPABASE_URL or KEY causes cryptic runtime errors |
-| No Vietnamese locale for business days | **Low** | date-fns default locale may miscount Vietnamese holidays |
+## Phase 1: Architecture Migration (COMPLETED)
 
-## Phase 1: Architecture Migration (Planned)
+**Priority:** P0 -- Replaced Supabase with .NET 9 + FastEndpoints + EF Core + SQL Server.
+**Plan:** `plans/260513-0554-efcore-scaffold-migration/`
 
-**Priority:** P0 — Replace Supabase with .NET 9 + FastEndpoints + Vertical Slice Architecture + SQL Server.
+### 1.1 .NET Backend + SQL Server -- COMPLETED
+| Task | Status |
+|------|--------|
+| .NET 9 API project (packages/api/) with FastEndpoints v8.1.0, EF Core 9.0.0, SQL Server | Done |
+| Scaffold USER_MASTER (9 props) and DM_DONVI (22 props) from existing DB | Done |
+| 5 Code First entities: UserRole, LeaveType, LeaveBalance, LeaveRequest, LeaveConfig | Done |
+| AppDbContext with ExcludeFromMigrations() for system tables, seed data | Done |
+| CurrentUserMiddleware (gateway headers) + dev mode fallback | Done |
+| Initial EF Core migration (InitialCreate) | Done |
+| Features directory scaffolded (Auth/Me, Config, LeaveBalances, LeaveRequests, LeaveTypes) | Done |
+| Endpoint .cs implementations | **IN PROGRESS** (folders exist, .cs files pending) |
 
-### 1.1 .NET Backend + SQL Server (P0)
-| Task | Priority | Effort |
-|------|----------|--------|
-| SQL Server schema migration (6 tables + data from PostgreSQL) | Critical | Medium |
-| FastEndpoints project setup + Vertical Slice folder structure | Critical | Small |
-| Auth slices: Login, Exchange, Me endpoints + JWT middleware (dual issuer) | Critical | Medium |
-| Employee CRUD slices | High | Small |
-| Department CRUD slices | High | Small |
-| Leave Type CRUD slices | High | Small |
-| Leave Request slices: List/Create/Update + overlap detection | Critical | Medium |
-| Leave Request slices: Approve/Reject (2-level state machine) | Critical | Medium |
-| Leave Request slices: Cancel | High | Small |
-| Leave Balance slices: List/My | High | Small |
-| Config slices: Get/Update | Medium | Small |
-| BCrypt password migration script | Critical | Small |
-
-### 1.2 Frontend Refactor (P1)
-| Task | Priority | Effort |
-|------|----------|--------|
-| Replace Supabase client with fetch-based api/client.ts | Critical | Medium |
-| JWT AuthContext (replaces Zustand auth state) | Critical | Medium |
-| postMessage listener for embed JWT exchange | High | Small |
-| Remove all Supabase package dependencies | Critical | Small |
-| Remove `src/integrations/supabase/` directory | Critical | Small |
-| Update all pages to use new API layer | Critical | Medium |
-
-### 1.3 Embedding Support (P2)
-| Task | Priority | Effort |
-|------|----------|--------|
-| iframe detection + dual mode UI | High | Small |
-| Host JWT validation via public key endpoint | High | Medium |
-| PostMessage handshake protocol | Medium | Small |
+### 1.2 Frontend Refactor -- COMPLETED
+| Task | Status |
+|------|--------|
+| Replace Supabase client with fetch-based api/client.ts | Done |
+| API modules: auth, departments, leave-types, leave-requests, leave-balances, config | Done |
+| Zustand store refactored (data layer only, no auth) | Done |
+| React AuthContext with JWT + embed mode (postMessage) | Done |
+| SSO-only LoginPage (no username/password form, auto-redirect) | Done |
+| All 11 pages refactored to use new API layer | Done |
+| @supabase/supabase-js removed from package.json | Done |
+| src/integrations/supabase/ directory deleted | Done |
 
 ## Phase 2: Feature Enhancements (Planned)
 
@@ -96,25 +69,32 @@
 | Comprehensive test suite | Unit + integration + E2E tests (Cypress/Playwright) |
 | CI/CD pipeline | GitHub Actions for automated test, build, deploy |
 
-## Milestone Timeline (Proposed)
+## Milestone Timeline
 
 ```
-Q2 2026 (Current): Prototype complete + Migration start
-    - All core features working on Supabase
-    - Phase 1.1: FastEndpoints + Vertical Slice backend + SQL Server migration
+Q1-Q2 2026: Supabase prototype complete
+    ~~~~
+    All core features working on Supabase PostgreSQL
 
-Q3 2026: Phase 1 Complete
-    - Frontend refactor (remove Supabase dependency)
-    - Embedding support
-    - Pilot deployment with 1-2 departments
+May 2026 (COMPLETED): Phase 1 - Architecture Migration
+    - .NET 9 API project created with EF Core 9.0.0 + FastEndpoints v8.1.0
+    - Scaffolded existing SQL Server tables (USER_MASTER, DM_DONVI)
+    - Frontend fully refactored (Supabase dependency removed)
+    - SSO gateway auth + CurrentUserMiddleware
+    - Features directory scaffolded, endpoints pending
 
-Q4 2026: Phase 2 - Feature Enhancements
+Jun 2026 (IN PROGRESS): Phase 1.1 - Endpoint Implementation
+    - Implement endpoint .cs files for all scaffolded slices
+    - Wire frontend API modules to real endpoints
+    - Integration testing
+
+Q3 2026: Phase 2 - Feature Enhancements
     - Email notifications
     - Balance auto-calculation
-    - Full organizational rollout
+    - Pilot deployment with 1-2 departments
 
-2027: Phase 3 - Platform Improvements
+Q4 2026: Phase 3 - Platform Improvements
+    - Full organizational rollout
     - PWA / Mobile app exploration
-    - SSO integration
     - External API
 ```

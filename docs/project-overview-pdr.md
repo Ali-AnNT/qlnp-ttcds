@@ -8,7 +8,7 @@
 | **Organization** | Trung Tam Chuyen Doi So (TTCDS) |
 | **Domain** | Quan ly nghi phep noi bo |
 | **Platform** | Web application (SPA) |
-| **Current Version** | 0.0.0 (early development) |
+| **Current Version** | 0.1.0 (Phase 1 migration complete) |
 
 ## 2. Purpose
 
@@ -79,7 +79,7 @@ Xay dung he thong noi bo thay the quy trinh xin nghi phep thu cong (giay to, ema
 |----------|------------|
 | **Performance** | Page load < 3s, form submit < 1s |
 | **Availability** | 99% trong gio hanh chinh (8h-17h, T2-T6) |
-| **Security** | JWT-based auth (FastEndpoints middleware), BCrypt password hash, role-based endpoint authorization |
+| **Security** | Gateway header auth (SSO Portal delegates), CurrentUserMiddleware, role-based endpoint authorization |
 | **Usability** | Giao dien tieng Viet, responsive mobile + desktop |
 | **Browser Support** | Chrome, Firefox, Edge (latest 2 versions) |
 | **Data Integrity** | Unique constraints tranh trung lap du lieu balance |
@@ -96,11 +96,12 @@ Xay dung he thong noi bo thay the quy trinh xin nghi phep thu cong (giay to, ema
 
 ## 7. Technical Constraints
 
-- Infrastructure: .NET 9 API server + SQL Server (on-premise hoac cloud)
-- Backend: FastEndpoints + Vertical Slice Architecture + Dapper + SQL Server
+- Infrastructure: .NET 9 API server + SQL Server (on-premise)
+- Backend: FastEndpoints + Vertical Slice Architecture + EF Core + SQL Server
 - Frontend: SPA React, khong SSR
-- Database: SQL Server (Express hoac Standard)
-- Hosting: Vercel / Netlify (frontend), IIS / Docker / Cloud Run (API)
+- Database: SQL Server (existing VI_NGHIPHEP database)
+- Auth: SSO Portal delegates via gateway headers (X-User-Id, X-User-Name, X-User-FullName)
+- Hosting: Vercel / Netlify / Nginx (frontend), IIS (API reverse proxy)
 
 ## 8. Dependencies
 
@@ -121,9 +122,8 @@ Xay dung he thong noi bo thay the quy trinh xin nghi phep thu cong (giay to, ema
 | Dependency | Version | Purpose |
 |------------|---------|---------|
 | .NET SDK | 9.0 | Runtime |
-| FastEndpoints | 5.x | REPR pattern API framework |
-| Dapper | 2.x | SQL micro-ORM |
-| FluentValidation | 11.x | Request validation |
-| BCrypt.Net-Next | 4.x | Password hashing |
-| Microsoft.Data.SqlClient | 5.x | SQL Server driver |
-| System.IdentityModel.Tokens.Jwt | 8.x | JWT generation & validation |
+| FastEndpoints | 8.1.0 | REPR pattern API framework |
+| EF Core (SqlServer) | 9.0.0 | ORM + migrations + SQL Server provider |
+| EF Core Design | 9.0.0 | Design-time tools (scaffold, migrations) |
+| EF Core Tools | 9.0.0 | CLI tools for migrations |
+| Microsoft.AspNetCore.OpenApi | 9.0.16 | OpenAPI/Swagger support |

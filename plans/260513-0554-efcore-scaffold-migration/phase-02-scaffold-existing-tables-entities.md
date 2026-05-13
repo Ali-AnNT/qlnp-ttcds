@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Scaffold Existing Tables & Entities"
-status: pending
+status: completed
 priority: P0
 effort: "1h"
 dependencies: ["1"]

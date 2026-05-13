@@ -1,5 +1,5 @@
 import { useLocation, Link } from "react-router-dom";
-import { useStore } from "@/store/useStore";
+import { useAuth } from "@/contexts/AuthContext";
 import { Menu, Bell, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -17,9 +17,11 @@ const breadcrumbMap: Record<string, string> = {
 };
 
 export const AppHeader = ({ onToggleSidebar }: { onToggleSidebar: () => void }) => {
-  const currentUser = useStore((s) => s.currentUser);
+  const { user } = useAuth();
   const location = useLocation();
   const crumb = breadcrumbMap[location.pathname] || "Trang";
+
+  const initials = user?.fullName?.split(" ").slice(-1)[0]?.[0] || "U";
 
   return (
     <header className="h-14 bg-card border-b flex items-center px-4 gap-3 sticky top-0 z-20">
@@ -40,12 +42,12 @@ export const AppHeader = ({ onToggleSidebar }: { onToggleSidebar: () => void }) 
       <div className="flex items-center gap-2 pl-2 border-l">
         <Avatar className="h-8 w-8">
           <AvatarFallback className="bg-accent text-accent-foreground text-xs font-semibold">
-            {currentUser?.fullName?.split(" ").slice(-1)[0]?.[0] || "U"}
+            {initials}
           </AvatarFallback>
         </Avatar>
         <div className="hidden md:block text-right">
-          <p className="text-sm font-medium leading-tight">{currentUser?.fullName}</p>
-          <p className="text-[11px] text-muted-foreground">{currentUser?.departmentName} • {currentUser?.role}</p>
+          <p className="text-sm font-medium leading-tight">{user?.fullName}</p>
+          <p className="text-[11px] text-muted-foreground">{user?.userName} • {user?.role}</p>
         </div>
       </div>
     </header>

@@ -1,6 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { useStore } from "@/store/useStore";
-import { UserRole } from "@/lib/leave-data";
+import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, FileText, CheckSquare, CalendarDays,
@@ -9,29 +8,31 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
+type AppRole = "CB.PCM" | "LD.PCM" | "GD.PGD" | "QTHT" | "quantri" | "user";
+
 interface MenuItem {
   label: string;
   path?: string;
   icon: React.ElementType;
-  roles: UserRole[];
+  roles: AppRole[];
   children?: { label: string; path: string }[];
 }
 
 const menuItems: MenuItem[] = [
-  { label: "Tổng quan", path: "/", icon: LayoutDashboard, roles: ["CB.PCM", "LD.PCM", "GD.PGD", "QTHT"] },
+  { label: "Tổng quan", path: "/", icon: LayoutDashboard, roles: ["CB.PCM", "LD.PCM", "GD.PGD", "QTHT", "quantri", "user"] },
   {
-    label: "Đơn xin nghỉ phép", icon: FileText, roles: ["CB.PCM", "LD.PCM"],
+    label: "Đơn xin nghỉ phép", icon: FileText, roles: ["CB.PCM", "LD.PCM", "quantri", "user"],
     children: [
       { label: "Tạo đơn mới", path: "/leave/new" },
       { label: "Danh sách đơn của tôi", path: "/leave/my" },
     ],
   },
-  { label: "Phê duyệt đơn", path: "/approval", icon: CheckSquare, roles: ["LD.PCM", "GD.PGD"] },
-  { label: "Theo dõi lịch nghỉ phép", path: "/calendar", icon: CalendarDays, roles: ["CB.PCM", "LD.PCM", "GD.PGD", "QTHT"] },
-  { label: "Tổng hợp lịch nghỉ", path: "/summary", icon: PieChart, roles: ["GD.PGD"] },
-  { label: "Thống kê báo cáo", path: "/reports", icon: BarChart3, roles: ["GD.PGD"] },
-  { label: "Vượt mức quy định", path: "/violations", icon: AlertTriangle, roles: ["GD.PGD"] },
-  { label: "Cấu hình quy định", path: "/config", icon: Settings, roles: ["QTHT"] },
+  { label: "Phê duyệt đơn", path: "/approval", icon: CheckSquare, roles: ["LD.PCM", "GD.PGD", "quantri"] },
+  { label: "Theo dõi lịch nghỉ phép", path: "/calendar", icon: CalendarDays, roles: ["CB.PCM", "LD.PCM", "GD.PGD", "QTHT", "quantri", "user"] },
+  { label: "Tổng hợp lịch nghỉ", path: "/summary", icon: PieChart, roles: ["GD.PGD", "quantri"] },
+  { label: "Thống kê báo cáo", path: "/reports", icon: BarChart3, roles: ["GD.PGD", "quantri"] },
+  { label: "Vượt mức quy định", path: "/violations", icon: AlertTriangle, roles: ["GD.PGD", "quantri"] },
+  { label: "Cấu hình quy định", path: "/config", icon: Settings, roles: ["QTHT", "quantri"] },
 ];
 
 interface Props {
@@ -42,16 +43,20 @@ interface Props {
 }
 
 export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
-  const currentUser = useStore(s => s.currentUser);
-  const logout = useStore(s => s.logout);
+  const { user } = useAuth();
   const location = useLocation();
   const [expandedItems, setExpandedItems] = useState<string[]>(["Đơn xin nghỉ phép"]);
 
-  const role = currentUser?.role;
-  const visibleItems = menuItems.filter(m => role && m.roles.includes(role));
+  const role = user?.role as AppRole | undefined;
+  const visibleItems = menuItems.filter((m) => role && m.roles.includes(role));
+
+  const handleLogout = () => {
+    localStorage.removeItem("jwt");
+    window.location.href = "/login";
+  };
 
   const toggleExpand = (label: string) => {
-    setExpandedItems(p => p.includes(label) ? p.filter(l => l !== label) : [...p, label]);
+    setExpandedItems((p) => (p.includes(label) ? p.filter((l) => l !== label) : [...p, label]));
   };
 
   const sidebarWidth = collapsed ? "w-16" : "w-60";
@@ -65,7 +70,6 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
         isMobile ? "fixed left-0 top-0 w-60" : sidebarWidth
       )}
     >
-      {/* Header */}
       <div className="h-14 flex items-center px-4 border-b border-sidebar-border gap-2">
         <CalendarDays className="h-6 w-6 text-accent shrink-0" />
         {!collapsed && <span className="font-bold text-sm truncate">QUẢN LÝ NGHỈ PHÉP</span>}
@@ -76,12 +80,11 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
         )}
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 py-2 overflow-y-auto">
-        {visibleItems.map(item => {
+        {visibleItems.map((item) => {
           const Icon = item.icon;
           const isExpanded = expandedItems.includes(item.label);
-          const isChildActive = item.children?.some(c => location.pathname === c.path);
+          const isChildActive = item.children?.some((c) => location.pathname === c.path);
 
           if (item.children) {
             return (
@@ -103,15 +106,17 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
                 </button>
                 {!collapsed && isExpanded && (
                   <div className="ml-4 border-l border-sidebar-border">
-                    {item.children.map(child => (
+                    {item.children.map((child) => (
                       <NavLink
                         key={child.path}
                         to={child.path}
                         onClick={isMobile ? onClose : undefined}
-                        className={({ isActive }) => cn(
-                          "block pl-6 pr-4 py-2 text-[13px] hover:bg-sidebar-accent transition-colors",
-                          isActive ? "bg-accent text-accent-foreground font-medium" : "text-sidebar-foreground"
-                        )}
+                        className={({ isActive }) =>
+                          cn(
+                            "block pl-6 pr-4 py-2 text-[13px] hover:bg-sidebar-accent transition-colors",
+                            isActive ? "bg-accent text-accent-foreground font-medium" : "text-sidebar-foreground"
+                          )
+                        }
                       >
                         {child.label}
                       </NavLink>
@@ -128,10 +133,12 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
               to={item.path!}
               end={item.path === "/"}
               onClick={isMobile ? onClose : undefined}
-              className={({ isActive }) => cn(
-                "flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-sidebar-accent transition-colors",
-                isActive ? "bg-accent text-accent-foreground font-medium" : ""
-              )}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-sidebar-accent transition-colors",
+                  isActive ? "bg-accent text-accent-foreground font-medium" : ""
+                )
+              }
             >
               <Icon className="h-4 w-4 shrink-0" />
               {!collapsed && <span className="truncate">{item.label}</span>}
@@ -140,10 +147,9 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
         })}
       </nav>
 
-      {/* Logout */}
       <div className="border-t border-sidebar-border p-2">
         <button
-          onClick={logout}
+          onClick={handleLogout}
           className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-sidebar-accent rounded-md transition-colors"
         >
           <LogOut className="h-4 w-4 shrink-0" />

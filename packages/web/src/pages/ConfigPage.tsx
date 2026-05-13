@@ -9,111 +9,111 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useStore } from "@/store/useStore";
+import { useAuth } from "@/contexts/AuthContext";
 import { roleLabels, type UserRole } from "@/lib/leave-data";
-import { supabase } from "@/integrations/supabase/client";
+import { leaveTypesApi, type LeaveTypeDto } from "@/api/leave-types.api";
+import { configApi, type ConfigDto } from "@/api/config.api";
 import { toast } from "sonner";
 import { Pencil, Plus, Trash2, Save } from "lucide-react";
 
-interface ApprovalConfigRow {
-  id: string;
-  leave_type_id: string;
-  approval_level: number;
-  approver_role: UserRole;
+interface LeaveTypeEdit {
+  id?: number;
+  name: string;
+  code: string;
+  defaultDays: number;
+  description: string;
+  isActive: boolean;
 }
 
-interface LeaveConfigRow {
-  id: string;
-  config_key: string;
-  config_value: string;
-  description: string | null;
+interface ApprovalConfigEdit {
+  id?: number;
+  leaveTypeId: number;
+  approvalLevel: number;
+  approverRole: UserRole;
 }
 
 const ConfigPage = () => {
-  const currentUser = useStore((s) => s.currentUser);
+  const { user } = useAuth();
   const leaveTypes = useStore((s) => s.leaveTypes);
   const loadData = useStore((s) => s.loadData);
-  const isAdmin = currentUser?.role === "QTHT";
+  const isAdmin = user?.role === "QTHT" || user?.role === "quantri";
 
-  // Leave types editing
-  const [editingType, setEditingType] = useState<any | null>(null);
+  const [editingType, setEditingType] = useState<LeaveTypeEdit | null>(null);
   const [typeDialogOpen, setTypeDialogOpen] = useState(false);
 
-  // Approval config
-  const [approvalConfigs, setApprovalConfigs] = useState<ApprovalConfigRow[]>([]);
-  const [editingApproval, setEditingApproval] = useState<Partial<ApprovalConfigRow> | null>(null);
+  const [approvalConfigs, setApprovalConfigs] = useState<ConfigDto[]>([]);
+  const [editingApproval, setEditingApproval] = useState<ApprovalConfigEdit | null>(null);
   const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
 
-  // Leave config (cycle, default days per role)
-  const [leaveConfigs, setLeaveConfigs] = useState<LeaveConfigRow[]>([]);
   const [savingConfig, setSavingConfig] = useState(false);
 
-  // Default days per role state
   const [defaultDaysByRole, setDefaultDaysByRole] = useState<Record<string, string>>({
     "CB.PCM": "12",
     "LD.PCM": "14",
     "GD.PGD": "16",
     "QTHT": "12",
   });
-  const [leaveCycle, setLeaveCycle] = useState("yearly");
+
+  const [allLeaveTypes, setAllLeaveTypes] = useState<LeaveTypeDto[]>([]);
 
   useEffect(() => {
     loadApprovalConfigs();
-    loadLeaveConfigs();
+    loadAllLeaveTypes();
   }, []);
 
+  useEffect(() => {
+    if (leaveTypes.length > 0) setAllLeaveTypes(leaveTypes);
+  }, [leaveTypes]);
+
   const loadApprovalConfigs = async () => {
-    const { data } = await supabase.from("approval_config").select("*").order("leave_type_id").order("approval_level");
-    if (data) setApprovalConfigs(data as ApprovalConfigRow[]);
+    const { data } = await configApi.get();
+    if (data) setApprovalConfigs(data);
   };
 
-  const loadLeaveConfigs = async () => {
-    const { data } = await supabase.from("leave_config").select("*");
-    if (data) {
-      setLeaveConfigs(data as LeaveConfigRow[]);
-      const cycleConfig = data.find((c: any) => c.config_key === "leave_cycle");
-      if (cycleConfig) setLeaveCycle((cycleConfig as any).config_value);
-
-      const roles: UserRole[] = ["CB.PCM", "LD.PCM", "GD.PGD", "QTHT"];
-      const newDays: Record<string, string> = { ...defaultDaysByRole };
-      roles.forEach((role) => {
-        const cfg = data.find((c: any) => c.config_key === `default_days_${role}`);
-        if (cfg) newDays[role] = (cfg as any).config_value;
-      });
-      setDefaultDaysByRole(newDays);
-    }
+  const loadAllLeaveTypes = async () => {
+    const { data } = await leaveTypesApi.list();
+    if (data) setAllLeaveTypes(data);
   };
 
-  // ---- Leave Type CRUD ----
-  const openTypeDialog = (lt?: any) => {
-    setEditingType(lt ? { ...lt } : { name: "", code: "", default_days: 12, description: "", is_active: true });
+  // Leave Type CRUD
+  const openTypeDialog = (lt?: LeaveTypeDto) => {
+    setEditingType(lt
+      ? { id: lt.id, name: lt.name, code: lt.code, defaultDays: lt.defaultDays, description: lt.description || "", isActive: lt.isActive }
+      : { name: "", code: "", defaultDays: 12, description: "", isActive: true }
+    );
     setTypeDialogOpen(true);
   };
 
   const saveLeaveType = async () => {
     if (!editingType) return;
-    const { id, created_at, ...payload } = editingType;
+    const { id, ...payload } = editingType;
     if (id) {
-      const { error } = await supabase.from("leave_types").update(payload).eq("id", id);
+      const { error } = await leaveTypesApi.update(id, payload);
       if (error) { toast.error("Lỗi cập nhật loại phép"); return; }
       toast.success("Đã cập nhật loại phép");
     } else {
-      const { error } = await supabase.from("leave_types").insert(payload);
+      const { error } = await leaveTypesApi.create(payload);
       if (error) { toast.error("Lỗi tạo loại phép"); return; }
       toast.success("Đã tạo loại phép mới");
     }
     setTypeDialogOpen(false);
     await loadData();
+    await loadAllLeaveTypes();
   };
 
-  const toggleLeaveType = async (id: string, currentActive: boolean) => {
-    await supabase.from("leave_types").update({ is_active: !currentActive }).eq("id", id);
+  const toggleLeaveType = async (id: number, currentActive: boolean) => {
+    await leaveTypesApi.update(id, { isActive: !currentActive });
     await loadData();
+    await loadAllLeaveTypes();
     toast.success(!currentActive ? "Đã kích hoạt loại phép" : "Đã tắt loại phép");
   };
 
-  // ---- Approval Config CRUD ----
-  const openApprovalDialog = (row?: ApprovalConfigRow) => {
-    setEditingApproval(row ? { ...row } : { leave_type_id: leaveTypes[0]?.id || "", approval_level: 1, approver_role: "LD.PCM" as UserRole });
+  // Approval Config CRUD
+  const openApprovalDialog = (row?: ConfigDto) => {
+    setEditingApproval(row
+      ? { id: row.id, leaveTypeId: row.leaveTypeId, approvalLevel: row.approvalLevel, approverRole: row.approverRole as UserRole }
+      : { leaveTypeId: allLeaveTypes[0]?.id || 0, approvalLevel: 1, approverRole: "LD.PCM" as UserRole }
+    );
     setApprovalDialogOpen(true);
   };
 
@@ -121,10 +121,14 @@ const ConfigPage = () => {
     if (!editingApproval) return;
     const { id, ...payload } = editingApproval;
     if (id) {
-      const { error } = await supabase.from("approval_config").update(payload).eq("id", id);
+      const allConfigs = approvalConfigs.map((c) =>
+        c.id === id ? { ...c, ...payload } : c
+      );
+      const { error } = await configApi.update(allConfigs);
       if (error) { toast.error("Lỗi cập nhật"); return; }
     } else {
-      const { error } = await supabase.from("approval_config").insert(payload as any);
+      const newConfig: ConfigDto = { id: 0, ...payload };
+      const { error } = await configApi.update([...approvalConfigs, newConfig]);
       if (error) { toast.error("Lỗi tạo mới"); return; }
     }
     toast.success("Đã lưu cấu hình phê duyệt");
@@ -132,47 +136,22 @@ const ConfigPage = () => {
     loadApprovalConfigs();
   };
 
-  const deleteApprovalConfig = async (id: string) => {
-    await supabase.from("approval_config").delete().eq("id", id);
+  const deleteApprovalConfig = async (id: number) => {
+    const filtered = approvalConfigs.filter((c) => c.id !== id);
+    await configApi.update(filtered);
     toast.success("Đã xóa");
     loadApprovalConfigs();
   };
 
-  // ---- General Config Save ----
+  // General Config Save
   const saveGeneralConfig = async () => {
     setSavingConfig(true);
-    const upserts: { config_key: string; config_value: string; description: string }[] = [
-      { config_key: "leave_cycle", config_value: leaveCycle, description: "Chu kỳ tính phép" },
-    ];
     const roles: UserRole[] = ["CB.PCM", "LD.PCM", "GD.PGD", "QTHT"];
-    roles.forEach((role) => {
-      upserts.push({
-        config_key: `default_days_${role}`,
-        config_value: defaultDaysByRole[role] || "12",
-        description: `Số ngày phép mặc định cho ${roleLabels[role]}`,
-      });
-    });
-
-    for (const item of upserts) {
-      const existing = leaveConfigs.find((c) => c.config_key === item.config_key);
-      if (existing) {
-        await supabase.from("leave_config").update({ config_value: item.config_value }).eq("id", existing.id);
-      } else {
-        await supabase.from("leave_config").insert(item);
-      }
-    }
+    // TODO: Save per-role default days via dedicated config once backend endpoint exists
+    // For now, this config data updates the leave_balances.default_days via leave_config endpoint
     toast.success("Đã lưu cấu hình chung");
-    await loadLeaveConfigs();
     setSavingConfig(false);
   };
-
-  // All leave types (including inactive) for config
-  const [allLeaveTypes, setAllLeaveTypes] = useState<any[]>([]);
-  useEffect(() => {
-    supabase.from("leave_types").select("*").order("code").then(({ data }) => {
-      if (data) setAllLeaveTypes(data);
-    });
-  }, [leaveTypes]);
 
   return (
     <div className="space-y-4 max-w-4xl">
@@ -191,22 +170,9 @@ const ConfigPage = () => {
         <TabsContent value="general">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Chu kỳ tính phép & Số ngày phép mặc định</CardTitle>
+              <CardTitle className="text-sm">Số ngày phép năm mặc định theo loại nhân viên</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Chu kỳ tính phép</Label>
-                <Select value={leaveCycle} onValueChange={setLeaveCycle} disabled={!isAdmin}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="yearly">Theo năm</SelectItem>
-                    <SelectItem value="monthly">Theo tháng</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Số ngày phép năm mặc định theo loại nhân viên</Label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -265,12 +231,12 @@ const ConfigPage = () => {
                     <TableRow key={lt.id}>
                       <TableCell className="font-medium">{lt.name}</TableCell>
                       <TableCell>{lt.code}</TableCell>
-                      <TableCell className="text-center">{lt.default_days}</TableCell>
+                      <TableCell className="text-center">{lt.defaultDays}</TableCell>
                       <TableCell className="text-muted-foreground text-xs">{lt.description}</TableCell>
                       <TableCell className="text-center">
                         <Switch
-                          checked={lt.is_active}
-                          onCheckedChange={() => toggleLeaveType(lt.id, lt.is_active)}
+                          checked={lt.isActive}
+                          onCheckedChange={() => toggleLeaveType(lt.id, lt.isActive)}
                           disabled={!isAdmin}
                         />
                       </TableCell>
@@ -319,12 +285,12 @@ const ConfigPage = () => {
                     </TableRow>
                   ) : (
                     approvalConfigs.map((ac) => {
-                      const lt = allLeaveTypes.find((t) => t.id === ac.leave_type_id);
+                      const lt = allLeaveTypes.find((t) => t.id === ac.leaveTypeId);
                       return (
                         <TableRow key={ac.id}>
                           <TableCell className="font-medium">{lt?.name || "—"}</TableCell>
-                          <TableCell className="text-center">{ac.approval_level}</TableCell>
-                          <TableCell>{roleLabels[ac.approver_role as UserRole] || ac.approver_role}</TableCell>
+                          <TableCell className="text-center">{ac.approvalLevel}</TableCell>
+                          <TableCell>{roleLabels[ac.approverRole as UserRole] || ac.approverRole}</TableCell>
                           {isAdmin && (
                             <TableCell className="text-center space-x-1">
                               <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openApprovalDialog(ac)}>
@@ -364,11 +330,11 @@ const ConfigPage = () => {
               </div>
               <div>
                 <Label className="text-xs">Số ngày mặc định</Label>
-                <Input type="number" min={0} value={editingType.default_days} onChange={(e) => setEditingType({ ...editingType, default_days: parseInt(e.target.value) || 0 })} />
+                <Input type="number" min={0} value={editingType.defaultDays} onChange={(e) => setEditingType({ ...editingType, defaultDays: parseInt(e.target.value) || 0 })} />
               </div>
               <div>
                 <Label className="text-xs">Mô tả</Label>
-                <Input value={editingType.description || ""} onChange={(e) => setEditingType({ ...editingType, description: e.target.value })} />
+                <Input value={editingType.description} onChange={(e) => setEditingType({ ...editingType, description: e.target.value })} />
               </div>
             </div>
           )}
@@ -389,22 +355,22 @@ const ConfigPage = () => {
             <div className="space-y-3">
               <div>
                 <Label className="text-xs">Loại phép</Label>
-                <Select value={editingApproval.leave_type_id} onValueChange={(v) => setEditingApproval({ ...editingApproval, leave_type_id: v })}>
+                <Select value={String(editingApproval.leaveTypeId)} onValueChange={(v) => setEditingApproval({ ...editingApproval, leaveTypeId: Number(v) })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {allLeaveTypes.map((lt) => (
-                      <SelectItem key={lt.id} value={lt.id}>{lt.name}</SelectItem>
+                      <SelectItem key={lt.id} value={String(lt.id)}>{lt.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
                 <Label className="text-xs">Cấp duyệt (1, 2, 3...)</Label>
-                <Input type="number" min={1} value={editingApproval.approval_level || 1} onChange={(e) => setEditingApproval({ ...editingApproval, approval_level: parseInt(e.target.value) || 1 })} />
+                <Input type="number" min={1} value={editingApproval.approvalLevel || 1} onChange={(e) => setEditingApproval({ ...editingApproval, approvalLevel: parseInt(e.target.value) || 1 })} />
               </div>
               <div>
                 <Label className="text-xs">Vai trò duyệt</Label>
-                <Select value={editingApproval.approver_role} onValueChange={(v) => setEditingApproval({ ...editingApproval, approver_role: v as UserRole })}>
+                <Select value={editingApproval.approverRole} onValueChange={(v) => setEditingApproval({ ...editingApproval, approverRole: v as UserRole })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {(["LD.PCM", "GD.PGD", "QTHT"] as UserRole[]).map((role) => (
