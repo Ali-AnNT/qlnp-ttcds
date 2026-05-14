@@ -41,8 +41,8 @@ source:
 
 | Phase | Day | Nội dung | Status |
 |-------|-----|----------|--------|
-| [01](phase-01-day1-auth-me-endpoint.md) | Day 1 (14/5) | Auth/Me endpoint + CSP + smoke test | pending |
-| [02](phase-02-day2-leave-types.md) | Day 2 (15/5) | LeaveTypes slice (4 endpoints) | pending |
+| [01](phase-01-day1-auth-me-endpoint.md) | Day 1 (14/5) | Auth/Me endpoint + CSP + smoke test | completed |
+| [02](phase-02-day2-leave-types.md) | Day 2 (15/5) | LeaveTypes slice (4 endpoints) | completed |
 | [03](phase-03-day3-leave-requests-p1.md) | Day 3 (18/5) | LeaveRequests List/Create/Update | pending |
 | [04](phase-04-day4-leave-requests-p2.md) | Day 4 (19/5) | LeaveRequests Approve/Reject/Cancel | pending |
 | [05](phase-05-day5-balances-config.md) | Day 5 (20/5) | LeaveBalances + Config slices | pending |

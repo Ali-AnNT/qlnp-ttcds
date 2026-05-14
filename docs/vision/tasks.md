@@ -63,11 +63,11 @@ source:
 
 ### Day 2 (2026-05-15, Thứ 6) — LeaveTypes slice (4 endpoints)
 
-- [ ] `Features/LeaveTypes/List/ListLeaveTypesEndpoint.cs` — GET `/api/leave-types`
-- [ ] `Features/LeaveTypes/Create/CreateLeaveTypeEndpoint.cs` — POST, FluentValidation (Name, Code unique, DefaultDays > 0), role guard QTHT
-- [ ] `Features/LeaveTypes/Update/UpdateLeaveTypeEndpoint.cs` — PUT `/api/leave-types/{id}`
-- [ ] `Features/LeaveTypes/Delete/DeleteLeaveTypeEndpoint.cs` — DELETE, chặn xóa nếu có `LeaveRequests` tham chiếu
-- [ ] Commit
+- [x] `Features/LeaveTypes/List/ListLeaveTypesEndpoint.cs` — GET `/api/leave-types`
+- [x] `Features/LeaveTypes/Create/CreateLeaveTypeEndpoint.cs` — POST, FluentValidation (Name, Code unique, DefaultDays > 0), role guard QTHT
+- [x] `Features/LeaveTypes/Update/UpdateLeaveTypeEndpoint.cs` — PUT `/api/leave-types/{id}`
+- [x] `Features/LeaveTypes/Delete/DeleteLeaveTypeEndpoint.cs` — DELETE, chặn xóa nếu có `LeaveRequests` tham chiếu
+- [x] Commit
 
 ### Day 3 (2026-05-18, Thứ 2) — LeaveRequests P1 (List/Create/Update)
 

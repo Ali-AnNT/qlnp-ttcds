@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Day 1 — Auth/Me Endpoint + CSP + Smoke Test"
-status: pending
+status: completed
 priority: P0
 effort: "4-5h"
 dependencies: []

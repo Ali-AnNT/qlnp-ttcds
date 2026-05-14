@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Code Review — LeaveTypes Vertical Slice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Light (default) ── */
+:root {
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'Fira Code', 'SF Mono', Consolas, monospace;
+  --bg: #f0f4f8;
+  --surface: #ffffff;
+  --surface2: #e8eef4;
+  --surface-elevated: #f8fbff;
+  --border: rgba(30, 60, 100, 0.1);
+  --border-bright: rgba(30, 60, 100, 0.2);
+  --text: #1a2a3a;
+  --text-dim: #5a7090;
+  --text-bright: #0d1621;
+  --accent: #1a5fa8;
+  --accent-dim: rgba(26, 95, 168, 0.08);
+  --node-a: #1a5fa8;
+  --node-a-dim: rgba(26, 95, 168, 0.08);
+  --node-b: #0d7a3e;
+  --node-b-dim: rgba(13, 122, 62, 0.08);
+  --node-c: #b45309;
+  --node-c-dim: rgba(180, 83, 9, 0.08);
+  --green: #0d7a3e;
+  --green-dim: rgba(13, 122, 62, 0.08);
+  --red: #b91c1c;
+  --red-dim: rgba(185, 28, 28, 0.08);
+  --amber: #b45309;
+  --amber-dim: rgba(180, 83, 9, 0.08);
+  --teal: #0f766e;
+  --teal-dim: rgba(15, 118, 110, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1421;
+    --surface: #111d2e;
+    --surface2: #162438;
+    --surface-elevated: #1a2d42;
+    --border: rgba(100, 160, 220, 0.12);
+    --border-bright: rgba(100, 160, 220, 0.22);
+    --text: #c8d8e8;
+    --text-dim: #607080;
+    --text-bright: #e8f0f8;
+    --accent: #4a90d9;
+    --accent-dim: rgba(74, 144, 217, 0.12);
+    --node-a: #4a90d9;
+    --node-a-dim: rgba(74, 144, 217, 0.12);
+    --node-b: #4ade80;
+    --node-b-dim: rgba(74, 222, 128, 0.1);
+    --node-c: #fbbf24;
+    --node-c-dim: rgba(251, 191, 36, 0.1);
+    --green: #4ade80;
+    --green-dim: rgba(74, 222, 128, 0.1);
+    --red: #fca5a5;
+    --red-dim: rgba(252, 165, 165, 0.1);
+    --amber: #fbbf24;
+    --amber-dim: rgba(251, 191, 36, 0.1);
+    --teal: #5eead4;
+    --teal-dim: rgba(94, 234, 212, 0.1);
+  }
+}
+
+[data-theme="dark"] {
+  --bg: #0d1421;
+  --surface: #111d2e;
+  --surface2: #162438;
+  --surface-elevated: #1a2d42;
+  --border: rgba(100, 160, 220, 0.12);
+  --border-bright: rgba(100, 160, 220, 0.22);
+  --text: #c8d8e8;
+  --text-dim: #607080;
+  --text-bright: #e8f0f8;
+  --accent: #4a90d9;
+  --accent-dim: rgba(74, 144, 217, 0.12);
+  --node-a: #4a90d9;
+  --node-a-dim: rgba(74, 144, 217, 0.12);
+  --node-b: #4ade80;
+  --node-b-dim: rgba(74, 222, 128, 0.1);
+  --node-c: #fbbf24;
+  --node-c-dim: rgba(251, 191, 36, 0.1);
+  --green: #4ade80;
+  --green-dim: rgba(74, 222, 128, 0.1);
+  --red: #fca5a5;
+  --red-dim: rgba(252, 165, 165, 0.1);
+  --amber: #fbbf24;
+  --amber-dim: rgba(251, 191, 36, 0.1);
+  --teal: #5eead4;
+  --teal-dim: rgba(94, 234, 212, 0.1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text);
+  background-color: var(--bg);
+  background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+  background-size: 24px 24px;
+  padding: 0 0 80px 0;
+  overflow-wrap: break-word;
+}
+
+/* ── Theme Toggle ── */
+.theme-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 300;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--border-bright);
+  background: var(--surface);
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: background 0.15s, color 0.15s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.theme-toggle:hover { background: var(--surface2); color: var(--text); }
+
+/* ── Page Header ── */
+.page-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 48px 40px 36px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.page-header__eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--accent);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.page-header__eyebrow::before {
+  content: '';
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.page-header__title {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-bright);
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+
+.page-header__sub {
+  font-size: 15px;
+  color: var(--text-dim);
+}
+
+/* ── Layout ── */
+.main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+.section {
+  margin-top: 40px;
+}
+
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-label::before {
+  content: '';
+  display: inline-block;
+  width: 3px; height: 14px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+/* ── Cards ── */
+.ve-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 20px;
+  position: relative;
+  min-width: 0;
+}
+.ve-card--elevated {
+  background: var(--surface-elevated);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+}
+.ve-card--hero {
+  background: color-mix(in srgb, var(--surface) 92%, var(--accent) 8%);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04);
+  border-color: color-mix(in srgb, var(--border) 50%, var(--accent) 50%);
+}
+.ve-card--accent-green { border-left: 3px solid var(--green); }
+.ve-card--accent-red   { border-left: 3px solid var(--red); }
+.ve-card--accent-amber { border-left: 3px solid var(--amber); }
+.ve-card--accent-blue  { border-left: 3px solid var(--accent); }
+
+/* ── KPI Row ── */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.kpi-card {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  animation: fadeScale 0.35s ease-out both;
+  animation-delay: calc(var(--i, 0) * 0.07s);
+}
+
+.kpi-card__value {
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-bright);
+}
+.kpi-card__value--green { color: var(--green); }
+.kpi-card__value--red   { color: var(--red); }
+.kpi-card__value--amber { color: var(--amber); }
+.kpi-card__value--blue  { color: var(--accent); }
+
+.kpi-card__label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-dim);
+  margin-top: 6px;
+}
+
+@keyframes fadeScale {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Two column grid ── */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.two-col > * { min-width: 0; }
+
+.three-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+.three-col > * { min-width: 0; }
+
+/* ── Review cards ── */
+.review-card__header {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.review-card__header--good   { color: var(--green); }
+.review-card__header--issue  { color: var(--amber); }
+.review-card__header--bad    { color: var(--red); }
+.review-card__header--query  { color: var(--accent); }
+
+.review-card__header::before {
+  content: '';
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.review-item {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.review-item:last-child { border-bottom: none; }
+
+.review-item code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: var(--accent-dim);
+  color: var(--accent);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+/* ── File list ── */
+.file-list {
+  list-style: none;
+  padding: 0;
+}
+.file-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+.file-list li:last-child { border-bottom: none; }
+
+.file-list__path {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+  word-break: break-all;
+}
+
+.file-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.file-badge--new    { background: var(--green-dim); color: var(--green); }
+.file-badge--mod    { background: var(--amber-dim); color: var(--amber); }
+.file-badge--plan   { background: var(--teal-dim);  color: var(--teal); }
+
+/* ── Status badges ── */
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+.status--good   { background: var(--green-dim); color: var(--green); }
+.status--warn   { background: var(--amber-dim); color: var(--amber); }
+.status--issue  { background: var(--red-dim);   color: var(--red); }
+.status--info   { background: var(--accent-dim); color: var(--accent); }
+
+/* ── Mermaid ── */
+.diagram-shell { position: relative; }
+.diagram-shell__hint {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  opacity: 0.7;
+}
+
+.mermaid-wrap {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px 24px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 360px;
+  cursor: grab;
+}
+.mermaid-wrap.is-panning { cursor: grabbing; user-select: none; }
+
+.zoom-controls {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 2px;
+  z-index: 10;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px;
+}
+.zoom-controls button {
+  width: 28px; height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+.zoom-controls button:hover { background: var(--border); color: var(--text); }
+.zoom-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  padding: 0 6px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+}
+
+.mermaid-viewport {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+}
+.mermaid-canvas { position: absolute; top: 0; left: 0; }
+
+/* ── Code block ── */
+.code-block {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 320px;
+  overflow-y: auto;
+  color: var(--text);
+}
+
+/* ── Separator ── */
+.sep { border: none; border-top: 1px solid var(--border); margin: 36px 0; }
+
+/* ── Nav TOC ── */
+.toc {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 32px;
+}
+.toc__title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+.toc a {
+  display: block;
+  font-size: 13px;
+  color: var(--accent);
+  text-decoration: none;
+  padding: 3px 0;
+  transition: color 0.15s;
+}
+.toc a:hover { color: var(--text-bright); }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .page-header { padding: 32px 20px 24px; }
+  .main { padding: 0 20px; }
+  .two-col, .three-col { grid-template-columns: 1fr; }
+  .kpi-row { grid-template-columns: 1fr 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" id="themeToggle" title="Toggle theme" aria-label="Toggle light/dark theme"></button>
+
+<!-- Header -->
+<div style="background: var(--surface); border-bottom: 1px solid var(--border);">
+  <div class="page-header" style="padding-bottom: 32px;">
+    <div class="page-header__eyebrow">Code Review · Branch rebuid-bundle · 2026-05-14</div>
+    <h1 class="page-header__title">LeaveTypes Vertical Slice</h1>
+    <p class="page-header__sub">Day 2 implementation: 4 CRUD endpoints với FastEndpoints + FluentValidation</p>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- TOC -->
+  <div style="margin-top: 32px;">
+    <div class="toc">
+      <div class="toc__title">Mục lục</div>
+      <a href="#kpi">KPI Dashboard</a>
+      <a href="#architecture">Kiến trúc Vertical Slice</a>
+      <a href="#files">File Map</a>
+      <a href="#review">Code Review</a>
+      <a href="#context">Re-entry Context</a>
+    </div>
+  </div>
+
+  <!-- KPI -->
+  <section class="section" id="kpi">
+    <div class="section-label">KPI Dashboard</div>
+    <div class="kpi-row">
+      <div class="kpi-card" style="--i:0">
+        <div class="kpi-card__value kpi-card__value--blue">12</div>
+        <div class="kpi-card__label">Files mới</div>
+      </div>
+      <div class="kpi-card" style="--i:1">
+        <div class="kpi-card__value kpi-card__value--green">+609</div>
+        <div class="kpi-card__label">Dòng thêm</div>
+      </div>
+      <div class="kpi-card" style="--i:2">
+        <div class="kpi-card__value kpi-card__value--red">−9</div>
+        <div class="kpi-card__label">Dòng xóa</div>
+      </div>
+      <div class="kpi-card" style="--i:3">
+        <div class="kpi-card__value" style="color: var(--teal)">4</div>
+        <div class="kpi-card__label">Endpoints</div>
+      </div>
+      <div class="kpi-card" style="--i:4">
+        <div class="kpi-card__value kpi-card__value--amber">6</div>
+        <div class="kpi-card__label">Files sửa</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Architecture diagram -->
+  <section class="section" id="architecture">
+    <div class="section-label">Kiến trúc Vertical Slice</div>
+    <div class="diagram-shell">
+      <p class="diagram-shell__hint">Ctrl/Cmd + scroll để zoom. Drag để pan.</p>
+      <div class="mermaid-wrap">
+        <div class="zoom-controls">
+          <button type="button" data-action="zoom-in" title="Zoom in">+</button>
+          <button type="button" data-action="zoom-out" title="Zoom out">&minus;</button>
+          <button type="button" data-action="zoom-fit" title="Fit">&#8634;</button>
+          <button type="button" data-action="zoom-one" title="1:1">1:1</button>
+          <span class="zoom-label">Loading...</span>
+        </div>
+        <div class="mermaid-viewport">
+          <div class="mermaid mermaid-canvas"></div>
+        </div>
+      </div>
+      <script type="text/plain" class="diagram-source">
+graph TD
+    Client["HTTP Client"]
+
+    subgraph LeaveTypes ["Features/LeaveTypes/"]
+        List["ListLeaveTypesEndpoint\nGET /api/leave-types\n(auth required)"]
+        Create["CreateLeaveTypeEndpoint\nPOST /api/leave-types\n(role: quantri)"]
+        Update["UpdateLeaveTypeEndpoint\nPUT /api/leave-types/{id}\n(role: quantri)"]
+        Delete["DeleteLeaveTypeEndpoint\nDELETE /api/leave-types/{id}\n(role: quantri)"]
+
+        CV["CreateLeaveTypeValidator\nName, Code unique, DefaultDays > 0"]
+        UV["UpdateLeaveTypeValidator\nCode unique (excl. self)"]
+        DTO["LeaveTypeDto\nrecord(Id, Name, Code, DefaultDays,\nDescription, IsActive)"]
+    end
+
+    DB[("PostgreSQL\nLeaveTypes table\n+ LeaveRequests FK")]
+    JWT["JWT Middleware\nRoleClaimType = 'Roles'"]
+
+    Client --> JWT
+    JWT --> List
+    JWT --> Create
+    JWT --> Update
+    JWT --> Delete
+    Create --> CV
+    Update --> UV
+    CV --> DB
+    UV --> DB
+    List --> DB
+    Create --> DTO
+    Update --> DTO
+    Delete -.->|"409 if hasRequests\nsoft delete otherwise"| DB
+      </script>
+    </div>
+  </section>
+
+  <!-- File Map -->
+  <section class="section" id="files">
+    <div class="section-label">File Map</div>
+    <div class="two-col">
+      <div class="ve-card">
+        <div class="review-card__header review-card__header--good">New — Feature Files (12)</div>
+        <ul class="file-list">
+          <li><span class="file-list__path">Features/LeaveTypes/LeaveTypeDto.cs</span><span class="file-badge file-badge--new">new</span></li>
+          <li><span class="file-list__path">Features/LeaveTypes/List/ListLeaveTypesEndpoint.cs</span><span class="file-badge file-badge--new">new</span></li>
+          <li><span class="file-list__path">Features/LeaveTypes/List/ListLeaveTypesResponse.cs</span><span class="file-badge file-badge--new">new</span></li>
+          <li><span class="file-list__path">Features/LeaveTypes/Create/CreateLeaveTypeEndpoint.cs</span><span class="file-badge file-badge--new">new</span></li>
+          <li><span class="file-list__path">Features/LeaveTypes/Create/CreateLeaveTypeRequest.cs</span><span class="file-badge file-badge--new">new</span></li>
+          <li><span class="file-list__path">Features/LeaveTypes/Create/CreateLeaveTypeResponse.cs</span><span class="file-badge file-badge--new">new</span></li>
+          <li><span class="file-list__path">Features/LeaveTypes/Create/CreateLeaveTypeValidator.cs</span><span class="file-badge file-badge--new">new</span></li>
+          <li><span class="file-list__path">Features/LeaveTypes/Update/UpdateLeaveTypeEndpoint.cs</span><span class="file-badge file-badge--new">new</span></li>
+          <li><span class="file-list__path">Features/LeaveTypes/Update/UpdateLeaveTypeRequest.cs</span><span class="file-badge file-badge--new">new</span></li>
+          <li><span class="file-list__path">Features/LeaveTypes/Update/UpdateLeaveTypeResponse.cs</span><span class="file-badge file-badge--new">new</span></li>
+          <li><span class="file-list__path">Features/LeaveTypes/Update/UpdateLeaveTypeValidator.cs</span><span class="file-badge file-badge--new">new</span></li>
+          <li><span class="file-list__path">Features/LeaveTypes/Delete/DeleteLeaveTypeEndpoint.cs</span><span class="file-badge file-badge--new">new</span></li>
+        </ul>
+      </div>
+      <div class="ve-card">
+        <div class="review-card__header review-card__header--issue">Modified (6)</div>
+        <ul class="file-list">
+          <li><span class="file-list__path">packages/api/Program.cs</span><span class="file-badge file-badge--mod">mod</span></li>
+          <li><span class="file-list__path">packages/api/QLNP.Api.http</span><span class="file-badge file-badge--mod">mod</span></li>
+          <li><span class="file-list__path">docs/vision/tasks.md</span><span class="file-badge file-badge--mod">mod</span></li>
+          <li><span class="file-list__path">plans/.../plan.md</span><span class="file-badge file-badge--plan">plan</span></li>
+          <li><span class="file-list__path">plans/.../phase-01-day1-auth-me-endpoint.md</span><span class="file-badge file-badge--plan">plan</span></li>
+          <li><span class="file-list__path">plans/.../phase-02-day2-leave-types.md</span><span class="file-badge file-badge--plan">plan (new)</span></li>
+        </ul>
+        <div style="margin-top: 12px;">
+          <div class="review-card__header review-card__header--query" style="margin-bottom: 8px;">Untracked</div>
+          <ul class="file-list">
+            <li><span class="file-list__path">.claude/skills/vertical-slice-fastendpoints/</span><span class="file-badge" style="background:var(--teal-dim);color:var(--teal)">skill</span></li>
+            <li><span class="file-list__path">plans/reports/code-review-260514-leave-types.md</span><span class="file-badge" style="background:var(--teal-dim);color:var(--teal)">report</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="sep">
+
+  <!-- Code Review -->
+  <section class="section" id="review">
+    <div class="section-label">Code Review</div>
+    <div class="two-col" style="margin-bottom: 20px;">
+      <!-- GOOD -->
+      <div class="ve-card ve-card--accent-green" style="animation: fadeUp 0.4s ease-out both; --i: 0">
+        <div class="review-card__header review-card__header--good">Tốt</div>
+        <div class="review-item">
+          <strong>Vertical slice thuần túy</strong> — mỗi operation có folder riêng (Create/List/Update/Delete), đúng pattern FastEndpoints.
+        </div>
+        <div class="review-item">
+          <strong>Async FluentValidation DB check</strong> — <code>MustAsync</code> trong validator check uniqueness trực tiếp qua EF Core, không cần service layer.
+        </div>
+        <div class="review-item">
+          <strong>Soft delete đúng cách</strong> — <code>IsActive = false</code> thay vì xóa cứng, check <code>LeaveRequests FK</code> trả 409 trước khi deactivate.
+        </div>
+        <div class="review-item">
+          <strong>JWT RoleClaimType fix</strong> — thêm <code>RoleClaimType = "Roles"</code> vào <code>Program.cs</code> để <code>Roles("quantri")</code> hoạt động chính xác.
+        </div>
+        <div class="review-item">
+          <strong>HTTP test file đầy đủ</strong> — có đủ happy path + error cases (DefaultDays=0, duplicate Code, 409 delete) trong <code>QLNP.Api.http</code>.
+        </div>
+      </div>
+
+      <!-- ISSUE -->
+      <div class="ve-card ve-card--accent-amber" style="animation: fadeUp 0.4s ease-out both; animation-delay: 0.07s">
+        <div class="review-card__header review-card__header--issue">Cần xem xét</div>
+        <div class="review-item">
+          <strong>List endpoint: manual auth check</strong> — <code>ListLeaveTypesEndpoint</code> dùng <code>HttpContext.User.Identity?.IsAuthenticated</code> thay vì <code>Policies()</code>/<code>Roles()</code> trong <code>Configure()</code>. Nên dùng <code>Authenticate();</code> trong Configure để nhất quán.
+        </div>
+        <div class="review-item">
+          <strong>Create: DbUpdateException rộng</strong> — bắt <code>DbUpdateException</code> chung để xử lý duplicate Code. Nên check uniqueness bằng validator trước (đã có) → exception path chỉ là fallback, nhưng message "mã có thể đã tồn tại" hơi mơ hồ.
+        </div>
+        <div class="review-item">
+          <strong>Delete: soft delete vs IsActive filter</strong> — List endpoint chỉ query <code>Where(t =&gt; t.IsActive)</code>. Sau khi delete, record vẫn tồn tại trong DB nhưng không visible. Cần đảm bảo Update endpoint cũng check IsActive khi fetch.
+        </div>
+        <div class="review-item">
+          <strong>Update: không check IsActive</strong> — <code>FindAsync([id])</code> sẽ trả về record đã bị soft-delete. Nên thêm check <code>leaveType.IsActive</code> sau FindAsync.
+        </div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <!-- BAD -->
+      <div class="ve-card ve-card--accent-red" style="animation: fadeUp 0.4s ease-out both; animation-delay: 0.14s">
+        <div class="review-card__header review-card__header--bad">Vấn đề</div>
+        <div class="review-item">
+          <strong>Thiếu unit/integration tests</strong> — không có test file nào cho LeaveTypes slice. Các edge cases (duplicate Code, FK constraint, JWT role guard) chưa được tự động hóa.
+        </div>
+        <div class="review-item">
+          <strong>Delete: không check inactive record</strong> — nếu <code>id</code> trỏ tới record đã deactivate (<code>IsActive=false</code>), endpoint trả <code>204 No Content</code> thay vì <code>404</code> hoặc <code>409</code>.
+        </div>
+      </div>
+
+      <!-- QUESTIONS -->
+      <div class="ve-card ve-card--accent-blue" style="animation: fadeUp 0.4s ease-out both; animation-delay: 0.21s">
+        <div class="review-card__header review-card__header--query">Câu hỏi</div>
+        <div class="review-item">
+          <strong>Role name case-sensitive?</strong> — <code>Roles("quantri")</code> vs JWT claim value có đúng case không? Cần verify trong token payload.
+        </div>
+        <div class="review-item">
+          <strong>List có cần phân trang?</strong> — hiện tại trả toàn bộ active records không giới hạn. Với dữ liệu nhỏ OK, nhưng cần document rõ giới hạn scope.
+        </div>
+        <div class="review-item">
+          <strong>Migration đã được tạo?</strong> — <code>LeaveType</code> entity cần migration tương ứng. Files trong diff không thấy migration mới.
+        </div>
+        <div class="review-item">
+          <strong>Description optional ở Update?</strong> — request có <code>Description?</code> nhưng entity set trực tiếp. Cần confirm overwrite với <code>null</code> là intentional.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Summary comparison -->
+  <section class="section">
+    <div class="section-label">Trạng thái theo Endpoint</div>
+    <div class="ve-card ve-card--elevated">
+      <table style="width:100%; border-collapse: collapse; font-size: 14px;">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding: 10px 12px; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); border-bottom: 2px solid var(--border-bright); background: var(--surface2); border-radius: 4px 0 0 0;">Endpoint</th>
+            <th style="text-align:left; padding: 10px 12px; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); border-bottom: 2px solid var(--border-bright); background: var(--surface2);">Auth</th>
+            <th style="text-align:left; padding: 10px 12px; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); border-bottom: 2px solid var(--border-bright); background: var(--surface2);">Validation</th>
+            <th style="text-align:left; padding: 10px 12px; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); border-bottom: 2px solid var(--border-bright); background: var(--surface2);">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding: 10px 12px; border-bottom: 1px solid var(--border);"><code style="font-family: var(--font-mono); font-size: 12px; background: var(--accent-dim); color: var(--accent); padding: 1px 5px; border-radius: 3px;">GET /api/leave-types</code></td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid var(--border);">Manual check</td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid var(--border);">—</td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid var(--border);"><span class="status status--warn">Partial</span></td>
+          </tr>
+          <tr style="background: color-mix(in srgb, var(--surface) 95%, var(--accent) 5%);">
+            <td style="padding: 10px 12px; border-bottom: 1px solid var(--border);"><code style="font-family: var(--font-mono); font-size: 12px; background: var(--accent-dim); color: var(--accent); padding: 1px 5px; border-radius: 3px;">POST /api/leave-types</code></td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid var(--border);">Roles("quantri")</td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid var(--border);">FluentValidation + async DB</td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid var(--border);"><span class="status status--good">Good</span></td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 12px; border-bottom: 1px solid var(--border);"><code style="font-family: var(--font-mono); font-size: 12px; background: var(--accent-dim); color: var(--accent); padding: 1px 5px; border-radius: 3px;">PUT /api/leave-types/{id}</code></td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid var(--border);">Roles("quantri")</td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid var(--border);">FluentValidation + ID match</td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid var(--border);"><span class="status status--warn">Minor issue</span></td>
+          </tr>
+          <tr style="background: color-mix(in srgb, var(--surface) 95%, var(--accent) 5%);">
+            <td style="padding: 10px 12px;"><code style="font-family: var(--font-mono); font-size: 12px; background: var(--accent-dim); color: var(--accent); padding: 1px 5px; border-radius: 3px;">DELETE /api/leave-types/{id}</code></td>
+            <td style="padding: 10px 12px;">Roles("quantri")</td>
+            <td style="padding: 10px 12px;">FK guard → 409</td>
+            <td style="padding: 10px 12px;"><span class="status status--warn">Minor issue</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Re-entry context -->
+  <section class="section" id="context">
+    <div class="section-label">Re-entry Context</div>
+    <div class="ve-card ve-card--hero">
+      <div class="review-card__header review-card__header--query" style="margin-bottom: 14px;">Bước tiếp theo</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div>
+          <div style="font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 8px;">Fix cần thiết trước commit</div>
+          <ul style="list-style: none; padding: 0; font-size: 14px; line-height: 1.8;">
+            <li style="padding-left: 14px; position: relative;">
+              <span style="position: absolute; left: 0; color: var(--amber);">›</span>
+              Thêm <code style="font-family: var(--font-mono); font-size: 12px; background: var(--accent-dim); color: var(--accent); padding: 1px 5px; border-radius: 3px;">Authenticate();</code> vào <code style="font-family: var(--font-mono); font-size: 12px; background: var(--accent-dim); color: var(--accent); padding: 1px 5px; border-radius: 3px;">ListLeaveTypesEndpoint.Configure()</code>
+            </li>
+            <li style="padding-left: 14px; position: relative;">
+              <span style="position: absolute; left: 0; color: var(--amber);">›</span>
+              Check <code style="font-family: var(--font-mono); font-size: 12px; background: var(--accent-dim); color: var(--accent); padding: 1px 5px; border-radius: 3px;">leaveType.IsActive</code> trong Update endpoint
+            </li>
+            <li style="padding-left: 14px; position: relative;">
+              <span style="position: absolute; left: 0; color: var(--amber);">›</span>
+              Check <code style="font-family: var(--font-mono); font-size: 12px; background: var(--accent-dim); color: var(--accent); padding: 1px 5px; border-radius: 3px;">IsActive</code> trong Delete (soft-deleted record → 404)
+            </li>
+          </ul>
+        </div>
+        <div>
+          <div style="font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 8px;">Day 3 plan</div>
+          <ul style="list-style: none; padding: 0; font-size: 14px; line-height: 1.8;">
+            <li style="padding-left: 14px; position: relative;">
+              <span style="position: absolute; left: 0; color: var(--teal);">›</span>
+              LeaveRequests P1: List/Create/Update (2026-05-18)
+            </li>
+            <li style="padding-left: 14px; position: relative;">
+              <span style="position: absolute; left: 0; color: var(--teal);">›</span>
+              Viết integration tests cho LeaveTypes slice
+            </li>
+            <li style="padding-left: 14px; position: relative;">
+              <span style="position: absolute; left: 0; color: var(--teal);">›</span>
+              Verify migration cho <code style="font-family: var(--font-mono); font-size: 12px; background: var(--accent-dim); color: var(--accent); padding: 1px 5px; border-radius: 3px;">LeaveType</code> entity đã apply
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /main -->
+
+<script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+const isDark = () => document.documentElement.getAttribute('data-theme') === 'dark'
+  || (!document.documentElement.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'base',
+  look: 'classic',
+  themeVariables: {
+    primaryColor: isDark() ? '#1a2d42' : '#dbeafe',
+    primaryBorderColor: isDark() ? '#4a90d9' : '#1a5fa8',
+    primaryTextColor: isDark() ? '#e8f0f8' : '#0d1621',
+    secondaryColor: isDark() ? '#162438' : '#f0fdf4',
+    secondaryBorderColor: isDark() ? '#4ade80' : '#0d7a3e',
+    secondaryTextColor: isDark() ? '#e8f0f8' : '#0d1621',
+    tertiaryColor: isDark() ? '#2a1f10' : '#fef3c7',
+    tertiaryBorderColor: isDark() ? '#fbbf24' : '#b45309',
+    lineColor: isDark() ? '#607080' : '#94a3b8',
+    fontSize: '15px',
+    fontFamily: 'Fira Code, SF Mono, monospace',
+  }
+});
+
+const config = { minZoom: 0.3, maxZoom: 3, fitPadding: 24 };
+const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+let activeDrag = null;
+
+window.addEventListener('mousemove', e => activeDrag?.onMove(e));
+window.addEventListener('mouseup', () => { activeDrag?.onEnd(); activeDrag = null; });
+
+function initDiagram(shell) {
+  const wrap = shell.querySelector('.mermaid-wrap');
+  const viewport = shell.querySelector('.mermaid-viewport');
+  const canvas = shell.querySelector('.mermaid-canvas');
+  const source = shell.querySelector('.diagram-source');
+  const label = shell.querySelector('.zoom-label');
+  if (!wrap || !viewport || !canvas || !source || !label) return;
+
+  let zoom = 1, panX = 0, panY = 0;
+
+  function setLabel(z) { label.textContent = Math.round(z * 100) + '%'; }
+
+  function applyTransform() {
+    canvas.style.transform = `translate(${panX}px, ${panY}px)`;
+    setLabel(zoom);
+  }
+
+  function fitDiagram() {
+    const svg = canvas.querySelector('svg');
+    if (!svg) return;
+    const vw = viewport.clientWidth || 600;
+    const vh = viewport.clientHeight || 300;
+    const sw = svg.getBoundingClientRect().width / zoom;
+    const sh = svg.getBoundingClientRect().height / zoom;
+    const scale = Math.min(
+      (vw - config.fitPadding * 2) / sw,
+      (vh - config.fitPadding * 2) / sh,
+      1
+    );
+    zoom = clamp(scale, config.minZoom, config.maxZoom);
+    svg.style.width = (sw * zoom) + 'px';
+    svg.style.height = (sh * zoom) + 'px';
+    panX = (vw - sw * zoom) / 2;
+    panY = (vh - sh * zoom) / 2;
+    applyTransform();
+  }
+
+  async function render() {
+    const code = source.textContent.trim();
+    if (!code) return;
+    const id = 'diag-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+    try {
+      const { svg } = await mermaid.render(id, code);
+      canvas.innerHTML = svg;
+      const svgEl = canvas.querySelector('svg');
+      if (svgEl) {
+        svgEl.style.display = 'block';
+        svgEl.removeAttribute('width');
+        svgEl.removeAttribute('height');
+      }
+      setTimeout(fitDiagram, 100);
+    } catch(err) {
+      label.textContent = 'Error';
+      console.error(err);
+    }
+  }
+
+  // Zoom controls
+  wrap.querySelectorAll('[data-action]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const svg = canvas.querySelector('svg');
+      if (!svg) return;
+      const action = btn.dataset.action;
+      if (action === 'zoom-in') {
+        zoom = clamp(zoom * 1.25, config.minZoom, config.maxZoom);
+        const w = parseFloat(svg.style.width) || 400;
+        const h = parseFloat(svg.style.height) || 300;
+        svg.style.width = (w * 1.25) + 'px';
+        svg.style.height = (h * 1.25) + 'px';
+      } else if (action === 'zoom-out') {
+        zoom = clamp(zoom * 0.8, config.minZoom, config.maxZoom);
+        const w = parseFloat(svg.style.width) || 400;
+        const h = parseFloat(svg.style.height) || 300;
+        svg.style.width = (w * 0.8) + 'px';
+        svg.style.height = (h * 0.8) + 'px';
+      } else if (action === 'zoom-fit') {
+        fitDiagram(); return;
+      } else if (action === 'zoom-one') {
+        zoom = 1;
+        const origW = parseFloat(svg.getAttribute('data-ow') || '600');
+        const origH = parseFloat(svg.getAttribute('data-oh') || '400');
+        svg.style.width = origW + 'px';
+        svg.style.height = origH + 'px';
+      }
+      applyTransform();
+    });
+  });
+
+  // Drag to pan
+  wrap.addEventListener('mousedown', e => {
+    if (e.target.closest('.zoom-controls')) return;
+    const startX = e.clientX - panX;
+    const startY = e.clientY - panY;
+    wrap.classList.add('is-panning');
+    activeDrag = {
+      onMove(ev) { panX = ev.clientX - startX; panY = ev.clientY - startY; applyTransform(); },
+      onEnd() { wrap.classList.remove('is-panning'); }
+    };
+  });
+
+  // Wheel zoom
+  wrap.addEventListener('wheel', e => {
+    if (!e.ctrlKey && !e.metaKey) return;
+    e.preventDefault();
+    const svg = canvas.querySelector('svg');
+    if (!svg) return;
+    const factor = e.deltaY < 0 ? 1.15 : 0.87;
+    zoom = clamp(zoom * factor, config.minZoom, config.maxZoom);
+    const w = parseFloat(svg.style.width) || 400;
+    const h = parseFloat(svg.style.height) || 300;
+    svg.style.width = (w * factor) + 'px';
+    svg.style.height = (h * factor) + 'px';
+    applyTransform();
+  }, { passive: false });
+
+  render();
+}
+
+document.querySelectorAll('.diagram-shell').forEach(initDiagram);
+</script>
+
+<script>
+(function() {
+  var toggle = document.getElementById('themeToggle');
+  var saved = localStorage.getItem('theme');
+  var initial = saved || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  if (saved) document.documentElement.setAttribute('data-theme', initial);
+  toggle.textContent = initial === 'dark' ? '☀' : '☾';
+  toggle.addEventListener('click', function() {
+    var current = document.documentElement.getAttribute('data-theme')
+      || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    var next = current === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    toggle.textContent = next === 'dark' ? '☀' : '☾';
+  });
+})();
+</script>
+</body>
+</html>
