@@ -1,126 +1,88 @@
 ---
-title: .NET 9 FastEndpoints + Vertical Slice Architecture Migration
-status: pending
+title: .NET 9 FastEndpoints + EF Core Migration Rebaseline
+status: in_progress
 priority: P0
-effort: xlarge
+effort: large
 branch: rebuid-bundle
-tags: [dotnet, fastendpoints, vertical-slice, sqlserver, dapper]
+tags: [dotnet, fastendpoints, vertical-slice, sqlserver, efcore, gateway-auth]
 created: 2026-05-13
-updated: 2026-05-13
+updated: 2026-05-14
+progress: 45
 source:
-  - plans/reports/brainstorm-260512-0906-standalone-dotnet-migration.md
   - docs/vision/brd.md
   - docs/vision/srs.md
+  - docs/project-roadmap.md
+  - plans/reports/scout-260514-0352-brd-and-srs.md
+  - plans/260513-0554-efcore-scaffold-migration/plan.md
 ---
+
+# .NET 9 FastEndpoints + EF Core Migration Rebaseline
 
 ## Overview
 
-Refactor QLNP từ Supabase sang .NET 9 + FastEndpoints + Vertical Slice Architecture + SQL Server. Hỗ trợ standalone login + embed mode (iframe) với dual-issuer JWT. Giữ nguyên UI/UX, refactor dần frontend.
+Rebaseline old Dapper/standalone-login plan to current architecture: .NET 9, FastEndpoints, EF Core 9, SQL Server, gateway auth, React frontend. Foundation and frontend migration mostly done. Active blocker: backend endpoint `.cs` files.
 
-**Timeline:** 10 working days (2 tuần)
+**Timeline:** 2026-05-13 to 2026-05-21. **Progress:** 45% overall; endpoints 0%.
 
-**Architecture Pattern:** Vertical Slice — code tổ chức theo feature (Login, CreateLeave, ApproveLeave...) thay vì layer ngang (Controllers/Services/Repositories). Mỗi slice là một folder chứa Endpoint + Request + Response + Validator, tự quản lý data access qua Dapper. Không tách Service/Repository layer riêng (YAGNI) — logic nghiệp vụ nằm trong endpoint handler.
+## Current State
 
-**API Framework:** FastEndpoints — REPR pattern (Request-EndPoint-Response), mỗi endpoint là class kế thừa `Endpoint<TRequest, TResponse>`. Pipeline: `Validator → PreProcessor → HandleAsync() → PostProcessor → Response`.
+| Area | Status |
+|------|--------|
+| API scaffold, EF Core, entities, migration | Done |
+| `USER_MASTER`, `DM_DONVI` system table scaffold | Done |
+| CurrentUser middleware + VSA folders | Done, tests deferred to Day 12 |
+| Frontend API/Auth/store/pages | Code done, DTO alignment + verification blocked by backend |
+| Backend endpoints | **0% — no .cs files exist** |
+| Tests + docs + deployment validation | Planned |
 
-**File naming convention (C#):** PascalCase cho tất cả C# files: `LoginEndpoint.cs`, `CreateLeaveRequestEndpoint.cs`. Mỗi class 1 file riêng.
+## Blockers
 
-## Daily Progress
+| Blocker | Impact | Resolution |
+|---------|--------|------------|
+| .NET 9 SDK not installed (only 8.0.126) | Cannot build/run backend | Install `dotnet-sdk-9.0` |
+| No endpoint files under `Features/` | Days 09-14 cannot proceed | Implement Day 09 endpoints first |
+| Days 05-08 verification items | 10 unchecked items blocked by real API | Resolve after Days 09-10 |
 
-| Day | Phase | VSA Folders / Scope | Status |
-|-----|-------|---------------------|--------|
-| 1 | Setup + DB | Scaffold `Features/` + `Auth/` + `Data/`, SQL Server schema, Dapper, FastEndpoints | [ ] |
-| 2 | Auth Slices | `Features/Auth/Login/`, `Exchange/`, `Me/` — dual-issuer JWT (HS256+RS256), BCrypt, JwtMiddleware | [ ] |
-| 3 | Employee + Dept Slices | `Features/Employees/{List,GetById,Create,Update,Delete}/`, tương tự `Departments/` | [ ] |
-| 4 | Leave Slices | `Features/LeaveTypes/{List,Create,Update,Delete}/`, `LeaveRequests/{List,Create,Update,Approve,Reject,Cancel}/`, `LeaveBalances/{List,My}/` | [ ] |
-| 5 | Config + Seed | `Features/Config/{Get,Update,GetGeneral}/`, Health, seed data, password migration | [ ] |
-| 6 | Frontend API Layer | Fetch wrapper + 6 API modules, `exchangeToken()` cho embed | [ ] |
-| 7 | Auth + Store | AuthContext JWT (standalone + exchange), refactor Zustand → API calls | [ ] |
-| 8 | Page Refactor P1 | Dashboard, Login, LeaveNew, LeaveMy, Calendar | [ ] |
-| 9 | Page Refactor P2 | Approval, Summary, Reports, Violations, Config, AppLayout | [ ] |
-| 10 | Embed Mode | Iframe detection, postMessage bridge (auth + resize), remove Supabase | [ ] |
-| 11 | Test + Docs + Review | Integration test, docs update, final review, PR | [ ] |
+## Corrected Decisions
 
-## Key Decisions
+- Use EF Core `AppDbContext`, not Dapper.
+- Use gateway/SSO current-user headers, not standalone password login.
+- Do not create employee/department CRUD. Reference `USER_MASTER` and `DM_DONVI`.
+- Keep endpoint logic in VSA folders under `packages/api/Features`.
+- Keep frontend calls in `packages/web/src/api/*.api.ts`.
 
-| Decision | Rationale |
-|----------|-----------|
-| **FastEndpoints** thay vì Minimal API | Mỗi endpoint là 1 class (REPR) → dễ test, pipeline rõ ràng, FluentValidation tích hợp sẵn |
-| **Vertical Slice Architecture** thay vì N-tier | Code theo feature, không theo layer kỹ thuật. Thêm/sửa feature = làm trong 1 folder. Giảm coupling, tăng cohesion |
-| **Dual-issuer JWT** (own HS256 + host RS256) | BE tự xử lý cả 2 chế độ auth. Host gửi JWT qua postMessage → exchange token. Không phụ thuộc gateway |
-| Dapper (không EF Core) | SQL thuần, kiểm soát hiệu năng. Phù hợp team quen SQL |
-| BCrypt hash password (cost 12) | Thay thế plaintext Supabase, đạt chuẩn bảo mật |
-| SQL Server UNIQUEIDENTIFIER | Map từ PostgreSQL UUID, dùng NEWSEQUENTIALID() cho PK |
-| Frontend API layer (fetch, không SDK) | Tách biệt backend, type-safe generics, JWT intercept tự động |
+## Day Plan
 
-## VSA Feature Structure
+| Day | Date | Workstream | Status | Detail |
+|-----|------|------------|--------|--------|
+| 1 | 2026-05-13 | API scaffold + EF Core setup | Done | [day-01](./day-01-api-scaffold-ef-core-setup.md) |
+| 2 | 2026-05-13 | Scaffold system entities | Done | [day-02](./day-02-scaffold-system-tables.md) |
+| 3 | 2026-05-13 | QLNP entities + migration | Done | [day-03](./day-03-qlnp-entities-and-migration.md) |
+| 4 | 2026-05-13 | Middleware + VSA folders | Done | [day-04](./day-04-middleware-and-vsa-folders.md) |
+| 5 | 2026-05-13 | Frontend API layer | Done (DTO align pending) | [day-05](./day-05-frontend-api-layer.md) |
+| 6 | 2026-05-13 | Auth/store refactor | Done (verify pending) | [day-06](./day-06-auth-store-refactor.md) |
+| 7 | 2026-05-13 | Page refactor P1 | Done (verify pending) | [day-07](./day-07-page-refactor-p1.md) |
+| 8 | 2026-05-13 | Page refactor P2 | Done (verify pending) | [day-08](./day-08-page-refactor-p2.md) |
+| 9 | 2026-05-14 | Backend endpoints P1 | **0% — not started** | [day-09](./day-09-backend-endpoints-p1.md) |
+| 10 | 2026-05-15 | Backend endpoints P2 | Planned | [day-10](./day-10-backend-endpoints-p2.md) |
+| 11 | 2026-05-18 | Integration wiring + fixes | Planned | [day-11](./day-11-integration-wiring-bug-fixes.md) |
+| 12 | 2026-05-19 | Tests | Planned | [day-12](./day-12-tests.md) |
+| 13 | 2026-05-20 | Docs + deployment | Planned | [day-13](./day-13-documentation-deployment.md) |
+| 14 | 2026-05-21 | Release readiness | Planned | [day-14](./day-14-release-readiness.md) |
 
-```
-backend/QlnpApi/Features/
-├── Auth/
-│   ├── Login/LoginEndpoint.cs         (POST /api/auth/login)
-│   ├── Exchange/ExchangeEndpoint.cs   (POST /api/auth/exchange)
-│   └── Me/MeEndpoint.cs               (GET /api/auth/me)
-├── Employees/
-│   ├── List/ListEmployeesEndpoint.cs   (GET /api/employees)
-│   ├── Create/CreateEmployeeEndpoint.cs(POST /api/employees)
-│   ├── Update/UpdateEmployeeEndpoint.cs(PUT /api/employees/{id})
-│   └── Delete/DeleteEmployeeEndpoint.cs(DELETE /api/employees/{id})
-├── Departments/
-│   ├── List/ListDepartmentsEndpoint.cs
-│   ├── Create/CreateDepartmentEndpoint.cs
-│   ├── Update/UpdateDepartmentEndpoint.cs
-│   └── Delete/DeleteDepartmentEndpoint.cs
-├── LeaveTypes/
-│   ├── List/ListLeaveTypesEndpoint.cs
-│   ├── Create/CreateLeaveTypeEndpoint.cs
-│   ├── Update/UpdateLeaveTypeEndpoint.cs
-│   └── Delete/DeleteLeaveTypeEndpoint.cs
-├── LeaveRequests/
-│   ├── List/ListLeaveRequestsEndpoint.cs      (role-based filtering)
-│   ├── Create/CreateLeaveRequestEndpoint.cs   (overlap + balance check)
-│   ├── Update/UpdateLeaveRequestEndpoint.cs   (pending only)
-│   ├── Approve/ApproveLeaveRequestEndpoint.cs (state machine)
-│   ├── Reject/RejectLeaveRequestEndpoint.cs
-│   └── Cancel/CancelLeaveRequestEndpoint.cs
-├── LeaveBalances/
-│   ├── List/ListLeaveBalancesEndpoint.cs
-│   └── My/MyLeaveBalanceEndpoint.cs
-└── Config/
-    ├── Get/GetConfigEndpoint.cs
-    └── Update/UpdateConfigEndpoint.cs
-```
+## Critical Missing Work
 
-**Shared (cross-cutting):**
-- `Data/DbConnectionFactory.cs` — SQL Server IDbConnection
-- `Middleware/JwtMiddleware.cs` — Validate token từ 2 issuer
-- `Auth/JwtService.cs` — Generate + validate JWT
+- Implement Auth/Me, LeaveTypes, Config/UserRole endpoints.
+- Implement LeaveRequests, LeaveBalances, and department reference endpoint if needed.
+- Align frontend DTOs with real endpoint responses.
+- Add API integration tests and update Vitest tests.
+- Update README/deployment docs and final validation.
 
-## Endpoint Template (FastEndpoints REPR)
+## Acceptance Criteria
 
-```csharp
-// LoginRequest.cs — record DTO
-// LoginResponse.cs — record DTO
-// LoginValidator.cs — FluentValidation rules
-// LoginEndpoint.cs — Endpoint<LoginRequest, LoginResponse>
-//   Configure(): Post("/api/auth/login"), AllowAnonymous()
-//   HandleAsync(): BCrypt verify → JWT generate → SendAsync(response)
-```
-
-## Key Risks
-
-| Risk | Mitigation |
-|------|------------|
-| Password migration: Supabase plaintext → BCrypt | Script export users, BCrypt hash từng password, verify sau migrate |
-| UUID → UNIQUEIDENTIFIER mapping | SQL type mapping table, verify row count từng bảng |
-| Approval 2-level state machine | Unit test state transitions, verify trong e2e |
-| Dual-issuer JWT validation | Middleware check `iss` claim → route đến validator tương ứng |
-| Host public key endpoint availability | Fallback: nếu host key unavailable, embed mode redirect → standalone login |
-
-## Related Docs
-
-- `docs/vision/brd.md` — Business Requirements (migration plan)
-- `docs/vision/srs.md` — Software Requirements (TO-BE architecture)
-- `docs/system-architecture.md` — TO-BE architecture diagrams
-- `docs/code-standards.md` — .NET + FastEndpoints coding conventions
-- `docs/project-roadmap.md` — Migration phases & timeline
+- [ ] All P0 endpoints compile.
+- [ ] `dotnet build packages/api/QLNP.Api.csproj` passes.
+- [ ] `pnpm --dir packages/web build` passes.
+- [ ] `pnpm --dir packages/web test` passes.
+- [ ] Manual smoke flow passes: auth, leave create, approve/reject/cancel, reports, config.
+- [ ] README, roadmap, changelog, architecture, and deployment docs match actual stack.
