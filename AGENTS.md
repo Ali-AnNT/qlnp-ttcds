@@ -1,3 +1,8 @@
+
+# Project Rules
+
+See [PROJECT_RULE.md](./PROJECT_RULE.md) for project-specific rules, conventions, and constraints.
+
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
