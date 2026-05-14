@@ -19,24 +19,27 @@ Refactor QLNP từ Supabase sang .NET 9 + FastEndpoints + Vertical Slice Archite
 
 **Timeline:** 10 working days (2 tuần)
 
-**Architecture Pattern:** Vertical Slice — code tổ chức theo feature (Login, CreateLeave, ApproveLeave...) thay vì layer ngang (Controllers/Services/Repositories). Mỗi slice là một folder chứa Endpoint + Request + Response + Validator, tự quản lý data access qua Dapper.
+**Architecture Pattern:** Vertical Slice — code tổ chức theo feature (Login, CreateLeave, ApproveLeave...) thay vì layer ngang (Controllers/Services/Repositories). Mỗi slice là một folder chứa Endpoint + Request + Response + Validator, tự quản lý data access qua Dapper. Không tách Service/Repository layer riêng (YAGNI) — logic nghiệp vụ nằm trong endpoint handler.
 
 **API Framework:** FastEndpoints — REPR pattern (Request-EndPoint-Response), mỗi endpoint là class kế thừa `Endpoint<TRequest, TResponse>`. Pipeline: `Validator → PreProcessor → HandleAsync() → PostProcessor → Response`.
 
+**File naming convention (C#):** PascalCase cho tất cả C# files: `LoginEndpoint.cs`, `CreateLeaveRequestEndpoint.cs`. Mỗi class 1 file riêng.
+
 ## Daily Progress
 
-| Day | Phase | Tasks | Status |
-|-----|-------|-------|--------|
-| 1 | Setup + DB | FastEndpoints scaffold, VSA folder structure, SQL Server schema, Dapper | [ ] |
-| 2 | Auth Slices | Login + Exchange + Me endpoints, JWT dual-issuer (HS256 + RS256), BCrypt | [ ] |
-| 3 | Employee + Department Slices | CRUD endpoints cho từng feature, role-based authorization | [ ] |
-| 4 | Leave Slices | LeaveTypes, LeaveRequests (create/update/approve/reject/cancel), LeaveBalances | [ ] |
-| 5 | Config + Seed + Migration | Config slice, seed data đầy đủ, password migration script, health check | [ ] |
-| 6 | Frontend API Layer | Fetch wrapper + 6 API client modules, type alignment | [ ] |
-| 7 | Auth + Store | AuthContext JWT (dual mode), refactor Zustand store → API calls | [ ] |
+| Day | Phase | VSA Folders / Scope | Status |
+|-----|-------|---------------------|--------|
+| 1 | Setup + DB | Scaffold `Features/` + `Auth/` + `Data/`, SQL Server schema, Dapper, FastEndpoints | [ ] |
+| 2 | Auth Slices | `Features/Auth/Login/`, `Exchange/`, `Me/` — dual-issuer JWT (HS256+RS256), BCrypt, JwtMiddleware | [ ] |
+| 3 | Employee + Dept Slices | `Features/Employees/{List,GetById,Create,Update,Delete}/`, tương tự `Departments/` | [ ] |
+| 4 | Leave Slices | `Features/LeaveTypes/{List,Create,Update,Delete}/`, `LeaveRequests/{List,Create,Update,Approve,Reject,Cancel}/`, `LeaveBalances/{List,My}/` | [ ] |
+| 5 | Config + Seed | `Features/Config/{Get,Update,GetGeneral}/`, Health, seed data, password migration | [ ] |
+| 6 | Frontend API Layer | Fetch wrapper + 6 API modules, `exchangeToken()` cho embed | [ ] |
+| 7 | Auth + Store | AuthContext JWT (standalone + exchange), refactor Zustand → API calls | [ ] |
 | 8 | Page Refactor P1 | Dashboard, Login, LeaveNew, LeaveMy, Calendar | [ ] |
 | 9 | Page Refactor P2 | Approval, Summary, Reports, Violations, Config, AppLayout | [ ] |
-| 10 | Embed + Cleanup + Test | iframe detection, postMessage bridge, remove Supabase, integration test, docs | [ ] |
+| 10 | Embed Mode | Iframe detection, postMessage bridge (auth + resize), remove Supabase | [ ] |
+| 11 | Test + Docs + Review | Integration test, docs update, final review, PR | [ ] |
 
 ## Key Decisions
 

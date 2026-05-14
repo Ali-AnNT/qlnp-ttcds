@@ -1,12 +1,12 @@
 ---
-day: 7
+day: 8
 phase: Page Refactor P1
 status: pending
 effort: 1 day
 priority: P1
 ---
 
-# Day 7: Page Refactor (Part 1)
+# Day 8: Page Refactor (Part 1)
 
 ## Context
 

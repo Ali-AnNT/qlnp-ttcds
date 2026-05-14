@@ -1,12 +1,12 @@
 ---
-day: 5
+day: 6
 phase: Frontend API Layer
 status: pending
 effort: 1 day
 priority: P1
 ---
 
-# Day 5: Frontend API Client Layer
+# Day 6: Frontend API Client Layer
 
 ## Context
 
@@ -35,7 +35,7 @@ Tạo tầng API client trong frontend thay thế Supabase calls. 8 files + fetc
 - [ ] `src/api/auth-api.ts`
   - `login(username, password): Promise<{token, user}>`
   - `getMe(): Promise<AuthUser>`
-  - **Note:** No exchangeToken — Gateway handles host auth
+  - **Note:** Exchange token qua POST /api/auth/exchange — frontend gửi host JWT đến BE, nhận app JWT
 
 - [ ] `src/api/employee-api.ts`
   - `getAll(): Promise<Employee[]>`

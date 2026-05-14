@@ -1,12 +1,12 @@
 ---
-day: 6
+day: 7
 phase: Auth + Store Refactor
 status: pending
 effort: 1 day
 priority: P1
 ---
 
-# Day 6: AuthContext JWT + Refactor Zustand Store
+# Day 7: AuthContext JWT + Refactor Zustand Store
 
 ## Context
 
