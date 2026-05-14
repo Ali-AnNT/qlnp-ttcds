@@ -25,3 +25,73 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOiI0IiwiR
 GET {{baseUrl}}/api/auth/me
 
 ###
+
+### ── LeaveTypes ──────────────────────────────────────────────
+
+### List LeaveTypes — active only
+GET {{baseUrl}}/api/leave-types
+Authorization: Bearer {{token}}
+
+###
+
+### Create LeaveType — valid (role: quantri)
+POST {{baseUrl}}/api/leave-types
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Nghỉ phép năm",
+  "code": "NPN",
+  "defaultDays": 12,
+  "description": "Nghỉ phép hàng năm theo quy định"
+}
+
+###
+
+### Create LeaveType — invalid: DefaultDays = 0 → 400
+POST {{baseUrl}}/api/leave-types
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Test",
+  "code": "TST",
+  "defaultDays": 0
+}
+
+###
+
+### Create LeaveType — duplicate Code → 400
+POST {{baseUrl}}/api/leave-types
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Duplicate",
+  "code": "NPN",
+  "defaultDays": 5
+}
+
+###
+
+### Update LeaveType — id=1 (replace id as needed)
+PUT {{baseUrl}}/api/leave-types/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "id": 1,
+  "name": "Nghỉ phép năm (updated)",
+  "code": "NPN",
+  "defaultDays": 14,
+  "description": "Cập nhật mô tả",
+  "isActive": true
+}
+
+###
+
+### Delete LeaveType — id=99 (soft delete; 409 nếu có requests)
+DELETE {{baseUrl}}/api/leave-types/99
+Authorization: Bearer {{token}}
+
+###
