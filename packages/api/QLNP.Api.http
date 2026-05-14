@@ -1,6 +1,27 @@
-@QLNP.Api_HostAddress = http://localhost:5256
+@baseUrl = http://localhost:5000
 
-GET {{QLNP.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+### Dev token claims (use jwt.io with DEV signing key)
+# {
+#   "UserId": "4",
+#   "DisplayName": "Trung Tam Chuyen Doi So",
+#   "UnitId": "49",
+#   "PhongBanId": "4",
+#   "DeviceId": "test-device",
+#   "Roles": ["CB.PCM", "LD.PCM"],
+#   "UserIdUBTP": "123",
+#   "PhongBanIdUBTP": "45",
+#   "DonViIdUBTP": "78",
+#   "iss": "mobile",
+#   "aud": "mobile"
+# }
+
+### Auth/Me — with valid JWT Bearer token (generate using dev key)
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOiI0IiwiRGlzcGxheU5hbWUiOiJUcnVuZyBUYW0gQ2h1eWVuIERvaSBTbyIsIlVuaXRJZCI6IjQ5IiwiUGhvbmdCYW5JZCI6IjQiLCJEZXZpY2VJZCI6ImQ0YjVlMjcxLWFiN2QtNGMwMS1iMGI0LWZkMWYxNTZmNmQ4YyIsIlVzZXJJZFVCVFAiOiIxMTUiLCJQaG9uZ0JhbklkVUJUUCI6IjQ4IiwiRG9uVmlJZFVCVFAiOiItMSIsIlJvbGVzIjpbIkM0LlBDTSJdLCJuYmYiOjE3NDU2NjI3ODcsImV4cCI6MTc0NTc0OTE4NywiaXNzIjoibW9iaWxlIiwiYXVkIjoibW9iaWxlIn0.ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefgh
+
+###
+
+### Auth/Me — without token → 401
+GET {{baseUrl}}/api/auth/me
 
 ###
