@@ -1,5 +1,18 @@
 # Project Changelog - QLNP-TTCDS
 
+## v0.1.1 -- 2026-05-14 -- Planning Rebaseline
+
+### Changed
+- Rebaselined `plans/260513-0221-dotnet-migration-refactor/plan.md` from the old Dapper/standalone-login approach to the current EF Core + gateway-auth architecture.
+- Updated project progress to 78% overall migration with endpoint implementation as the active blocker.
+- Adjusted remaining timeline to 2026-05-14 through 2026-05-21 for endpoints, integration, tests, docs, and release validation.
+- Synced roadmap with Phase 1.1 endpoint implementation and release-readiness targets.
+- Regenerated detailed day files under `plans/260513-0221-dotnet-migration-refactor/` to match the rebaselined 14-day timeline.
+
+### Notes
+- No application code changed in this planning update.
+- The canonical implementation direction remains `packages/api` + `packages/web`, EF Core 9, FastEndpoints, SQL Server, and gateway/SSO current-user resolution.
+
 ## v0.1.0 -- 2026-05-13 -- Architecture Migration (Supabase -> .NET 9)
 
 ### Breaking Changes

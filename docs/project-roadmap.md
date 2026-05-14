@@ -20,6 +20,7 @@ All Supabase-related issues resolved by architecture migration:
 
 **Priority:** P0 -- Replaced Supabase with .NET 9 + FastEndpoints + EF Core + SQL Server.
 **Plan:** `plans/260513-0554-efcore-scaffold-migration/`
+**Rebaseline:** `plans/260513-0221-dotnet-migration-refactor/plan.md` updated on 2026-05-14 to track remaining endpoint/test/docs work.
 
 ### 1.1 .NET Backend + SQL Server -- COMPLETED
 | Task | Status |
@@ -31,7 +32,7 @@ All Supabase-related issues resolved by architecture migration:
 | CurrentUserMiddleware (gateway headers) + dev mode fallback | Done |
 | Initial EF Core migration (InitialCreate) | Done |
 | Features directory scaffolded (Auth/Me, Config, LeaveBalances, LeaveRequests, LeaveTypes) | Done |
-| Endpoint .cs implementations | **IN PROGRESS** (folders exist, .cs files pending) |
+| Endpoint .cs implementations | **IN PROGRESS** (folders exist, .cs files pending; target completion 2026-05-15) |
 
 ### 1.2 Frontend Refactor -- COMPLETED
 | Task | Status |
@@ -44,6 +45,21 @@ All Supabase-related issues resolved by architecture migration:
 | All 11 pages refactored to use new API layer | Done |
 | @supabase/supabase-js removed from package.json | Done |
 | src/integrations/supabase/ directory deleted | Done |
+
+## Phase 1.1: Endpoint Implementation & Release Readiness (IN PROGRESS)
+
+**Priority:** P0 -- Complete backend behavior behind the already-refactored frontend.
+**Target window:** 2026-05-14 to 2026-05-21.
+**Progress:** 0% endpoint implementation, 78% overall migration.
+
+| Task | Status | Target |
+|------|--------|--------|
+| Auth/Me, LeaveTypes, Config/UserRole endpoints | In Progress | 2026-05-14 |
+| LeaveRequests, LeaveBalances, Department reference endpoints | Planned | 2026-05-15 |
+| Frontend integration against real API | Planned | 2026-05-18 |
+| API integration tests + Vitest updates | Planned | 2026-05-19 |
+| README/deployment/docs sync | Planned | 2026-05-20 |
+| Final build/test/manual validation | Planned | 2026-05-21 |
 
 ## Phase 2: Feature Enhancements (Planned)
 
@@ -83,10 +99,11 @@ May 2026 (COMPLETED): Phase 1 - Architecture Migration
     - SSO gateway auth + CurrentUserMiddleware
     - Features directory scaffolded, endpoints pending
 
-Jun 2026 (IN PROGRESS): Phase 1.1 - Endpoint Implementation
+May 14-21 2026 (IN PROGRESS): Phase 1.1 - Endpoint Implementation & Release Readiness
     - Implement endpoint .cs files for all scaffolded slices
     - Wire frontend API modules to real endpoints
     - Integration testing
+    - Documentation/deployment sync
 
 Q3 2026: Phase 2 - Feature Enhancements
     - Email notifications
