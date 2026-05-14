@@ -58,7 +58,8 @@ source:
 - [x] `Features/Auth/Me/MeEndpoint.cs` — inject `ICurrentUserProvider`; remove `HttpContext.Items["CurrentUser"]` usage
 - [x] **Deleted** `Middleware/CurrentUserMiddleware.cs` — no longer needed
 - [x] `dotnet build packages/api` — 0 errors, 0 warnings
-- [ ] Commit: `feat(api): replace gateway header auth with JWT + ICurrentUserProvider`
+- [x] Commit: `feat(api): replace gateway header auth with JWT + ICurrentUserProvider` (933511c)
+- [x] Docs commit: `docs(planning): add 2-week migration plan + JWT auth plan` (92bfee8)
 
 ### Day 2 (2026-05-15, Thứ 6) — LeaveTypes slice (4 endpoints)
 
