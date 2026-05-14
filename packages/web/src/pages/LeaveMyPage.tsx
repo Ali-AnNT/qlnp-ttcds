@@ -61,7 +61,9 @@ const LeaveMyPage = () => {
         try {
           const interval = { start: parseISO(r.startDate), end: parseISO(r.endDate) };
           eachDayOfInterval(interval).forEach((d) => dates.add(format(d, "yyyy-MM-dd")));
-        } catch {}
+        } catch {
+          // Ignore malformed historical dates; validation below covers the edited range.
+        }
       });
     return dates;
   }, [leaveRequests, user, editRequest]);
@@ -71,7 +73,9 @@ const LeaveMyPage = () => {
     try {
       const interval = { start: parseISO(editStartDate), end: parseISO(editEndDate) };
       return eachDayOfInterval(interval).some((d) => approvedDates.has(format(d, "yyyy-MM-dd")));
-    } catch { return false; }
+    } catch {
+      return false;
+    }
   }, [editStartDate, editEndDate, approvedDates]);
 
   const handleCancel = async (id: number) => {

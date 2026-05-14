@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useStore } from "@/store/useStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, type DefaultLegendContentProps } from "recharts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatDate } from "@/lib/date-utils";
@@ -114,11 +114,11 @@ const SummaryPage = () => {
       }));
   }, [userDetailUserId, approvedRequests, leaveTypes]);
 
-  const renderLegend = (props: any) => {
+  const renderLegend = (props: DefaultLegendContentProps) => {
     const { payload } = props;
     return (
       <div className="flex flex-wrap justify-center gap-3 mt-2">
-        {payload?.map((entry: any, index: number) => (
+        {payload?.map((entry, index) => (
           <div key={index} className="flex items-center gap-1.5 text-xs">
             <div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: entry.color }} />
             <span className="text-muted-foreground">{entry.value}</span>

@@ -14,6 +14,7 @@ import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveCo
 
 const LIMIT = 12;
 const COLORS = ["hsl(var(--destructive))", "hsl(var(--warning))", "hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--secondary))", "#8b5cf6", "#06b6d4", "#f59e0b"];
+type Period = "year" | "quarter" | "month";
 
 const ViolationsPage = () => {
   const leaveRequests = useStore((s) => s.leaveRequests);
@@ -21,7 +22,7 @@ const ViolationsPage = () => {
   const leaveTypes = useStore((s) => s.leaveTypes);
 
   const [search, setSearch] = useState("");
-  const [period, setPeriod] = useState<"year" | "quarter" | "month">("year");
+  const [period, setPeriod] = useState<Period>("year");
   const [year, setYear] = useState(new Date().getFullYear().toString());
   const [quarter, setQuarter] = useState(`${Math.floor(new Date().getMonth() / 3) + 1}`);
   const [month, setMonth] = useState(`${new Date().getMonth() + 1}`);
@@ -156,7 +157,7 @@ const ViolationsPage = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Tìm cán bộ hoặc phòng ban..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
             </div>
-            <Select value={period} onValueChange={(v: any) => setPeriod(v)}>
+            <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="year">Theo năm</SelectItem>

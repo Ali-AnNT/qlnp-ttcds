@@ -31,8 +31,8 @@ async function request<T>(
     }
     const data = await res.json();
     return { data, error: null };
-  } catch (e: any) {
-    return { data: null, error: e.message || "Network error" };
+  } catch (e: unknown) {
+    return { data: null, error: e instanceof Error ? e.message : "Network error" };
   }
 }
 

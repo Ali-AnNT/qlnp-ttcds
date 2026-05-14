@@ -38,7 +38,9 @@ const LeaveNewPage = () => {
         try {
           const interval = { start: parseISO(r.startDate), end: parseISO(r.endDate) };
           eachDayOfInterval(interval).forEach((d) => dates.add(format(d, "yyyy-MM-dd")));
-        } catch {}
+        } catch {
+          // Ignore malformed historical dates; form validation covers the submitted range.
+        }
       });
     return dates;
   }, [leaveRequests, user]);
@@ -48,7 +50,9 @@ const LeaveNewPage = () => {
     try {
       const interval = { start: parseISO(startDate), end: parseISO(endDate) };
       return eachDayOfInterval(interval).some((d) => approvedDates.has(format(d, "yyyy-MM-dd")));
-    } catch { return false; }
+    } catch {
+      return false;
+    }
   }, [startDate, endDate, approvedDates]);
 
   const handleSubmit = async () => {
