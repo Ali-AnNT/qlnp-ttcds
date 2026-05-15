@@ -24,9 +24,9 @@ dotnet ef database update
 This creates: UserRoles, LeaveTypes, LeaveBalances, LeaveRequests, LeaveConfigs.
 
 ### Seed Data (automatic)
-EF Core seeds 3 leave types + 1 user role on first migration:
+EF Core seeds 3 leave types + 4 user roles on first migration:
 - annual (12 days), sick (0 days), personal (3 days)
-- userId=1, role="quantri"
+- userId=1 QTHT, userId=2 CB.PCM, userId=3 LD.PCM, userId=4 GD.PGD
 
 ## 2. Environment Variables
 
@@ -58,7 +58,7 @@ Configure `appsettings.json` or `appsettings.Development.json`:
 }
 ```
 
-- `DevMode.Enabled`: when true, CurrentUserMiddleware falls back to admin user (userId=1, role=quantri)
+- `DevMode.Enabled`: when true, CurrentUserMiddleware falls back to admin user (userId=1, roles=["QTHT"])
 
 ## 3. Local Development
 

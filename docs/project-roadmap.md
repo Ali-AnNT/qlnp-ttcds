@@ -50,12 +50,15 @@ All Supabase-related issues resolved by architecture migration:
 
 **Priority:** P0 -- Complete backend behavior behind the already-refactored frontend.
 **Target window:** 2026-05-14 to 2026-05-21.
-**Progress:** 0% endpoint implementation, 78% overall migration.
+**Progress:** 40% endpoint implementation, 82% overall migration.
 
 | Task | Status | Target |
 |------|--------|--------|
-| Auth/Me, LeaveTypes, Config/UserRole endpoints | In Progress | 2026-05-14 |
-| LeaveRequests, LeaveBalances, Department reference endpoints | Planned | 2026-05-15 |
+| Auth/Me endpoint | Done | 2026-05-14 |
+| LeaveTypes CRUD endpoints (Roles "QTHT") | Done | 2026-05-14 |
+| LeaveRequests P1: List/Create/Update | Done | 2026-05-15 |
+| LeaveRequests P2: Approve/Reject/Cancel | Planned | 2026-05-16 |
+| LeaveBalances, Department reference endpoints | Planned | 2026-05-17 |
 | Frontend integration against real API | Planned | 2026-05-18 |
 | API integration tests + Vitest updates | Planned | 2026-05-19 |
 | README/deployment/docs sync | Planned | 2026-05-20 |

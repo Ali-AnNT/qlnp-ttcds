@@ -112,7 +112,7 @@ User Action -> Component -> useStore action -> api module -> fetch("/api/...")
 
 ### Auth Flow
 1. If embed mode (iframe): listens for `postMessage({ type: "auth", token })` from host SSO Portal
-2. If standalone + dev mode: CurrentUserMiddleware fallback to userId=1, role="quantri"
+2. If standalone + dev mode: CurrentUserMiddleware fallback to userId=1, roles=["QTHT"]
 3. Production: gateway headers (X-User-Id, X-User-Name, X-User-FullName) set by IIS reverse proxy
 4. `AuthProvider` calls `GET /api/auth/me` on mount to resolve user profile
 5. `AuthGuard` in App.tsx checks `user` from AuthContext; redirects to /login if null
@@ -142,16 +142,17 @@ Authorization via `CurrentUser.Role` from AuthContext:
 ## Database (SQL Server - VI_NGHIPHEP)
 
 ### System Tables (read-only, ExcludeFromMigrations)
-- `USER_MASTER` - UserMasterId, UserName, HoTen, PhongBanId, DonViId, UserPortalId, CanBoId, LaDonViChinh, Used
+- `USER_MASTER` - UserMasterId, UserName, HoTen, PhongBanId, DonViId, UserPortalId, CanBoId, LaDonViChinh, Used. Nav prop: DonVi
 - `DM_DONVI` - DonViId, MaDonVi, TenDonVi, TenVietTat, DonViCapChaId, Cap, CapDonViId, LoaiDonViId, ... (22 props total)
 
 ### QLNP Tables (Code First, managed by EF Core migrations)
 - `UserRoles` - UserId (PK/FK to USER_MASTER), Role (max 10)
 - `LeaveTypes` - Id, Name, Code (unique), DefaultDays, Description, IsActive
 - `LeaveBalances` - Id, UserId, LeaveTypeId, Year, TotalDays, UsedDays. UNIQUE(UserId, LeaveTypeId, Year)
-- `LeaveRequests` - Id, UserId, LeaveTypeId, StartDate, EndDate, TotalDays, Reason, Status, ApprovedBy, ApprovedAt, RejectedReason, CreatedAt, UpdatedAt
+- `LeaveRequests` - Id, UserId, LeaveTypeId, StartDate, EndDate, TotalDays, Reason, Status, RequestedApproverId (nullable), ApprovedBy, ApprovedAt, RejectedReason, CreatedAt, UpdatedAt. Nav props: User, LeaveType, Approver, RequestedApprover
+- `USER_MASTER` - UserMasterId, UserName, HoTen, PhongBanId, DonViId, UserPortalId, CanBoId, LaDonViChinh, Used. Nav prop: DonVi
 - `LeaveConfigs` - Id, LeaveTypeId, ApprovalLevel (CK >= 1), ApproverRole
 
 ### Seed Data
 - 3 LeaveTypes: annual (12d), sick (0d), personal (3d)
-- 1 UserRole: userId=1, role="quantri"
+- 4 UserRoles: userId=1 QTHT, userId=2 CB.PCM, userId=3 LD.PCM, userId=4 GD.PGD

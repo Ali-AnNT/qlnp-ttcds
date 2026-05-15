@@ -11,7 +11,7 @@ internal sealed class Endpoint : EndpointWithoutRequest
     public override void Configure()
     {
         Delete("/api/leave-types/{id}");
-        Roles("quantri");
+        Roles("QLNP.QTHT");
     }
 
     public override async Task HandleAsync(CancellationToken ct)

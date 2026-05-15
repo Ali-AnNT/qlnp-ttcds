@@ -39,7 +39,10 @@ public class LeaveRequest
     [Column(TypeName = "datetime2")]
     public DateTime? UpdatedAt { get; set; }
 
+    public long? RequestedApproverId { get; set; }
+
     public UserMaster User { get; set; } = null!;
     public LeaveType LeaveType { get; set; } = null!;
     public UserMaster? Approver { get; set; }
+    public UserMaster? RequestedApprover { get; set; }
 }
