@@ -47,6 +47,13 @@ builder.Services.AddAuthorization();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserProvider, CurrentUserProvider>();
 
+// Data classes
+builder.Services.AddScoped<QLNP.Api.Features.LeaveTypes.Create.Data>();
+builder.Services.AddScoped<QLNP.Api.Features.LeaveTypes.Update.Data>();
+builder.Services.AddScoped<QLNP.Api.Features.LeaveTypes.List.Data>();
+builder.Services.AddScoped<QLNP.Api.Features.LeaveTypes.Delete.Data>();
+builder.Services.AddScoped<QLNP.Api.Features.Auth.Me.Data>();
+
 var app = builder.Build();
 
 app.UseAuthentication();

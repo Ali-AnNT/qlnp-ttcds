@@ -6,17 +6,18 @@ namespace QLNP.Api.Auth;
 
 public class CurrentUserProvider : ICurrentUserProvider
 {
-    private readonly HttpContext _httpContext;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
     public CurrentUserProvider(IHttpContextAccessor httpContextAccessor)
     {
-        _httpContext = httpContextAccessor.HttpContext
-            ?? throw new InvalidOperationException("No HttpContext available");
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public CurrentUser GetCurrentUser()
     {
-        var user = _httpContext.User;
+        var httpContext = _httpContextAccessor.HttpContext
+            ?? throw new InvalidOperationException("No HttpContext available");
+        var user = httpContext.User;
 
         return new CurrentUser(
             UserId: long.Parse(user.FindFirst("UserId")?.Value ?? "0"),

@@ -1,17 +1,12 @@
 using FastEndpoints;
-using QLNP.Api.Auth;
-using QLNP.Api.Middleware;
 
 namespace QLNP.Api.Features.Auth.Me;
 
-public class MeEndpoint : EndpointWithoutRequest<MeResponse>
+internal sealed class Endpoint : EndpointWithoutRequest<Response>
 {
-    private readonly ICurrentUserProvider _userProvider;
+    private readonly Data _data;
 
-    public MeEndpoint(ICurrentUserProvider userProvider)
-    {
-        _userProvider = userProvider;
-    }
+    public Endpoint(Data data) => _data = data;
 
     public override void Configure()
     {
@@ -23,8 +18,8 @@ public class MeEndpoint : EndpointWithoutRequest<MeResponse>
     {
         try
         {
-            var user = _userProvider.GetCurrentUser();
-            await Send.OkAsync(new MeResponse(
+            var user = _data.GetCurrentUser();
+            await Send.OkAsync(new Response(
                 user.UserId,
                 user.DisplayName,
                 user.UnitId,
@@ -41,14 +36,3 @@ public class MeEndpoint : EndpointWithoutRequest<MeResponse>
         }
     }
 }
-
-public record MeResponse(
-    long Id,
-    string DisplayName,
-    long UnitId,
-    long PhongBanId,
-    List<string> Roles,
-    int UserIdUBTP,
-    int PhongBanIdUBTP,
-    int DonViIdUBTP
-);
