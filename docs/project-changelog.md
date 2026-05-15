@@ -1,6 +1,15 @@
 # Project Changelog - QLNP-TTCDS
 
-## v0.2.0 -- 2026-05-15 -- LeaveRequests P1 Endpoints
+## v0.2.0 -- 2026-05-15 -- LeaveRequests P1 Endpoints + JWT Auth
+
+### Changed
+- Replaced gateway header auth (CurrentUserMiddleware + X-User-Id/X-User-Name/X-User-FullName) with JWT Bearer authentication
+- Deleted `Middleware/CurrentUserMiddleware.cs` -- replaced by `Auth/ICurrentUserProvider.cs` + `Auth/CurrentUserProvider.cs` (reads JWT claims)
+- Added `Microsoft.AspNetCore.Authentication.JwtBearer` v10.0.8 package
+- `appsettings.json`: replaced `GatewayHeaders` section with `Jwt: { Issuer, Audience, SigningKey }`
+- `Program.cs`: `AddAuthentication(JwtBearerDefaults).AddJwtBearer(...)` + `UseAuthentication()` + `UseAuthorization()`
+- `CurrentUser` record expanded: added DeviceId, UserIdUBTP, PhongBanIdUBTP, DonViIdUBTP fields
+- Target framework changed from .NET 9 to .NET 10 (`net10.0`)
 
 ### Added
 - **GET /api/leave-requests** -- List endpoint with role-based filtering:
@@ -44,7 +53,7 @@
 - No application code changed in this planning update.
 - The canonical implementation direction remains `packages/api` + `packages/web`, EF Core 9, FastEndpoints, SQL Server, and gateway/SSO current-user resolution.
 
-## v0.1.0 -- 2026-05-13 -- Architecture Migration (Supabase -> .NET 9)
+## v0.1.0 -- 2026-05-13 -- Architecture Migration (Supabase -> .NET)
 
 ### Breaking Changes
 - Supabase backend removed entirely -- replaced by .NET 9 + EF Core + SQL Server
@@ -55,11 +64,11 @@
 - Env vars changed: `VITE_SUPABASE_URL`/`VITE_SUPABASE_PUBLISHABLE_KEY` removed, replaced by `VITE_API_URL`
 
 ### Added
-- `packages/api/` -- .NET 9 API project with FastEndpoints v8.1.0, EF Core 9.0.0
+- `packages/api/` -- .NET 10 API project with FastEndpoints v8.1.0, EF Core 9.0.0
 - Scaffolded system entities: `UserMaster` (9 props from USER_MASTER), `DmDonvi` (22 props from DM_DONVI)
 - 5 Code First entities: `UserRole`, `LeaveType`, `LeaveBalance`, `LeaveRequest`, `LeaveConfig`
 - `AppDbContext` with `ExcludeFromMigrations()` for system tables, EF relationships, seed data (3 leave_types + 1 user_role)
-- `CurrentUserMiddleware` -- reads gateway headers (X-User-Id, X-User-Name, X-User-FullName), dev mode fallback
+- `CurrentUserMiddleware` -- reads JWT claims via ICurrentUserProvider (formerly gateway headers), dev mode fallback
 - `CurrentUser` record (UserId, UserName, FullName, DonViId, Role)
 - Features directory scaffolded: Auth/Me, Config, LeaveBalances, LeaveRequests, LeaveTypes
 - Initial EF Core migration (InitialCreate) for QLNP tables
@@ -71,7 +80,7 @@
 - Zustand store: auth state removed (moved to AuthContext), data-only operations
 - All 11 pages refactored to use new API modules instead of Supabase client
 - pnpm monorepo structure: `packages/api` + `packages/web`
-- Deployment: IIS (API) + static hosting (frontend), gateway auth via reverse proxy
+- Deployment: IIS (API) + static hosting (frontend), JWT Bearer auth (SSO Portal issues tokens)
 
 ### Removed
 - Supabase PostgreSQL database (all 7 tables, RLS policies, verify_login RPC)

@@ -145,15 +145,15 @@ Use shadcn/ui Table component with:
 
 ### Date Format
 - Display: dd-MM-yyyy (Vietnamese standard)
-- API: ISO 8601 / yyyy-MM-dd (PostgreSQL date type)
+- API: ISO 8601 / yyyy-MM-dd (SQL Server date type)
 
 ### Navigation Labels
 - Short, action-oriented: "Tao don moi", "Phe duyet don"
 - Breadcrumb derived from path (not hardcoded)
 
 ### Error Messages
-- Vietnamese, user-friendly
-- Examples: "Vui long nhap ten dang nhap va mat khau!", "Sai ten dang nhap hoac mat khau!", "Loi ket noi. Vui long thu lai!"
+- Vietnamese, user-friendly, appropriate for SSO-based system (no login/password errors)
+- Examples: "Phiên đăng nhập đã hết hạn. Vui lòng tải lại trang!", "Không thể kết nối đến máy chủ. Vui lòng thử lại!", "Bạn không có quyền thực hiện thao tác này."
 
 ## Accessibility
 

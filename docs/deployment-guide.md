@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - Node.js 18+ or Bun 1.x
-- .NET SDK 9.0
+- .NET SDK 10.0
 - SQL Server (existing VI_NGHIPHEP database with USER_MASTER, DM_DONVI)
 - Git
 
@@ -47,18 +47,26 @@ Configure `appsettings.json` or `appsettings.Development.json`:
   "ConnectionStrings": {
     "DefaultConnection": "Server=HOST,1439;Database=VI_NGHIPHEP;User Id=USER;Password=PASS;TrustServerCertificate=True"
   },
-  "GatewayHeaders": {
-    "UserId": "X-User-Id",
-    "UserName": "X-User-Name",
-    "UserFullName": "X-User-FullName"
+  "Jwt": {
+    "Issuer": "your-issuer",
+    "Audience": "your-audience",
+    "SigningKey": "YOUR_SECRET_KEY_AT_LEAST_32_CHARACTERS_LONG!"
   },
-  "DevMode": {
-    "Enabled": true
+  "Security": {
+    "FrameAncestors": "'self'"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
   }
 }
 ```
 
-- `DevMode.Enabled`: when true, CurrentUserMiddleware falls back to admin user (userId=1, roles=["QTHT"])
+- `Jwt:SigningKey`: must be at least 32 characters, shared with SSO Portal that issues tokens
+- `Jwt:Issuer` / `Jwt:Audience`: must match the values configured in SSO Portal
+- `Security:FrameAncestors`: CSP frame-ancestors directive for iframe embedding (use `'self'` for dev, add host domain for production)
 
 ## 3. Local Development
 
@@ -74,7 +82,7 @@ cd packages/web && vite
 # or: pnpm dev
 ```
 
-Visit `http://localhost:8080` to access the app. With DevMode enabled, auto-authenticated as admin.
+Visit `http://localhost:8080` to access the app. In dev mode, API falls back to admin user (userId=1, roles=["QTHT"]) when no JWT is provided.
 
 ## 4. Build for Production
 
@@ -101,11 +109,9 @@ Output: `packages/api/publish/` (self-contained web app).
 **API** (IIS Application):
 1. Create IIS site/app pointing to `packages/api/publish/`
 2. Configure Application Pool: .NET CLR v4.0, Integrated pipeline
-3. Set `DevMode.Enabled` to `false` in `appsettings.json`
-4. Ensure IIS ARR/reverse proxy sets gateway headers:
-   - `X-User-Id` (from SSO Portal)
-   - `X-User-Name`
-   - `X-User-FullName`
+3. Configure `appsettings.json` with production Jwt:Issuer, Jwt:Audience, Jwt:SigningKey
+4. Set `Security:FrameAncestors` to include host SSO Portal domain (e.g., `'self' https://portal.example.gov.vn'`)
+5. Ensure SSO Portal issues JWT tokens matching the configured Issuer/Audience/SigningKey
 
 **Frontend** (IIS / Nginx):
 1. Copy `packages/web/dist/` to web root
@@ -122,7 +128,7 @@ Output: `packages/api/publish/` (self-contained web app).
 
 ## 6. Post-Deployment Verification
 
-- [ ] Landing page `/` auto-authenticates (dev mode) or shows SSO waiting screen
+- [ ] Landing page `/` auto-authenticates (dev mode) or waits for SSO JWT token
 - [ ] Role-based sidebar shows correct menu items for current user role
 - [ ] Create leave request -> approve -> verify in calendar
 - [ ] Charts render on Reports, Summary, Violations pages
@@ -133,9 +139,9 @@ Output: `packages/api/publish/` (self-contained web app).
 | Issue | Solution |
 |-------|----------|
 | "Cannot connect to database" | Verify SQL Server is accessible, check ConnectionStrings in appsettings.json |
-| API returns 401 Unauthorized | Check DevMode.Enabled (dev) or gateway headers (production). Ensure IIS sets X-User-Id header |
+| API returns 401 Unauthorized | Check JWT token is valid and not expired. Verify Jwt:Issuer, Jwt:Audience, Jwt:SigningKey match between API and SSO Portal |
 | Blank page on route | SPA routing not configured. Add rewrite rules to serve index.html for all paths |
-| "Waiting for SSO" stuck | In dev, set DevMode.Enabled=true. In prod, verify SSO Portal is sending postMessage auth |
+| "Waiting for SSO" stuck | In dev, API allows anonymous /api/auth/me with admin fallback. In prod, verify SSO Portal sends valid JWT via postMessage |
 | CORS errors | Add CORS policy in Program.cs. Ensure frontend origin matches API origin |
 | EF migration fails | Ensure system tables (USER_MASTER, DM_DONVI) exist in database before running migrations |
-| build fails | Run `pnpm install` at monorepo root first. For API, ensure .NET SDK 9.0 is installed |
+| build fails | Run `pnpm install` at monorepo root first. For API, ensure .NET SDK 10.0 is installed |

@@ -2,15 +2,15 @@
 
 ## Architecture Overview
 
-**pnpm monorepo**: `packages/api` (.NET 9 backend) + `packages/web` (React SPA frontend).
+**pnpm monorepo**: `packages/api` (.NET 10 backend) + `packages/web` (React SPA frontend).
 
 ### Frontend (packages/web)
-React SPA with fetch-based API client, Zustand data store, AuthContext (SSO gateway auth). UI built with shadcn/ui components on Tailwind CSS.
+React SPA with fetch-based API client, Zustand data store, AuthContext (JWT Bearer auth). UI built with shadcn/ui components on Tailwind CSS.
 
 ### Backend (packages/api)
-.NET 9 + FastEndpoints v8.1.0 + EF Core 9.0.0 + SQL Server. Vertical slice architecture. CurrentUserMiddleware reads gateway headers from SSO Portal.
+.NET 10 + FastEndpoints v8.1.0 + EF Core 9.0.0 + SQL Server. Vertical slice architecture. JWT Bearer authentication; ICurrentUserProvider reads claims from JWT to resolve CurrentUser.
 
-**Data flow**: React Component -> Zustand Store -> api/client.ts (fetch + JWT) -> FastEndpoints Endpoint -> AppDbContext (EF Core) -> SQL Server
+**Data flow**: React Component -> Zustand Store -> api/client.ts (fetch + JWT Bearer) -> FastEndpoints Endpoint -> AppDbContext (EF Core) -> SQL Server
 
 ```
 User Action -> Component -> useStore action -> api module -> fetch("/api/...")
@@ -112,11 +112,11 @@ User Action -> Component -> useStore action -> api module -> fetch("/api/...")
 
 ### Auth Flow
 1. If embed mode (iframe): listens for `postMessage({ type: "auth", token })` from host SSO Portal
-2. If standalone + dev mode: CurrentUserMiddleware fallback to userId=1, roles=["QTHT"]
-3. Production: gateway headers (X-User-Id, X-User-Name, X-User-FullName) set by IIS reverse proxy
-4. `AuthProvider` calls `GET /api/auth/me` on mount to resolve user profile
+2. If standalone + dev mode: JWT Bearer allows anonymous access to /api/auth/me with dev-mode fallback (userId=1, roles=["QTHT"])
+3. Production: JWT Bearer token issued by SSO Portal, attached as Authorization header
+4. `AuthProvider` calls `GET /api/auth/me` (with JWT Bearer) on mount to resolve user profile
 5. `AuthGuard` in App.tsx checks `user` from AuthContext; redirects to /login if null
-6. LoginPage shows "waiting for SSO" or loading spinner (no username/password form)
+6. LoginPage shows "waiting for SSO" (embed mode) or loading spinner (no username/password form)
 
 ### Role-Based UI
 Authorization via `CurrentUser.Role` from AuthContext:
@@ -156,3 +156,29 @@ Authorization via `CurrentUser.Role` from AuthContext:
 ### Seed Data
 - 3 LeaveTypes: annual (12d), sick (0d), personal (3d)
 - 4 UserRoles: userId=1 QTHT, userId=2 CB.PCM, userId=3 LD.PCM, userId=4 GD.PGD
+
+## Current API Endpoints (8 implemented)
+
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| GET | /api/auth/me | Anonymous (dev fallback) | Returns current user from JWT claims |
+| GET | /api/leave-types | Authenticated | List all leave types |
+| POST | /api/leave-types | QTHT | Create leave type (FluentValidation) |
+| PUT | /api/leave-types/{id} | QTHT | Update leave type |
+| DELETE | /api/leave-types/{id} | QTHT | Soft delete leave type |
+| GET | /api/leave-requests | Authenticated (role-filtered) | List requests: own/dept/all by role |
+| POST | /api/leave-requests | CB.PCM, LD.PCM | Create request (business days, overlap check) |
+| PUT | /api/leave-requests/{id} | CB.PCM, LD.PCM (owner only, pending) | Update pending request |
+
+## Scaffolded but Not Implemented (empty directories)
+
+| Directory | Endpoints |
+|-----------|-----------|
+| LeaveRequests/Approve | PUT /api/leave-requests/{id}/approve |
+| LeaveRequests/Reject | PUT /api/leave-requests/{id}/reject |
+| LeaveRequests/Cancel | PUT /api/leave-requests/{id}/cancel |
+| LeaveBalances/List | GET /api/leave-balances |
+| LeaveBalances/My | GET /api/leave-balances/my |
+| Config/Get | GET /api/config |
+| Config/Update | PUT /api/config |
+| Config/UserRole | PUT /api/config/user-role |
