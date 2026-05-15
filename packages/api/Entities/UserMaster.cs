@@ -22,4 +22,6 @@ public partial class UserMaster
     public bool? LaDonViChinh { get; set; }
 
     public bool? Used { get; set; }
+
+    public DmDonvi? DonVi { get; set; }
 }

@@ -183,14 +183,21 @@ packages/api/
 │   ├── AppDbContext.cs               # EF Core context + OnModelCreating + seed data
 │   ├── AppDbContextFactory.cs        # Design-time factory for migrations
 │   └── Migrations/                   # EF Core migrations
-├── Features/                         # Vertical slices (endpoints WIP)
-│   ├── Auth/Me/                      # MeEndpoint
+├── Features/                         # Vertical slices
+│   ├── Auth/Me/                      # MeEndpoint (implemented)
 │   ├── Config/Get, Update, UserRole/ # Config endpoints
 │   ├── LeaveBalances/List, My/
-│   ├── LeaveRequests/List, Create, Update, Approve, Reject, Cancel/
-│   └── LeaveTypes/List, Create, Update, Delete/
+│   ├── LeaveRequests/
+│   │   ├── List/ Create/ Update/     # P1 implemented (role-based filtering, business days, overlap)
+│   │   ├── Approve/ Reject/ Cancel/  # Scaffolded (P2)
+│   │   ├── BusinessDayCalculator.cs  # T2-T6 inclusive count
+│   │   └── LeaveRequestDto.cs        # Shared DTO
+│   └── LeaveTypes/List, Create, Update, Delete/  # Roles("QTHT")
+├── Auth/
+│   ├── ICurrentUserProvider.cs       # Interface for current user resolution
+│   └── CurrentUserProvider.cs        # Reads claims from HttpContext
 └── Middleware/
-    └── CurrentUserMiddleware.cs      # Read gateway headers, resolve current user
+    └── CurrentUser.cs                # CurrentUser record (UserId, DisplayName, UnitId, PhongBanId, Roles, etc.)
 ```
 
 ### Naming Conventions
@@ -208,32 +215,41 @@ packages/api/
 ### Endpoint Pattern (REPR + EF Core)
 
 ```csharp
-// {Feature}/Request.cs
-public record MeRequest();
+// {Feature}/Models.cs
+internal sealed record Request(
+    long LeaveTypeId, DateTime StartDate, DateTime EndDate,
+    string Reason, long? RequestedApproverId);
 
-// {Feature}/Response.cs
-public record MeResponse(long UserId, string UserName, string FullName, long? DonViId, string Role);
+internal sealed record Response(LeaveRequestDto LeaveRequest);
 
-// {Feature}/{Feature}Endpoint.cs
-public class MeEndpoint : Endpoint<MeRequest, MeResponse>
+// {Feature}/Data.cs -- Data access via AppDbContext DI
+internal sealed class Data
 {
     private readonly AppDbContext _db;
+    public Data(AppDbContext db) => _db = db;
+    public async Task<LeaveRequest?> GetByIdAsync(long id, CancellationToken ct) =>
+        await _db.LeaveRequests.Include(lr => lr.User).ThenInclude(u => u!.DonVi)
+            .Include(lr => lr.LeaveType).FirstOrDefaultAsync(lr => lr.Id == id, ct);
+}
 
-    public MeEndpoint(AppDbContext db)
-    {
-        _db = db;
-    }
+// {Feature}/Endpoint.cs
+internal sealed class Endpoint : Endpoint<Request, Response, Mapper>
+{
+    private readonly Data _data;
+    private readonly ICurrentUserProvider _currentUser;
+
+    public Endpoint(Data data, ICurrentUserProvider currentUser) { _data = data; _currentUser = currentUser; }
 
     public override void Configure()
     {
-        Get("/api/auth/me");
+        Post("/api/leave-requests");
+        Roles("CB.PCM", "LD.PCM");  // FastEndpoints role-based auth
     }
 
-    public override async Task HandleAsync(MeRequest req, CancellationToken ct)
+    public override async Task HandleAsync(Request r, CancellationToken ct)
     {
-        var cu = HttpContext.Items["CurrentUser"] as CurrentUser;
-        if (cu == null) { await SendUnauthorizedAsync(ct); return; }
-        await SendAsync(new MeResponse(cu.UserId, cu.UserName, cu.FullName, cu.DonViId, cu.Role), cancellation: ct);
+        var user = _currentUser.GetCurrentUser();  // Claims-based current user
+        // ... business logic + EF Core queries via _data ...
     }
 }
 ```
@@ -242,11 +258,9 @@ public class MeEndpoint : Endpoint<MeRequest, MeResponse>
 
 ```
 HTTP Request
-  → CurrentUserMiddleware    [resolve current user from gateway headers]
+  → Authentication/Authorization (claims-based, Roles() attribute)
   → Validator.ValidateAsync()     [FluentValidation, auto]
-  → PreProcessor.PreProcessAsync() [optional: role check, rate limiting]
-  → Endpoint.HandleAsync()         [business logic + EF Core queries]
-  → PostProcessor.PostProcessAsync() [optional: audit log, cleanup]
+  → Endpoint.HandleAsync()         [business logic + Data class + EF Core]
   → HTTP Response
 ```
 
@@ -261,11 +275,12 @@ HTTP Request
 ### API Conventions
 
 - Request/Response dùng C# `record` types
-- CurrentUser resolved từ HttpContext.Items["CurrentUser"] (set by middleware)
-- Role check: so sánh `CurrentUser.Role` trong handler hoặc PreProcessor
+- CurrentUser resolved from Claims via ICurrentUserProvider (UserId, DisplayName, UnitId, PhongBanId, Roles list)
+- Role check: FastEndpoints `Roles()` attribute (compile-time) hoặc `CurrentUser.Roles.Contains()` trong handler logic
+- Multi-role users: `CurrentUser.Roles` là `List<string>`, nhiều roles possible (VD: LD.PCM + GD.PGD)
 - Response format nhất quán: `{ data, error }` envelope
 - Error response dùng `AddError()` hoặc `ThrowError()` của FastEndpoints
-- Dev mode: CurrentUserMiddleware fallback to userId=1, role="quantri" khi không có gateway headers
+- Dev mode: CurrentUserMiddleware fallback to userId=1, roles=["QTHT"] khi không có gateway headers
 
 ## Git Practices
 

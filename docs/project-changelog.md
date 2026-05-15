@@ -1,5 +1,36 @@
 # Project Changelog - QLNP-TTCDS
 
+## v0.2.0 -- 2026-05-15 -- LeaveRequests P1 Endpoints
+
+### Added
+- **GET /api/leave-requests** -- List endpoint with role-based filtering:
+  - CB.PCM: own requests only
+  - LD.PCM: department (PhongBanId) scoped
+  - GD.PGD / QTHT: all requests, no filter
+  - Includes User.HoTen, User.DonVi.TenDonVi, LeaveType.Name via eager loading
+- **POST /api/leave-requests** -- Create endpoint (Roles: CB.PCM, LD.PCM):
+  - FluentValidation: LeaveTypeId existence, future StartDate, EndDate >= StartDate, Reason required (max 500)
+  - Business days validation via `BusinessDayCalculator` (T2-T6 inclusive, returns 422 if 0)
+  - Overlap detection against existing approved requests (returns 409)
+  - Auto-sets UserId from CurrentUser, TotalDays from calculator
+- **PUT /api/leave-requests/{id}** -- Update endpoint (Roles: CB.PCM, LD.PCM):
+  - Owner check: entity.UserId must match CurrentUser.UserId (403)
+  - Pending-only guard: Status must be "pending" (409)
+  - Same business days + overlap validation as Create
+  - Excludes self from overlap check
+- `LeaveRequest.RequestedApproverId` (nullable long) + `RequestedApprover` nav prop to UserMaster
+- `UserMaster.DonVi` nav prop to DmDonvi (configured in AppDbContext with Restrict delete)
+- Migration: `AddRequestedApproverIdAndNavProps`
+- `BusinessDayCalculator` static utility class (T2-T6 inclusive count)
+- Shared `LeaveRequestDto` record used across List/Create/Update responses
+- `ICurrentUserProvider` interface + `CurrentUserProvider` (claims-based, multi-role support)
+- `CurrentUser` record: UserId, DisplayName, UnitId, PhongBanId, DeviceId, Roles (List<string>), UserIdUBTP, PhongBanIdUBTP, DonViIdUBTP
+
+### Changed
+- LeaveTypes CRUD endpoints: Roles changed from "quantri" to "QTHT"
+- Seed data: expanded from 1 UserRole (quantri) to 4 UserRoles (QTHT, CB.PCM, LD.PCM, GD.PGD)
+- Feature folder structure: each endpoint now has Data.cs (queries), Endpoint.cs, Mapper.cs, Models.cs (Request/Response/Validator)
+
 ## v0.1.1 -- 2026-05-14 -- Planning Rebaseline
 
 ### Changed

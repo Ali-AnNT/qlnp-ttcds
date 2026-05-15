@@ -53,6 +53,9 @@ builder.Services.AddScoped<QLNP.Api.Features.LeaveTypes.Update.Data>();
 builder.Services.AddScoped<QLNP.Api.Features.LeaveTypes.List.Data>();
 builder.Services.AddScoped<QLNP.Api.Features.LeaveTypes.Delete.Data>();
 builder.Services.AddScoped<QLNP.Api.Features.Auth.Me.Data>();
+builder.Services.AddScoped<QLNP.Api.Features.LeaveRequests.List.Data>();
+builder.Services.AddScoped<QLNP.Api.Features.LeaveRequests.Create.Data>();
+builder.Services.AddScoped<QLNP.Api.Features.LeaveRequests.Update.Data>();
 
 var app = builder.Build();
 

@@ -29,13 +29,15 @@ Host Website (SSO Portal)
             ▼ GET/POST/PUT/DELETE /api/*
 ASP.NET 9 FastEndpoints API
   ├─ CurrentUserMiddleware (gateway headers: X-User-Id, X-User-Name, X-User-FullName)
-  │   └─ Dev mode fallback (userId=1, role=quantri)
-  ├─ Features/                     ← Vertical Slices (endpoints WIP)
-  │   ├─ Auth/Me/                  MeEndpoint (scaffolded)
+  │   └─ Dev mode fallback (userId=1, roles=["QTHT"])
+  ├─ Auth/CurrentUserProvider (ICurrentUserProvider: reads claims, returns CurrentUser record)
+  ├─ Features/                     ← Vertical Slices
+  │   ├─ Auth/Me/                  MeEndpoint (implemented)
   │   ├─ Config/Get, Update, UserRole/
   │   ├─ LeaveBalances/List, My/
-  │   ├─ LeaveRequests/List, Create, Update, Approve, Reject, Cancel/
-  │   └─ LeaveTypes/List, Create, Update, Delete/
+  │   ├─ LeaveRequests/List, Create, Update/  ← P1 implemented; Approve/Reject/Cancel scaffolded
+  │   │   └─ BusinessDayCalculator.cs (T2-T6 inclusive)
+  │   └─ LeaveTypes/List, Create, Update, Delete/  ← Roles("QTHT")
   ├─ Data/AppDbContext              (EF Core 9 + SQL Server)
   │   ├─ System tables: USER_MASTER, DM_DONVI (ExcludeFromMigrations)
   │   └─ App tables: UserRoles, LeaveTypes, LeaveBalances, LeaveRequests, LeaveConfigs
@@ -126,7 +128,7 @@ sequenceDiagram
     Store->>API: fetch("/api/leave-requests", { method: POST, body })
     API->>API: Attach JWT Authorization header
     API->>FE: HTTP Request
-    FE->>FE: Resolve CurrentUser from HttpContext.Items
+    FE->>FE: Resolve CurrentUser via ICurrentUserProvider (claims)
     FE->>FE: FluentValidation (auto)
     FE->>DbCtx: EF Core query (LINQ)
     DbCtx->>DB: SQL
@@ -138,7 +140,7 @@ sequenceDiagram
     Store-->>Component: Re-render with new state
     Component-->>User: Updated UI
 
-    Note over FE,DB: Mỗi endpoint handler dùng AppDbContext qua DI injection
+    Note over FE,DB: Mỗi endpoint handler dùng AppDbContext + ICurrentUserProvider qua DI injection
 ```
 
 ## Database ERD
@@ -147,7 +149,7 @@ sequenceDiagram
 
 **DM_DONVI** (22 properties): DonViId (PK), MaDonVi, TenDonVi, TenVietTat, DonViCapChaId, Cap, CapDonViId, LoaiDonViId, SoNha, DuongId, TinhThanhId, QuanHuyenId, PhuongXaId, DiaChiDayDu, DienThoai, Fax, Email, Website, MoTa, Used, Latitude, Longitude
 
-**USER_MASTER** (9 properties): UserMasterId (PK), UserName, HoTen, PhongBanId, DonViId, UserPortalId, CanBoId, LaDonViChinh, Used
+**USER_MASTER** (9 properties + DonVi nav prop): UserMasterId (PK), UserName, HoTen, PhongBanId, DonViId, UserPortalId, CanBoId, LaDonViChinh, Used. Navigation: DonVi -> DM_DONVI
 
 ### QLNP Tables (Code First, managed by EF Core migrations)
 
@@ -182,12 +184,14 @@ erDiagram
         decimal TotalDays "5,1"
         string Reason
         string Status "max 20"
+        bigint RequestedApproverId FK_nullable
         bigint ApprovedBy FK_nullable
         datetime2 ApprovedAt_nullable
         string RejectedReason_nullable
         datetime2 CreatedAt "default SYSUTCDATETIME"
         datetime2 UpdatedAt_nullable
     }
+    USER_MASTER ||--o| LeaveRequests : "requested approver"
     LeaveBalances {
         bigint Id PK
         bigint UserId FK
@@ -206,7 +210,7 @@ erDiagram
 
 ### Seed Data
 - LeaveTypes: `annual` (12 days), `sick` (0 days), `personal` (3 days)
-- UserRoles: userId=1, role="quantri"
+- UserRoles: userId=1 QTHT, userId=2 CB.PCM, userId=3 LD.PCM, userId=4 GD.PGD
 
 ## Authentication Flow
 
@@ -223,9 +227,9 @@ sequenceDiagram
     Host->>R: postMessage({ type: "auth", token: jwt })
     R->>R: AuthContext stores JWT in localStorage
     R->>API: GET /api/auth/me (Bearer JWT)
-    API->>API: CurrentUserMiddleware reads gateway headers
+    API->>API: CurrentUserMiddleware reads gateway headers / claims
     API->>DB: Lookup USER_MASTER + UserRoles
-    API-->>R: { userId, userName, fullName, donViId, role }
+    API-->>R: { userId, userName, fullName, donViId, roles }
     R->>R: AuthState updated, app rendered
 ```
 
@@ -238,8 +242,8 @@ sequenceDiagram
 
     Note over Dev,API: DevMode:Enabled = true, no gateway headers
     Dev->>API: GET /api/auth/me (any/no JWT)
-    API->>API: CurrentUserMiddleware fallback (userId=1, role=quantri)
-    API-->>Dev: { userId: 1, userName: "admin", fullName: "Administrator", role: "quantri" }
+    API->>API: CurrentUserMiddleware fallback (userId=1, roles=["QTHT"])
+    API-->>Dev: { userId: 1, userName: "admin", fullName: "Administrator", roles: ["QTHT"] }
 ```
 
 **Note**: Login form removed. Authentication delegated to SSO Portal. The API trusts gateway headers from the reverse proxy/IIS (X-User-Id, X-User-Name, X-User-FullName).

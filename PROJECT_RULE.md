@@ -11,3 +11,9 @@
 - **MUST update task progress** in `docs/vision/tasks.md` after completing each task — mark checkboxes `[x]`, update status tables, add notes if needed.
 - This applies to every Day's checklist items, checklist nghiệm thu, and action items.
 - Progress tracking in `tasks.md` is the single source of truth for migration status. Keep it current.
+
+## Git Commit Flow (MANDATORY)
+
+- **NEVER commit directly to `dev` or `main`**.
+- Commit flow: `branch → PR → dev → PR → main`
+- Always create a feature branch before any code change.

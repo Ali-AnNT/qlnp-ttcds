@@ -80,6 +80,11 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.PhongBanId).HasColumnName("PhongBanID");
             entity.Property(e => e.UserName).HasMaxLength(50);
             entity.Property(e => e.UserPortalId).HasColumnName("User_PortalID");
+
+            entity.HasOne(e => e.DonVi)
+                .WithMany()
+                .HasForeignKey(e => e.DonViId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // ---- QLNP tables (Code First) ----
@@ -123,6 +128,10 @@ public partial class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.ApprovedBy)
                 .IsRequired(false);
+            entity.HasOne(e => e.RequestedApprover)
+                .WithMany()
+                .HasForeignKey(e => e.RequestedApproverId)
+                .OnDelete(DeleteBehavior.SetNull);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
         });
 
@@ -143,7 +152,10 @@ public partial class AppDbContext : DbContext
         );
 
         modelBuilder.Entity<UserRole>().HasData(
-            new UserRole { UserId = 1, Role = "quantri" }
+            new UserRole { UserId = 1, Role = "QTHT" },
+            new UserRole { UserId = 2, Role = "CB.PCM" },
+            new UserRole { UserId = 3, Role = "LD.PCM" },
+            new UserRole { UserId = 4, Role = "GD.PGD" }
         );
 
         OnModelCreatingPartial(modelBuilder);
