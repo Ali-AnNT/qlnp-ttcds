@@ -18,7 +18,7 @@ internal sealed class Endpoint : Endpoint<Request, Response, Mapper>
     public override void Configure()
     {
         Post("/api/leave-requests");
-        Roles("CB.PCM", "LD.PCM");
+        Roles("QLNP.CB.PCM", "QLNP.LD.PCM");
     }
 
     public override async Task HandleAsync(Request r, CancellationToken ct)

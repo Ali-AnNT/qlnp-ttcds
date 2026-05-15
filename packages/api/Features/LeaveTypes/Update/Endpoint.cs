@@ -11,7 +11,7 @@ internal sealed class Endpoint : Endpoint<Request, Response, Mapper>
     public override void Configure()
     {
         Put("/api/leave-types/{id}");
-        Roles("QTHT");
+        Roles("QLNP.QTHT");
     }
 
     public override async Task HandleAsync(Request r, CancellationToken ct)

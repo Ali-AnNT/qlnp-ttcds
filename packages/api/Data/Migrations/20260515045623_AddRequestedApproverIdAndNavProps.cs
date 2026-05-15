@@ -12,6 +12,16 @@ namespace QLNP.Api.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.AlterColumn<string>(
+                name: "Role",
+                table: "UserRoles",
+                type: "nvarchar(20)",
+                maxLength: 20,
+                nullable: false,
+                oldClrType: typeof(string),
+                oldType: "nvarchar(10)",
+                oldMaxLength: 10);
+
             migrationBuilder.AddColumn<long>(
                 name: "RequestedApproverId",
                 table: "LeaveRequests",
@@ -23,16 +33,16 @@ namespace QLNP.Api.Data.Migrations
                 keyColumn: "UserId",
                 keyValue: 1L,
                 column: "Role",
-                value: "QTHT");
+                value: "QLNP.QTHT");
 
             migrationBuilder.InsertData(
                 table: "UserRoles",
                 columns: new[] { "UserId", "Role" },
                 values: new object[,]
                 {
-                    { 2L, "CB.PCM" },
-                    { 3L, "LD.PCM" },
-                    { 4L, "GD.PGD" }
+                    { 2L, "QLNP.CB.PCM" },
+                    { 3L, "QLNP.LD.PCM" },
+                    { 4L, "QLNP.GD.PGD" }
                 });
 
             migrationBuilder.CreateIndex(
@@ -78,6 +88,16 @@ namespace QLNP.Api.Data.Migrations
             migrationBuilder.DropColumn(
                 name: "RequestedApproverId",
                 table: "LeaveRequests");
+
+            migrationBuilder.AlterColumn<string>(
+                name: "Role",
+                table: "UserRoles",
+                type: "nvarchar(10)",
+                maxLength: 10,
+                nullable: false,
+                oldClrType: typeof(string),
+                oldType: "nvarchar(20)",
+                oldMaxLength: 20);
 
             migrationBuilder.UpdateData(
                 table: "UserRoles",

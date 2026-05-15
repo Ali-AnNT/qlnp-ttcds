@@ -92,7 +92,7 @@ public partial class AppDbContext : DbContext
         modelBuilder.Entity<UserRole>(entity =>
         {
             entity.HasKey(e => e.UserId);
-            entity.Property(e => e.Role).HasMaxLength(10);
+            entity.Property(e => e.Role).HasMaxLength(20);
             entity.HasOne(e => e.User)
                 .WithMany()
                 .HasForeignKey(e => e.UserId);
@@ -152,10 +152,10 @@ public partial class AppDbContext : DbContext
         );
 
         modelBuilder.Entity<UserRole>().HasData(
-            new UserRole { UserId = 1, Role = "QTHT" },
-            new UserRole { UserId = 2, Role = "CB.PCM" },
-            new UserRole { UserId = 3, Role = "LD.PCM" },
-            new UserRole { UserId = 4, Role = "GD.PGD" }
+            new UserRole { UserId = 1, Role = "QLNP.QTHT" },
+            new UserRole { UserId = 2, Role = "QLNP.CB.PCM" },
+            new UserRole { UserId = 3, Role = "QLNP.LD.PCM" },
+            new UserRole { UserId = 4, Role = "QLNP.GD.PGD" }
         );
 
         OnModelCreatingPartial(modelBuilder);

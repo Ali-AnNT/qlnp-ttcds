@@ -12,7 +12,7 @@ using QLNP.Api.Data;
 namespace QLNP.Api.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260515040656_AddRequestedApproverIdAndNavProps")]
+    [Migration("20260515045623_AddRequestedApproverIdAndNavProps")]
     partial class AddRequestedApproverIdAndNavProps
     {
         /// <inheritdoc />
@@ -387,8 +387,8 @@ namespace QLNP.Api.Data.Migrations
 
                     b.Property<string>("Role")
                         .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.HasKey("UserId");
 
@@ -398,22 +398,22 @@ namespace QLNP.Api.Data.Migrations
                         new
                         {
                             UserId = 1L,
-                            Role = "QTHT"
+                            Role = "QLNP.QTHT"
                         },
                         new
                         {
                             UserId = 2L,
-                            Role = "CB.PCM"
+                            Role = "QLNP.CB.PCM"
                         },
                         new
                         {
                             UserId = 3L,
-                            Role = "LD.PCM"
+                            Role = "QLNP.LD.PCM"
                         },
                         new
                         {
                             UserId = 4L,
-                            Role = "GD.PGD"
+                            Role = "QLNP.GD.PGD"
                         });
                 });
 
