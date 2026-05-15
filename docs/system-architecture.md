@@ -23,7 +23,8 @@ ASP.NET 10 FastEndpoints API
   │   ├─ Auth/Me/                  MeEndpoint (implemented)
   │   ├─ Config/Get, Update, UserRole/  ← scaffolded dirs (no .cs yet)
   │   ├─ LeaveBalances/List, My/  ← scaffolded dirs (no .cs yet)
-  │   ├─ LeaveRequests/List, Create, Update/  ← P1 implemented; Approve/Reject/Cancel scaffolded (no .cs yet)
+  │   ├─ LeaveRequests/List, Create, Update, Approve, Reject, Cancel/  ← P1+P2 implemented
+  │   │   ├─ LeaveRequestMapping.cs (shared DRY DTO mapping)
   │   │   └─ BusinessDayCalculator.cs (T2-T6 inclusive)
   │   └─ LeaveTypes/List, Create, Update, Delete/  ← Roles("QTHT")
   ├─ Data/AppDbContext              (EF Core 9 + SQL Server)

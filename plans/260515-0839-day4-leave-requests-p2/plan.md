@@ -1,6 +1,6 @@
 ---
 title: "Day 4 — LeaveRequests P2 (Approve/Reject/Cancel)"
-status: pending
+status: complete
 priority: P0
 effort: "1d"
 branch: feat/efcore-migration-net9-fastendpoints
@@ -41,9 +41,9 @@ Implement 3 endpoints còn lại của `LeaveRequests` feature slice theo Vertic
 
 | # | Phase | Status | Effort |
 |---|-------|--------|--------|
-| 1 | [Approve Endpoint](phase-01-approve-endpoint.md) | pending | 3h |
-| 2 | [Reject Endpoint](phase-02-reject-endpoint.md) | pending | 1.5h |
-| 3 | [Cancel Endpoint](phase-03-cancel-endpoint.md) | pending | 1h |
+| 1 | [Approve Endpoint](phase-01-approve-endpoint.md) | complete | 3h |
+| 2 | [Reject Endpoint](phase-02-reject-endpoint.md) | complete | 1.5h |
+| 3 | [Cancel Endpoint](phase-03-cancel-endpoint.md) | complete | 1h |
 
 ## Quyết định kỹ thuật (chốt)
 
@@ -57,11 +57,11 @@ Implement 3 endpoints còn lại của `LeaveRequests` feature slice theo Vertic
 
 ## Checklist nghiệm thu
 
-- [ ] `dotnet build` không lỗi sau khi implement cả 3 endpoint
-- [ ] AC-007: LD.PCM duyệt → status = approved_leader, approved_by = LD id
-- [ ] AC-008: GD.PGD duyệt → status = approved_director, used_days tăng
-- [ ] AC-009: Từ chối + lý do → status = rejected
-- [ ] AC-010: Owner hủy đơn pending → status = cancelled
-- [ ] AC-011: LD.PCM không approve đơn phòng khác → 403
-- [ ] AC-012: used_days cập nhật đúng sau approved_director
-- [ ] Commit: `feat(api): LeaveRequests P2 - Approve/Reject/Cancel`
+- [x] `dotnet build` không lỗi sau khi implement cả 3 endpoint
+- [x] AC-007: LD.PCM duyệt → status = approved_leader, approved_by = LD id
+- [x] AC-008: GD.PGD duyệt → status = approved_director, used_days tăng
+- [x] AC-009: Từ chối + lý do → status = rejected
+- [x] AC-010: Owner hủy đơn pending → status = cancelled
+- [x] AC-011: LD.PCM không approve đơn phòng khác → 403
+- [x] AC-012: used_days cập nhật đúng sau approved_director
+- [x] Commit: `feat(api): LeaveRequests P2 - Approve/Reject/Cancel`

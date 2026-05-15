@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Cancel Endpoint"
-status: pending
+status: complete
 priority: P1
 effort: "1h"
 dependencies: [1, 2]
@@ -144,12 +144,12 @@ internal sealed class Endpoint : EndpointWithoutRequest<Response>
 
 ## Success Criteria
 
-- [ ] `dotnet build` clean
-- [ ] Owner cancel đơn pending → status=cancelled (AC-010)
-- [ ] Owner cancel đơn approved_leader → status=cancelled
-- [ ] Non-owner cancel → 403
-- [ ] Cancel đơn approved_director → 409
-- [ ] Cancel đơn rejected/cancelled → 409
+- [x] `dotnet build` clean
+- [x] Owner cancel đơn pending → status=cancelled (AC-010)
+- [x] Owner cancel đơn approved_leader → status=cancelled
+- [x] Non-owner cancel → 403
+- [x] Cancel đơn approved_director → 409
+- [x] Cancel đơn rejected/cancelled → 409
 
 ## Risk Assessment
 

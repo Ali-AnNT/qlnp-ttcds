@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Approve Endpoint"
-status: pending
+status: complete
 priority: P1
 effort: "3h"
 dependencies: []
@@ -210,15 +210,15 @@ internal sealed class Endpoint : EndpointWithoutRequest<Response>
 
 ## Success Criteria
 
-- [ ] `dotnet build` clean
-- [ ] LD.PCM approve đơn pending → status=approved_leader, ApprovedBy đúng
-- [ ] GD.PGD approve đơn approved_leader → status=approved_director, UsedDays tăng
-- [ ] LD.PCM approve đơn phòng khác → 403
-- [ ] LD.PCM approve đơn của chính mình → 403
-- [ ] LD.PCM approve đơn không pending → 409
-- [ ] GD.PGD approve đơn pending (skip cấp 1) → 409
-- [ ] Dual-role user (LD+GD) approve đơn approved_leader → approved_director (GD logic thắng)
-- [ ] UsedDays vượt TotalDays → 422
+- [x] `dotnet build` clean
+- [x] LD.PCM approve đơn pending → status=approved_leader, ApprovedBy đúng
+- [x] GD.PGD approve đơn approved_leader → status=approved_director, UsedDays tăng
+- [x] LD.PCM approve đơn phòng khác → 403
+- [x] LD.PCM approve đơn của chính mình → 403
+- [x] LD.PCM approve đơn không pending → 409
+- [x] GD.PGD approve đơn pending (skip cấp 1) → 409
+- [x] Dual-role user (LD+GD) approve đơn approved_leader → approved_director (GD logic thắng)
+- [x] UsedDays vượt TotalDays → 422
 
 ## Risk Assessment
 

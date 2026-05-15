@@ -1,5 +1,28 @@
 # Project Changelog - QLNP-TTCDS
 
+## v0.3.0 -- 2026-05-15 -- LeaveRequests P2 (Approve/Reject/Cancel)
+
+### Added
+- **PUT /api/leave-requests/{id}/approve** -- Approve endpoint (Roles: LD.PCM, GD.PGD):
+  - LD.PCM: pending → approved_leader, scope check (same PhongBanId, not self)
+  - GD.PGD: approved_leader → approved_director, auto-upsert LeaveBalance.UsedDays
+  - Dual-role user: isDirector priority (GD.PGD logic wins)
+  - UsedDays overflow protection: 422 if would exceed TotalDays
+  - Lazy-init LeaveBalance row (TotalDays = LeaveType.DefaultDays) if not exists
+- **PUT /api/leave-requests/{id}/reject** -- Reject endpoint (Roles: LD.PCM, GD.PGD):
+  - LD.PCM: reject pending → rejected (scope: same PhongBanId, not self)
+  - GD.PGD: reject approved_leader → rejected
+  - FluentValidation: RejectedReason required (NotEmpty)
+- **DELETE /api/leave-requests/{id}** -- Cancel endpoint (Roles: CB.PCM, LD.PCM):
+  - Owner-only check (entity.UserId == currentUser.UserId)
+  - Status guard: only pending or approved_leader can be cancelled
+- `LeaveRequestMapping.cs` -- shared extension method `MapToDto()` for DRY DTO mapping across all LeaveRequest endpoints
+
+### Changed
+- Refactored Create/Mapper.cs and Update/Mapper.cs to use shared `LeaveRequestMapping.MapToDto()`
+- Approve endpoint: DbUpdateException catch + 409 response for concurrent save conflicts
+- Approve endpoint: dual-role auto-select (isDirector checked before isLeader)
+
 ## v0.2.0 -- 2026-05-15 -- LeaveRequests P1 Endpoints + JWT Auth
 
 ### Changed

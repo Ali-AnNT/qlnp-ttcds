@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Reject Endpoint"
-status: pending
+status: complete
 priority: P1
 effort: "1.5h"
 dependencies: [1]
@@ -171,15 +171,15 @@ internal sealed class Endpoint : Endpoint<Request, Response>
 
 ## Success Criteria
 
-- [ ] `dotnet build` clean
-- [ ] LD.PCM reject đơn pending + lý do → status=rejected, RejectedReason lưu
-- [ ] GD.PGD reject đơn approved_leader → status=rejected
-- [ ] Reject không có lý do → 400 validation error
-- [ ] LD.PCM reject đơn phòng khác → 403
-- [ ] LD.PCM reject đơn của chính mình → 403
-- [ ] LD.PCM reject đơn approved_leader → 409
-- [ ] GD.PGD reject đơn pending → 409 (phải qua cấp 1 trước)
-- [ ] Reject đơn approved_director → 409
+- [x] `dotnet build` clean
+- [x] LD.PCM reject đơn pending + lý do → status=rejected, RejectedReason lưu
+- [x] GD.PGD reject đơn approved_leader → status=rejected
+- [x] Reject không có lý do → 400 validation error
+- [x] LD.PCM reject đơn phòng khác → 403
+- [x] LD.PCM reject đơn của chính mình → 403
+- [x] LD.PCM reject đơn approved_leader → 409
+- [x] GD.PGD reject đơn pending → 409 (phải qua cấp 1 trước)
+- [x] Reject đơn approved_director → 409
 
 ## Risk Assessment
 

@@ -32,7 +32,7 @@ All Supabase-related issues resolved by architecture migration:
 | JWT Bearer authentication (ICurrentUserProvider, Claims-based) | Done |
 | Initial EF Core migration (InitialCreate) | Done |
 | Features directory scaffolded (Auth/Me, Config, LeaveBalances, LeaveRequests, LeaveTypes) | Done |
-| Endpoint .cs implementations | **IN PROGRESS** (8/17 implemented; Approve/Reject/Cancel, LeaveBalances, Config pending) |
+| Endpoint .cs implementations | **IN PROGRESS** (11/17 implemented; LeaveBalances, Config pending) |
 
 ### 1.2 Frontend Refactor -- COMPLETED
 | Task | Status |
@@ -50,14 +50,14 @@ All Supabase-related issues resolved by architecture migration:
 
 **Priority:** P0 -- Complete backend behavior behind the already-refactored frontend.
 **Target window:** 2026-05-14 to 2026-05-21.
-**Progress:** 8/17 endpoint implementations (47%), 85% overall migration.
+**Progress:** 11/17 endpoint implementations (65%), 88% overall migration.
 
 | Task | Status | Target |
 |------|--------|--------|
 | Auth/Me endpoint | Done | 2026-05-14 |
 | LeaveTypes CRUD endpoints (Roles "QTHT") | Done | 2026-05-14 |
 | LeaveRequests P1: List/Create/Update | Done | 2026-05-15 |
-| LeaveRequests P2: Approve/Reject/Cancel | Planned | 2026-05-16 |
+| LeaveRequests P2: Approve/Reject/Cancel | Done | 2026-05-15 |
 | LeaveBalances, Department reference endpoints | Planned | 2026-05-17 |
 | Frontend integration against real API | Planned | 2026-05-18 |
 | API integration tests + Vitest updates | Planned | 2026-05-19 |
@@ -103,8 +103,8 @@ May 2026 (COMPLETED): Phase 1 - Architecture Migration
     - Features directory scaffolded, 8/17 endpoints implemented
 
 May 14-21 2026 (IN PROGRESS): Phase 1.1 - Endpoint Implementation & Release Readiness
-    - 8 endpoints done: Auth/Me, LeaveTypes CRUD, LeaveRequests List/Create/Update
-    - 9 remaining: Approve/Reject/Cancel, LeaveBalances List/My, Config Get/Update/UserRole
+    - 11 endpoints done: Auth/Me, LeaveTypes CRUD, LeaveRequests List/Create/Update/Approve/Reject/Cancel
+    - 6 remaining: LeaveBalances List/My, Config Get/Update/UserRole
     - Integration testing
     - Documentation/deployment sync
 
