@@ -1,14 +1,12 @@
 using FastEndpoints;
-using Microsoft.EntityFrameworkCore;
-using QLNP.Api.Data;
 
 namespace QLNP.Api.Features.LeaveTypes.Delete;
 
-public class DeleteLeaveTypeEndpoint : EndpointWithoutRequest
+internal sealed class Endpoint : EndpointWithoutRequest
 {
-    private readonly AppDbContext _db;
+    private readonly Data _data;
 
-    public DeleteLeaveTypeEndpoint(AppDbContext db) => _db = db;
+    public Endpoint(Data data) => _data = data;
 
     public override void Configure()
     {
@@ -20,14 +18,14 @@ public class DeleteLeaveTypeEndpoint : EndpointWithoutRequest
     {
         var id = Route<long>("id");
 
-        var leaveType = await _db.LeaveTypes.FindAsync([id], ct);
+        var leaveType = await _data.GetByIdAsync(id, ct);
         if (leaveType is null || !leaveType.IsActive)
         {
             await Send.NotFoundAsync(ct);
             return;
         }
 
-        var hasRequests = await _db.LeaveRequests.AnyAsync(r => r.LeaveTypeId == id, ct);
+        var hasRequests = await _data.HasRequestsAsync(id, ct);
         if (hasRequests)
         {
             AddError("Không thể xóa: loại nghỉ đang được sử dụng trong đơn xin nghỉ");
@@ -36,7 +34,7 @@ public class DeleteLeaveTypeEndpoint : EndpointWithoutRequest
         }
 
         leaveType.IsActive = false;
-        await _db.SaveChangesAsync(ct);
+        await _data.SaveAsync(ct);
 
         await Send.NoContentAsync(ct);
     }
