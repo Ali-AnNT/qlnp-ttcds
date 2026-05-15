@@ -59,6 +59,13 @@ builder.Services.AddScoped<QLNP.Api.Features.LeaveRequests.Update.Data>();
 
 var app = builder.Build();
 
+// Auto-apply pending EF Core migrations on startup
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+}
+
 app.UseAuthentication();
 app.UseAuthorization();
 
