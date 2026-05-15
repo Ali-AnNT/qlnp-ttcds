@@ -56,7 +56,7 @@ namespace QLNP.Api.Data.Migrations
                 column: "RequestedApproverId",
                 principalTable: "USER_MASTER",
                 principalColumn: "User_MasterID",
-                onDelete: ReferentialAction.SetNull);
+                onDelete: ReferentialAction.Restrict);
         }
 
         /// <inheritdoc />

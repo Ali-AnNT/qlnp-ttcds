@@ -459,7 +459,7 @@ namespace QLNP.Api.Data.Migrations
                     b.HasOne("QLNP.Api.Entities.UserMaster", "RequestedApprover")
                         .WithMany()
                         .HasForeignKey("RequestedApproverId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("QLNP.Api.Entities.UserMaster", "User")
                         .WithMany()

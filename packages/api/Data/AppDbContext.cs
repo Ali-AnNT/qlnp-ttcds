@@ -131,7 +131,7 @@ public partial class AppDbContext : DbContext
             entity.HasOne(e => e.RequestedApprover)
                 .WithMany()
                 .HasForeignKey(e => e.RequestedApproverId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.Restrict);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
         });
 
