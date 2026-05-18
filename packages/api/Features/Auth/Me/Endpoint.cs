@@ -11,21 +11,28 @@ internal sealed class Endpoint : EndpointWithoutRequest<Response>
     public override void Configure()
     {
         Get("/api/auth/me");
+        AllowAnonymous();
         Tags("Auth");
-        Options(x => x.RequireAuthorization());
     }
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        var currentUser = _data.GetCurrentUser();
-        var response = await _data.BuildResponseAsync(currentUser.UserId, ct);
-
-        if (response is null)
+        try
         {
-            await Send.NotFoundAsync(ct);
-            return;
-        }
+            var currentUser = _data.GetCurrentUser();
+            var response = await _data.BuildResponseAsync(currentUser.UserId, ct);
 
-        await Send.OkAsync(response, ct);
+            if (response is null)
+            {
+                await Send.NotFoundAsync(ct);
+                return;
+            }
+
+            await Send.OkAsync(response, ct);
+        }
+        catch (InvalidOperationException)
+        {
+            await Send.UnauthorizedAsync(ct);
+        }
     }
 }
