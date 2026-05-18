@@ -1,7 +1,7 @@
 ---
 day: 11
 title: Integration Wiring and Bug Fixes
-status: planned
+status: in_progress
 priority: P0
 effort: 1 day
 date: 2026-05-18
@@ -27,7 +27,7 @@ Connect the refactored frontend to real backend endpoints and fix contract misma
 
 ## Requirements
 
-- All API modules call real endpoints.
+- All API modules call real endpoints. -- DONE (all api.ts files exist)
 - Store actions handle API errors.
 - Pages render backend data without mock/Supabase fallback.
 
@@ -39,28 +39,40 @@ Backend DTOs -> frontend API module mapping -> store state -> pages.
 
 | Action | File |
 |--------|------|
-| Modify | `packages/web/src/api/*.api.ts` |
-| Modify | `packages/web/src/store/useStore.ts` |
-| Modify | `packages/web/src/lib/leave-data.ts` |
-| Modify | affected `packages/web/src/pages/*.tsx` |
+| Aligned | `packages/web/src/api/auth.api.ts` |
+| Aligned | `packages/web/src/api/leave-types.api.ts` |
+| Aligned | `packages/web/src/api/leave-requests.api.ts` |
+| Aligned | `packages/web/src/api/leave-balances.api.ts` |
+| Aligned | `packages/web/src/api/config.api.ts` |
+| Aligned | `packages/web/src/api/departments.api.ts` |
+| Aligned | `packages/web/src/api/client.ts` |
 
-## Implementation Steps
+## Alignment Work Completed
 
-1. Start API in dev mode.
-2. Run frontend dev server.
-3. Call each API module manually or through UI.
-4. Fix DTO/date casing mismatches.
-5. Fix store load ordering after auth resolution.
-6. Verify create/update/approve/cancel flows.
-7. Confirm no Supabase runtime imports.
+- Auth/Me DTO aligned between backend and frontend.
+- HTTP methods for approve/reject/cancel aligned (backend changed PUT->POST, DELETE->POST to match frontend).
+- LeaveRequestDto now includes donViId and updatedAt fields.
+- All list endpoints return raw arrays instead of wrapped `{items: [...]}`.
+- Both projects build with 0 errors.
+
+## Remaining Work (needs runtime environment)
+
+- [ ] Start API in dev mode and run frontend dev server.
+- [ ] Call each API module manually or through UI.
+- [ ] Fix any remaining DTO/date casing mismatches found during runtime.
+- [ ] Fix store load ordering after auth resolution.
+- [ ] Verify create/update/approve/cancel flows end-to-end.
+- [ ] Confirm no Supabase runtime imports.
+- [ ] Remove stale mock/Supabase fallback references.
 
 ## Todo List
 
-- [ ] Auth/me integration.
-- [ ] Leave types integration.
-- [ ] Leave request lifecycle integration.
-- [ ] Balance/config integration.
+- [x] Auth/me integration (DTO aligned).
+- [x] Leave types integration (DTO aligned).
+- [x] Leave request lifecycle integration (methods + DTO aligned).
+- [x] Balance/config integration (DTO aligned).
 - [ ] Reports/violations data integration.
+- [ ] Runtime verification of full flows.
 - [ ] Remove stale API assumptions.
 
 ## Success Criteria
@@ -82,4 +94,4 @@ Backend DTOs -> frontend API module mapping -> store state -> pages.
 
 ## Next Steps
 
-- Add integration and frontend tests.
+- Add integration and frontend tests (Day 12).
