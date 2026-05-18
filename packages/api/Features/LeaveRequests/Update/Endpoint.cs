@@ -4,7 +4,7 @@ using QLNP.Api.Auth;
 
 namespace QLNP.Api.Features.LeaveRequests.Update;
 
-internal sealed class Endpoint : Endpoint<Request, Response, Mapper>
+internal sealed class Endpoint : Endpoint<Request, LeaveRequestDto, Mapper>
 {
     private readonly Data _data;
     private readonly ICurrentUserProvider _currentUser;
@@ -19,6 +19,7 @@ internal sealed class Endpoint : Endpoint<Request, Response, Mapper>
     {
         Put("/api/leave-requests/{id}");
         Roles("QLNP.CB.PCM", "QLNP.LD.PCM");
+        Tags("Leave Requests");
     }
 
     public override async Task HandleAsync(Request r, CancellationToken ct)

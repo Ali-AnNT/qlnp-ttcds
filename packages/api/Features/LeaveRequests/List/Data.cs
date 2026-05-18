@@ -41,11 +41,12 @@ internal sealed class Data
             .OrderByDescending(lr => lr.CreatedAt)
             .Select(lr => new LeaveRequestDto(
                 lr.Id, lr.UserId, lr.User.HoTen ?? "",
+                lr.User.DonViId,
                 lr.User.DonVi != null ? lr.User.DonVi.TenDonVi ?? "" : "",
                 lr.LeaveTypeId, lr.LeaveType.Name,
                 lr.StartDate, lr.EndDate, lr.TotalDays,
                 lr.Reason, lr.Status, lr.RequestedApproverId,
-                lr.ApprovedBy, lr.ApprovedAt, lr.RejectedReason, lr.CreatedAt))
+                lr.ApprovedBy, lr.ApprovedAt, lr.RejectedReason, lr.CreatedAt, lr.UpdatedAt))
             .ToListAsync(ct);
     }
 }

@@ -1,3 +1,3 @@
 namespace QLNP.Api.Features.LeaveRequests.List;
 
-internal sealed record Response(List<LeaveRequestDto> Items);
+// Response is List<LeaveRequestDto> directly

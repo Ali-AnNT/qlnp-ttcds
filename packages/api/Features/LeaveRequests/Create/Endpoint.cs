@@ -4,7 +4,7 @@ using QLNP.Api.Auth;
 
 namespace QLNP.Api.Features.LeaveRequests.Create;
 
-internal sealed class Endpoint : Endpoint<Request, Response, Mapper>
+internal sealed class Endpoint : Endpoint<Request, LeaveRequestDto, Mapper>
 {
     private readonly Data _data;
     private readonly ICurrentUserProvider _currentUser;
@@ -19,6 +19,7 @@ internal sealed class Endpoint : Endpoint<Request, Response, Mapper>
     {
         Post("/api/leave-requests");
         Roles("QLNP.CB.PCM", "QLNP.LD.PCM");
+        Tags("Leave Requests");
     }
 
     public override async Task HandleAsync(Request r, CancellationToken ct)
@@ -59,7 +60,7 @@ internal sealed class Endpoint : Endpoint<Request, Response, Mapper>
 
         // Load nav props for DTO mapping
         var loaded = await _data.GetByIdAsync(entity.Id, ct);
-        await Send.CreatedAtAsync($"/api/leave-requests/{entity.Id}",
-            Map.FromEntity(loaded!), cancellation: ct);
+        var dto = Map.FromEntity(loaded!);
+        await Send.CreatedAtAsync($"/api/leave-requests/{entity.Id}", dto, cancellation: ct);
     }
 }

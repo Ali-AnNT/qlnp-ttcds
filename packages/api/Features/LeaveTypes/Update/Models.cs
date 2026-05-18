@@ -27,4 +27,4 @@ internal sealed class Validator : Validator<Request>
     }
 }
 
-internal sealed record Response(LeaveTypeDto LeaveType);
+// Response is LeaveTypeDto directly

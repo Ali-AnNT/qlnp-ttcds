@@ -3,7 +3,7 @@ using QLNP.Api.Entities;
 
 namespace QLNP.Api.Features.LeaveTypes.Create;
 
-internal sealed class Mapper : Mapper<Request, Response, LeaveType>
+internal sealed class Mapper : Mapper<Request, LeaveTypeDto, LeaveType>
 {
     public override LeaveType ToEntity(Request r) => new()
     {

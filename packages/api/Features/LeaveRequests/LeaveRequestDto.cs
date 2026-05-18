@@ -4,6 +4,7 @@ internal sealed record LeaveRequestDto(
     long Id,
     long UserId,
     string UserName,
+    long? DonViId,
     string DonViName,
     long LeaveTypeId,
     string LeaveTypeName,
@@ -16,5 +17,6 @@ internal sealed record LeaveRequestDto(
     long? ApprovedBy,
     DateTime? ApprovedAt,
     string? RejectedReason,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    DateTime? UpdatedAt
 );

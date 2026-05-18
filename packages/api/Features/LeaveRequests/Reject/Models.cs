@@ -4,7 +4,6 @@ using FluentValidation;
 namespace QLNP.Api.Features.LeaveRequests.Reject;
 
 internal sealed record Request(string RejectedReason);
-internal sealed record Response(LeaveRequestDto Item);
 
 internal sealed class Validator : Validator<Request>
 {

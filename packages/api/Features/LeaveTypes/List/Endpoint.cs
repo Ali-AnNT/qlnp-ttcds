@@ -2,7 +2,7 @@ using FastEndpoints;
 
 namespace QLNP.Api.Features.LeaveTypes.List;
 
-internal sealed class Endpoint : EndpointWithoutRequest<Response>
+internal sealed class Endpoint : EndpointWithoutRequest<List<LeaveTypeDto>>
 {
     private readonly Data _data;
 
@@ -12,6 +12,7 @@ internal sealed class Endpoint : EndpointWithoutRequest<Response>
     {
         Get("/api/leave-types");
         Options(x => x.RequireAuthorization());
+        Tags("Leave Types");
     }
 
     public override async Task HandleAsync(CancellationToken ct)
@@ -21,6 +22,6 @@ internal sealed class Endpoint : EndpointWithoutRequest<Response>
         var dtos = items.Select(t =>
             new LeaveTypeDto(t.Id, t.Name, t.Code, t.DefaultDays, t.Description, t.IsActive)).ToList();
 
-        await Send.OkAsync(new Response(dtos), ct);
+        await Send.OkAsync(dtos, ct);
     }
 }

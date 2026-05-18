@@ -12,6 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddFastEndpoints()
     .SwaggerDocument(o =>
     {
+        o.AutoTagPathSegmentIndex = 2;
         o.DocumentSettings = s =>
         {
             s.Title = "QLNP API";
@@ -43,6 +44,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+// CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:8082")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
+
 // Current User Provider
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserProvider, CurrentUserProvider>();
@@ -54,8 +67,19 @@ builder.Services.AddScoped<QLNP.Api.Features.LeaveTypes.List.Data>();
 builder.Services.AddScoped<QLNP.Api.Features.LeaveTypes.Delete.Data>();
 builder.Services.AddScoped<QLNP.Api.Features.Auth.Me.Data>();
 builder.Services.AddScoped<QLNP.Api.Features.LeaveRequests.List.Data>();
+builder.Services.AddScoped<QLNP.Api.Features.LeaveRequests.My.Data>();
 builder.Services.AddScoped<QLNP.Api.Features.LeaveRequests.Create.Data>();
 builder.Services.AddScoped<QLNP.Api.Features.LeaveRequests.Update.Data>();
+builder.Services.AddScoped<QLNP.Api.Features.LeaveRequests.Approve.Data>();
+builder.Services.AddScoped<QLNP.Api.Features.LeaveRequests.Reject.Data>();
+builder.Services.AddScoped<QLNP.Api.Features.LeaveRequests.Cancel.Data>();
+builder.Services.AddScoped<QLNP.Api.Features.Config.Get.Data>();
+builder.Services.AddScoped<QLNP.Api.Features.Config.Update.Data>();
+builder.Services.AddScoped<QLNP.Api.Features.Config.UserRole.Data>();
+builder.Services.AddScoped<QLNP.Api.Features.LeaveBalances.List.Data>();
+builder.Services.AddScoped<QLNP.Api.Features.LeaveBalances.My.Data>();
+builder.Services.AddScoped<QLNP.Api.Features.Departments.List.Data>();
+builder.Services.AddScoped<QLNP.Api.Features.Departments.Get.Data>();
 
 var app = builder.Build();
 
@@ -66,6 +90,7 @@ using (var scope = app.Services.CreateScope())
     db.Database.Migrate();
 }
 
+app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 

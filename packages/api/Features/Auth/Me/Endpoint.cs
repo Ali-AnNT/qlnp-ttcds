@@ -12,23 +12,23 @@ internal sealed class Endpoint : EndpointWithoutRequest<Response>
     {
         Get("/api/auth/me");
         AllowAnonymous();
+        Tags("Auth");
     }
 
     public override async Task HandleAsync(CancellationToken ct)
     {
         try
         {
-            var user = _data.GetCurrentUser();
-            await Send.OkAsync(new Response(
-                user.UserId,
-                user.DisplayName,
-                user.UnitId,
-                user.PhongBanId,
-                user.Roles,
-                user.UserIdUBTP,
-                user.PhongBanIdUBTP,
-                user.DonViIdUBTP
-            ), ct);
+            var currentUser = _data.GetCurrentUser();
+            var response = await _data.BuildResponseAsync(currentUser.UserId, ct);
+
+            if (response is null)
+            {
+                await Send.NotFoundAsync(ct);
+                return;
+            }
+
+            await Send.OkAsync(response, ct);
         }
         catch (InvalidOperationException)
         {

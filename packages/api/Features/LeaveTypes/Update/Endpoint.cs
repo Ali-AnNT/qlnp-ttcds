@@ -2,7 +2,7 @@ using FastEndpoints;
 
 namespace QLNP.Api.Features.LeaveTypes.Update;
 
-internal sealed class Endpoint : Endpoint<Request, Response, Mapper>
+internal sealed class Endpoint : Endpoint<Request, LeaveTypeDto, Mapper>
 {
     private readonly Data _data;
 
@@ -12,6 +12,7 @@ internal sealed class Endpoint : Endpoint<Request, Response, Mapper>
     {
         Put("/api/leave-types/{id}");
         Roles("QLNP.QTHT");
+        Tags("Leave Types");
     }
 
     public override async Task HandleAsync(Request r, CancellationToken ct)
@@ -37,6 +38,6 @@ internal sealed class Endpoint : Endpoint<Request, Response, Mapper>
         var dto = new LeaveTypeDto(leaveType.Id, leaveType.Name, leaveType.Code,
             leaveType.DefaultDays, leaveType.Description, leaveType.IsActive);
 
-        await Send.OkAsync(new Response(dto), ct);
+        await Send.OkAsync(dto, ct);
     }
 }

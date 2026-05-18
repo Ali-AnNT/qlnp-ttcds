@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace QLNP.Api.Features.LeaveTypes.Create;
 
-internal sealed class Endpoint : Endpoint<Request, Response, Mapper>
+internal sealed class Endpoint : Endpoint<Request, LeaveTypeDto, Mapper>
 {
     private readonly Data _data;
 
@@ -13,6 +13,7 @@ internal sealed class Endpoint : Endpoint<Request, Response, Mapper>
     {
         Post("/api/leave-types");
         Roles("QLNP.QTHT");
+        Tags("Leave Types");
     }
 
     public override async Task HandleAsync(Request r, CancellationToken ct)
@@ -35,7 +36,7 @@ internal sealed class Endpoint : Endpoint<Request, Response, Mapper>
 
         await Send.CreatedAtAsync(
             $"/api/leave-types/{entity.Id}",
-            new Response(dto),
+            dto,
             cancellation: ct);
     }
 }
