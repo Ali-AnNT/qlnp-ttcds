@@ -164,7 +164,7 @@ export default MyComponent;
 - Status colors: semantic CSS classes (bg-warning, text-success, etc.)
 - Responsive: mobile-first with md: breakpoint for desktop
 
-## Backend (.NET 9 + FastEndpoints + EF Core + Vertical Slice Architecture)
+## Backend (.NET 10 + FastEndpoints + EF Core + Vertical Slice Architecture)
 
 ### Project Structure
 
@@ -195,9 +195,9 @@ packages/api/
 │   └── LeaveTypes/List, Create, Update, Delete/  # Roles("QTHT")
 ├── Auth/
 │   ├── ICurrentUserProvider.cs       # Interface for current user resolution
-│   └── CurrentUserProvider.cs        # Reads claims from HttpContext
+│   └── CurrentUserProvider.cs        # Reads claims from ClaimsPrincipal (JWT)
 └── Middleware/
-    └── CurrentUser.cs                # CurrentUser record (UserId, DisplayName, UnitId, PhongBanId, Roles, etc.)
+    └── CurrentUser.cs                # CurrentUser record (UserId, DisplayName, UnitId, PhongBanId, DeviceId, Roles, UserIdUBTP, PhongBanIdUBTP, DonViIdUBTP)
 ```
 
 ### Naming Conventions
@@ -258,9 +258,10 @@ internal sealed class Endpoint : Endpoint<Request, Response, Mapper>
 
 ```
 HTTP Request
-  → Authentication/Authorization (claims-based, Roles() attribute)
-  → Validator.ValidateAsync()     [FluentValidation, auto]
-  → Endpoint.HandleAsync()         [business logic + Data class + EF Core]
+  → JWT Bearer Authentication (Issuer/Audience/SigningKey validation)
+  → Authorization (claims-based, Roles() attribute)
+  → Validator.ValidateAsync()       [FluentValidation, auto]
+  → Endpoint.HandleAsync()           [business logic + Data class + EF Core]
   → HTTP Response
 ```
 
@@ -280,7 +281,7 @@ HTTP Request
 - Multi-role users: `CurrentUser.Roles` là `List<string>`, nhiều roles possible (VD: LD.PCM + GD.PGD)
 - Response format nhất quán: `{ data, error }` envelope
 - Error response dùng `AddError()` hoặc `ThrowError()` của FastEndpoints
-- Dev mode: CurrentUserMiddleware fallback to userId=1, roles=["QTHT"] khi không có gateway headers
+- Dev mode: ICurrentUserProvider fallback to userId=1, roles=["QTHT"] khi anonymous (no JWT)
 
 ## Git Practices
 

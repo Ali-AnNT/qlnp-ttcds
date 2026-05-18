@@ -1,41 +1,30 @@
 # System Architecture - QLNP-TTCDS
 
-## Supabase Prototype (DEPRECATED)
+## ~~Supabase Prototype~~ (DEPRECATED — removed in Phase 1)
 
-```
-Browser (React SPA)
-    |
-    | HTTPS (REST + RPC)
-    v
-Supabase (Backend-as-a-Service)
-    |--- PostgreSQL Database
-    |--- Row Level Security (RLS)
-    |--- SECURITY DEFINER RPC Functions
-```
+Supabase architecture replaced by .NET API + SQL Server. All Supabase code, deps, and migrations removed.
 
-**Status**: Removed. Replaced by .NET API + SQL Server in Phase 1 migration.
-
-## Current Architecture (Phase 1): .NET 9 + EF Core + Gateway Auth
+## Current Architecture (Phase 1): .NET 10 + EF Core + JWT Bearer Auth
 
 ### High-Level
 
 ```
 Host Website (SSO Portal)
   └─ iframe ─ React SPA (Vite)
-       ├─ AuthContext (JWT in localStorage + postMessage)
+       ├─ AuthContext (JWT from postMessage or localStorage)
        ├─ Zustand Store (data only, no auth)
        └─ api/client.ts (fetch + Bearer JWT)
             │
             ▼ GET/POST/PUT/DELETE /api/*
-ASP.NET 9 FastEndpoints API
-  ├─ CurrentUserMiddleware (gateway headers: X-User-Id, X-User-Name, X-User-FullName)
-  │   └─ Dev mode fallback (userId=1, roles=["QTHT"])
-  ├─ Auth/CurrentUserProvider (ICurrentUserProvider: reads claims, returns CurrentUser record)
+ASP.NET 10 FastEndpoints API
+  ├─ JWT Bearer Authentication (Issuer, Audience, SigningKey from appsettings.json)
+  ├─ ICurrentUserProvider (reads ClaimsPrincipal from JWT, returns CurrentUser record)
   ├─ Features/                     ← Vertical Slices
   │   ├─ Auth/Me/                  MeEndpoint (implemented)
-  │   ├─ Config/Get, Update, UserRole/
-  │   ├─ LeaveBalances/List, My/
-  │   ├─ LeaveRequests/List, Create, Update/  ← P1 implemented; Approve/Reject/Cancel scaffolded
+  │   ├─ Config/Get, Update, UserRole/  ← scaffolded dirs (no .cs yet)
+  │   ├─ LeaveBalances/List, My/  ← scaffolded dirs (no .cs yet)
+  │   ├─ LeaveRequests/List, Create, Update, Approve, Reject, Cancel/  ← P1+P2 implemented
+  │   │   ├─ LeaveRequestMapping.cs (shared DRY DTO mapping)
   │   │   └─ BusinessDayCalculator.cs (T2-T6 inclusive)
   │   └─ LeaveTypes/List, Create, Update, Delete/  ← Roles("QTHT")
   ├─ Data/AppDbContext              (EF Core 9 + SQL Server)
@@ -214,7 +203,7 @@ erDiagram
 
 ## Authentication Flow
 
-### Gateway Auth via SSO Portal (current)
+### JWT Bearer Auth via SSO Portal (production)
 
 ```mermaid
 sequenceDiagram
@@ -227,9 +216,9 @@ sequenceDiagram
     Host->>R: postMessage({ type: "auth", token: jwt })
     R->>R: AuthContext stores JWT in localStorage
     R->>API: GET /api/auth/me (Bearer JWT)
-    API->>API: CurrentUserMiddleware reads gateway headers / claims
+    API->>API: JWT validation + ICurrentUserProvider reads claims
     API->>DB: Lookup USER_MASTER + UserRoles
-    API-->>R: { userId, userName, fullName, donViId, roles }
+    API-->>R: { userId, displayName, roles, ... }
     R->>R: AuthState updated, app rendered
 ```
 
@@ -240,13 +229,13 @@ sequenceDiagram
     participant Dev as Developer Browser
     participant API as FastEndpoints API
 
-    Note over Dev,API: DevMode:Enabled = true, no gateway headers
-    Dev->>API: GET /api/auth/me (any/no JWT)
-    API->>API: CurrentUserMiddleware fallback (userId=1, roles=["QTHT"])
-    API-->>Dev: { userId: 1, userName: "admin", fullName: "Administrator", roles: ["QTHT"] }
+    Note over Dev,API: JWT Bearer allows anonymous for /api/auth/me in dev
+    Dev->>API: GET /api/auth/me (no JWT / anonymous)
+    API->>API: ICurrentUserProvider fallback (userId=1, roles=["QTHT"])
+    API-->>Dev: { userId: 1, displayName: "admin", roles: ["QTHT"] }
 ```
 
-**Note**: Login form removed. Authentication delegated to SSO Portal. The API trusts gateway headers from the reverse proxy/IIS (X-User-Id, X-User-Name, X-User-FullName).
+**Note**: Login form removed. Authentication delegated to SSO Portal which issues JWT. The API validates JWT via symmetric key (Jwt:SigningKey in appsettings.json). ICurrentUserProvider reads ClaimsPrincipal, no longer uses gateway headers or CurrentUserMiddleware.
 
 ## Approval Workflow
 
@@ -276,8 +265,8 @@ graph TD
     end
     subgraph "Application Server (IIS)"
         RP[Reverse Proxy / IIS ARR]
-        API[ASP.NET 9 + FastEndpoints]
-        MW[CurrentUserMiddleware]
+        API[ASP.NET 10 + FastEndpoints]
+        AUTH[JWT Bearer Auth + ICurrentUserProvider]
     end
     subgraph "Database Server"
         DB[SQL Server - VI_NGHIPHEP]
@@ -290,11 +279,11 @@ graph TD
     end
 
     Browser -->|HTTPS| SPA
-    Browser -->|HTTPS| RP
-    RP -->|gateway headers| API
+    Browser -->|HTTPS + Bearer JWT| RP
+    RP -->|JWT validated| API
     Host -->|postMessage JWT| SPA
-    API --> MW
-    MW --> DB
+    API --> AUTH
+    AUTH --> DB
 ```
 
 ## Key Architectural Decisions
@@ -303,7 +292,7 @@ graph TD
 |----------|-----------|
 | **FastEndpoints** thay vì Minimal API | Mỗi endpoint là 1 class riêng (REPR pattern) → dễ test, dễ maintain, pipeline behaviors rõ ràng (Validator → PreProcessor → Handler → PostProcessor) |
 | **EF Core** thay vì Dapper | Type-safe LINQ queries, migrations built-in, change tracking. Phù hợp khi làm việc với DB có sẵn (scaffold system tables + Code First app tables) |
-| **Gateway Header Auth** thay vì JWT login | Hệ thống đã có SSO Portal. API đọc gateway headers (X-User-Id, X-User-Name, X-User-FullName) từ reverse proxy → không cần quản lý password hay JWT generation |
+| **JWT Bearer Auth** thay vì gateway headers | SSO Portal issues JWT, app nhận qua postMessage (iframe) hoặc Authorization header. API validates JWT via symmetric key. ICurrentUserProvider reads claims → CurrentUser record. Đã bỏ CurrentUserMiddleware và gateway headers |
 | **ExcludeFromMigrations** cho system tables | USER_MASTER, DM_DONVI là các bảng có sẵn của hệ thống khác. Không được phép thay đổi schema. EF Core chỉ đọc dữ liệu |
 | **Vertical Slice Architecture** thay vì N-tier | Code tổ chức theo feature, không theo layer kỹ thuật. Thêm/sửa feature = làm việc trong 1 folder, không lan sang các layer khác → giảm coupling, tăng cohesion |
 | Single Zustand store | Data-only state management. Auth state moved to React Context. Limited state surface area for intranet app |
@@ -311,4 +300,4 @@ graph TD
 | Business days calculation (date-fns) | Standard for government/education leave tracking |
 | shadcn/ui (Radix primitives) | Production-ready accessible components, customizable via CSS variables |
 | No SSR | Intranet app behind auth, no SEO needed. SPA is simpler to deploy and maintain |
-| pnpm monorepo | `packages/api` (.NET 9) + `packages/web` (React SPA). Shared tooling, single repo |
+| pnpm monorepo | `packages/api` (.NET 10) + `packages/web` (React SPA). Shared tooling, single repo |

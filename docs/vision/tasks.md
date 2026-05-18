@@ -34,9 +34,9 @@ source:
 |----------|------------|---------|
 | API scaffold + EF Core + Entities | ✅ Done | 7 entities, AppDbContext, Migrations |
 | System tables (`USER_MASTER`, `DM_DONVI`) read-only | ✅ Done | |
-| `CurrentUserMiddleware` + dev fallback | ✅ Done | Cần verify gateway headers parse |
+| `CurrentUserMiddleware` + dev fallback | ✅ Done | Now JWT Bearer + ICurrentUserProvider (gateway headers removed) |
 | Frontend `api/client.ts` + AuthContext | ✅ Done | Đã listen postMessage |
-| **Backend Endpoint `.cs` files (17 cái)** | ❌ **0%** | Blocker chính |
+| **Backend Endpoint `.cs` files (17 cái)** | 🟡 **8/17 (47%)** | Auth/Me + LeaveTypes CRUD (4) + LeaveRequests P1 (3) done; P2 + Balances + Config pending |
 | Supabase folder cleanup | ❌ Pending | `packages/web/supabase/` còn config + migrations |
 | Dev mode token input UI | ❌ Pending | Chưa có form nhập token |
 | Tests (unit + integration) | ❌ Pending | |
@@ -71,10 +71,10 @@ source:
 
 ### Day 3 (2026-05-18, Thứ 2) — LeaveRequests P1 (List/Create/Update)
 
-- [ ] `Features/LeaveRequests/List/ListLeaveRequestsEndpoint.cs` — role-based filtering (CB.PCM own / LD.PCM dept / GD.PGD all)
-- [ ] `Features/LeaveRequests/Create/CreateLeaveRequestEndpoint.cs` — validator: start ≤ end, start ≥ today, reason non-empty; tính business days (Mon-Fri); detect overlap với approved
-- [ ] `Features/LeaveRequests/Update/UpdateLeaveRequestEndpoint.cs` — chỉ sửa khi status=pending (BRULE-007)
-- [ ] Commit
+- [x] `Features/LeaveRequests/List/ListLeaveRequestsEndpoint.cs` — role-based filtering (CB.PCM own / LD.PCM dept / GD.PGD all)
+- [x] `Features/LeaveRequests/Create/CreateLeaveRequestEndpoint.cs` — validator: start ≤ end, start ≥ today, reason non-empty; tính business days (Mon-Fri); detect overlap với approved
+- [x] `Features/LeaveRequests/Update/UpdateLeaveRequestEndpoint.cs` — chỉ sửa khi status=pending (BRULE-007)
+- [x] Commit: `feat(api): Leave Requests P1 + Auto Migration (#4)` (4d419e2)
 
 ### Day 4 (2026-05-19, Thứ 3) — LeaveRequests P2 (Approve/Reject/Cancel)
 
@@ -111,7 +111,7 @@ source:
 
 - [ ] Tạo `packages/web/public/embed-host-sample.html` — trang demo host: textarea token + button "Send via postMessage" + iframe trỏ về `/`
 - [ ] Verify flow: mở `embed-host-sample.html` → gửi `{ type: "auth", token }` → iframe gọi `/api/auth/me` → dashboard hiển thị
-- [ ] Doc cho host team: `docs/embed-integration.md` (≤ 200 dòng) — postMessage contract, gateway headers expected, CSP/X-Frame-Options note
+- [ ] Doc cho host team: `docs/embed-integration.md` (≤ 200 dòng) — postMessage contract, JWT token expected, CSP/X-Frame-Options note
 - [ ] Commit
 
 ### Day 8 (2026-05-25, Thứ 2) — Supabase removal
@@ -139,7 +139,7 @@ source:
 ### Day 10 (2026-05-27, Thứ 4) — Tests + docs + release
 
 - [ ] Unit tests: business days calculation, overlap detection, state machine transitions (`packages/api.tests/` hoặc xUnit project)
-- [ ] Integration test mẫu cho `CurrentUserMiddleware` (header vs DevMode fallback)
+- [ ] Integration test mẫu cho JWT auth (JWT claims vs anonymous dev fallback)
 - [ ] Cập nhật `docs/development-roadmap.md` — đánh dấu phase 1 + 2 Complete
 - [ ] Cập nhật `docs/project-changelog.md` — entry migration done
 - [ ] Cập nhật `docs/system-architecture.md` nếu cần
@@ -165,7 +165,7 @@ source:
 | Rủi ro | Mức độ | Mitigation |
 |--------|--------|-----------|
 | DTO frontend mismatch backend khi build endpoints | High | Day 9 dành riêng cho integration fix; align từng slice ngay khi viết endpoint |
-| `CurrentUserMiddleware` parse header sai trong production | Medium | Day 1 verify với mock headers; Day 7 viết doc rõ cho host team |
+| JWT validation config sai (Issuer/Audience/SigningKey) trong production | Medium | Day 1 verify JWT config; Day 7 viết doc rõ cho host team |
 | LeaveBalances.UsedDays cộng dồn sai khi approve | Medium | Unit test ở Day 10; thử AC-008 ở Day 9 |
 | Supabase migrations folder có info hữu ích cho SQL Server migration | Low | Backup folder ra `archive/` trước khi xóa nếu cần tham chiếu |
 | Iframe bị block bởi X-Frame-Options | Medium | Day 7 cấu hình ASP.NET `Content-Security-Policy: frame-ancestors` cho host domain |
