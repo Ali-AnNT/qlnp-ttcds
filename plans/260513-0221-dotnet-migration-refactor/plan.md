@@ -1,6 +1,6 @@
 ---
 title: .NET 9 FastEndpoints + EF Core Migration Rebaseline
-status: in_progress
+status: superseded
 priority: P0
 effort: large
 branch: rebuid-bundle

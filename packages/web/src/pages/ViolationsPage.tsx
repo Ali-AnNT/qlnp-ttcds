@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useStore } from "@/store/useStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -12,7 +12,6 @@ import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/date-utils";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid } from "recharts";
 
-const LIMIT = 12;
 const COLORS = ["hsl(var(--destructive))", "hsl(var(--warning))", "hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--secondary))", "#8b5cf6", "#06b6d4", "#f59e0b"];
 type Period = "year" | "quarter" | "month";
 
@@ -20,6 +19,10 @@ const ViolationsPage = () => {
   const leaveRequests = useStore((s) => s.leaveRequests);
   const departments = useStore((s) => s.departments);
   const leaveTypes = useStore((s) => s.leaveTypes);
+  const leaveBalances = useStore((s) => s.leaveBalances);
+  const loadData = useStore((s) => s.loadData);
+
+  useEffect(() => { loadData(); }, []);
 
   const [search, setSearch] = useState("");
   const [period, setPeriod] = useState<Period>("year");
@@ -35,6 +38,15 @@ const ViolationsPage = () => {
     return Array.from(set).sort((a, b) => b - a);
   }, [leaveRequests]);
 
+  const getUserLimit = (userId: number) => {
+    const balances = leaveBalances.filter((b) => b.userId === userId && b.year === Number(year));
+    if (balances.length > 0) {
+      return balances.reduce((sum, b) => sum + Number(b.totalDays), 0);
+    }
+    const fallback = leaveTypes.reduce((sum, t) => sum + Number(t.defaultDays || 0), 0);
+    return fallback > 0 ? fallback : 12;
+  };
+
   const filteredApproved = useMemo(() => {
     return leaveRequests.filter((r) => {
       if (r.status !== "approved_leader" && r.status !== "approved_director") return false;
@@ -49,7 +61,7 @@ const ViolationsPage = () => {
     });
   }, [leaveRequests, year, period, month, quarter]);
 
-  // Group by userId to get per-user violations
+  // Group by userId to get per-user aggregates
   const userAggregates = useMemo(() => {
     const map = new Map<number, { userId: number; userName: string; donViId: number; totalUsed: number; requests: typeof filteredApproved; byType: Record<string, number> }>();
     filteredApproved.forEach((r) => {
@@ -64,7 +76,7 @@ const ViolationsPage = () => {
         map.set(r.userId, {
           userId: r.userId,
           userName: r.userName || "",
-          donViId: r.donViId,
+          donViId: r.donViId || 0,
           totalUsed: Number(r.totalDays),
           requests: [r],
           byType: { [ltName]: Number(r.totalDays) },
@@ -77,12 +89,13 @@ const ViolationsPage = () => {
   const employeeViolations = useMemo(() => {
     return userAggregates
       .map((u) => {
-        const overage = u.totalUsed - LIMIT;
+        const limit = getUserLimit(u.userId);
+        const overage = u.totalUsed - limit;
         const dept = departments.find((d) => d.donViId === u.donViId);
-        return { ...u, dept, overage };
+        return { ...u, dept, limit, overage };
       })
       .filter((v) => v.overage > 0);
-  }, [userAggregates, departments]);
+  }, [userAggregates, departments, leaveBalances, leaveTypes, year]);
 
   const searchedEmpViolations = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -96,7 +109,7 @@ const ViolationsPage = () => {
     return departments.map((d) => {
       const deptUsers = userAggregates.filter((u) => u.donViId === d.donViId);
       const totalUsed = deptUsers.reduce((s, u) => s + u.totalUsed, 0);
-      const allowed = deptUsers.length * LIMIT;
+      const allowed = deptUsers.reduce((s, u) => s + getUserLimit(u.userId), 0);
       const overage = totalUsed - allowed;
 
       const violatingEmps = employeeViolations.filter((v) => v.dept?.donViId === d.donViId);
@@ -120,7 +133,7 @@ const ViolationsPage = () => {
         byType,
       };
     }).filter((d) => d.violatingCount > 0 || d.overage > 0);
-  }, [departments, userAggregates, employeeViolations]);
+  }, [departments, userAggregates, employeeViolations, leaveBalances, leaveTypes, year]);
 
   const searchedDeptViolations = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -147,7 +160,7 @@ const ViolationsPage = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h2 className="text-lg font-bold">Theo dõi vượt mức quy định</h2>
-        <Badge variant="outline" className="text-xs">Định mức: {LIMIT} ngày/cán bộ/năm</Badge>
+        <Badge variant="outline" className="text-xs">Định mức: theo cán bộ/năm</Badge>
       </div>
 
       <Card>
@@ -322,7 +335,7 @@ const ViolationsPage = () => {
                 <TableRow key={v.userId} className={cn(i % 2 === 1 ? "bg-muted/20" : "", "bg-destructive/5")}>
                   <TableCell className="font-medium">{v.userName}</TableCell>
                   <TableCell>{v.dept?.tenDonVi}</TableCell>
-                  <TableCell className="text-center">{LIMIT}</TableCell>
+                  <TableCell className="text-center">{v.limit}</TableCell>
                   <TableCell className="text-center">{v.totalUsed}</TableCell>
                   <TableCell className="text-center font-bold text-destructive">+{v.overage}</TableCell>
                   <TableCell>

@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Setup JWT Infrastructure"
-status: pending
+status: completed
 priority: P0
 effort: "1h"
 dependencies: []

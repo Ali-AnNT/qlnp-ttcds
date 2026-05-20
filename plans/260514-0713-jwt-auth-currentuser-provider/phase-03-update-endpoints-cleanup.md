@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Update Endpoints & Cleanup"
-status: pending
+status: completed
 priority: P0
 effort: "1h"
 dependencies: [2]

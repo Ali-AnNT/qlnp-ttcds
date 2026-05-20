@@ -83,11 +83,14 @@ builder.Services.AddScoped<QLNP.Api.Features.Departments.Get.Data>();
 
 var app = builder.Build();
 
-// Auto-apply pending EF Core migrations on startup
-using (var scope = app.Services.CreateScope())
+// Auto-apply pending EF Core migrations on startup (skip in test environment)
+if (!app.Environment.IsEnvironment("Test"))
 {
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.Database.Migrate();
+    }
 }
 
 app.UseCors("AllowFrontend");

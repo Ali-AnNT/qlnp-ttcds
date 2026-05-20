@@ -1,6 +1,8 @@
 # Project Rules
 
-See [PROJECT_RULE.md](./PROJECT_RULE.md) for project-specific rules, conventions, and constraints.
+- **MANDATORY: ALWAYS read `PROJECT_RULE.md` first** before doing anything — it contains project-specific rules, conventions, and constraints that must be followed.
+- **MANDATORY: ALWAYS read `docs/vision/brd.md` and `docs/vision/srs.md`** before implementing any feature/task.
+- See [PROJECT_RULE.md](./PROJECT_RULE.md) for all project rules.
 
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useStore } from "@/store/useStore";
 import { formatDate } from "@/lib/date-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +13,9 @@ const ReportsPage = () => {
   const leaveRequests = useStore((s) => s.leaveRequests);
   const departments = useStore((s) => s.departments);
   const leaveTypes = useStore((s) => s.leaveTypes);
+  const loadData = useStore((s) => s.loadData);
+
+  useEffect(() => { loadData(); }, []);
 
   const approved = leaveRequests.filter((r) => r.status === "approved_leader" || r.status === "approved_director");
   const rejected = leaveRequests.filter((r) => r.status === "rejected");

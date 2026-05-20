@@ -6,7 +6,7 @@ effort: "1d"
 branch: feat/efcore-migration-net9-fastendpoints
 created: 2026-05-15
 blockedBy: [260515-0233-day3-leave-requests-p1]
-blocks: [260514-0446-2week-finalization-and-embed]
+blocks: []
 source:
   - docs/vision/brd.md
   - docs/vision/srs.md

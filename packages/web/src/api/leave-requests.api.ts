@@ -4,6 +4,8 @@ export interface LeaveRequestDto {
   id: number;
   userId: number;
   userName?: string;
+  donViId?: number;
+  donViName?: string;
   leaveTypeId: number;
   leaveTypeName?: string;
   startDate: string;
@@ -11,6 +13,7 @@ export interface LeaveRequestDto {
   totalDays: number;
   reason: string | null;
   status: string;
+  requestedApproverId?: number | null;
   approvedBy: number | null;
   approvedAt: string | null;
   rejectedReason: string | null;
