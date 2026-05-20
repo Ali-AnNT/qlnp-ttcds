@@ -34,3 +34,4 @@ _ReSharper.Caches/
 *.sln
 *.sw?
 .gitnexus
+.claude/worktrees/
