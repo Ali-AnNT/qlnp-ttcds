@@ -11,7 +11,6 @@ internal sealed class Endpoint : EndpointWithoutRequest<Response>
     public override void Configure()
     {
         Get("/api/auth/me");
-        AllowAnonymous();
         Tags("Auth");
     }
 
