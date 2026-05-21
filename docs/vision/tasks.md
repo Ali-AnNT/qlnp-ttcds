@@ -1,196 +1,290 @@
 ---
-title: Kế hoạch 2 tuần — Hoàn tất migration Supabase → .NET + Embed/Token
+title: Task List — Backend + Embed (post-migration)
 status: in-progress
 priority: P0
 effort: large
 branch: feat/efcore-migration-net9-fastendpoints
-tags: [dotnet, fastendpoints, supabase-removal, embed, postmessage, gateway-auth]
+tags: [dotnet, fastendpoints, embed, audit, reports, supabase-removal]
 created: 2026-05-14
-start: 2026-05-14
-end: 2026-05-27
+updated: 2026-05-21
 source:
   - docs/vision/brd.md
   - docs/vision/srs.md
-  - plans/reports/scout-260514-0446-brd-and-srs.md
+  - docs/usecase/usecase.md
 ---
 
-# Kế hoạch 2 tuần — Finalize Migration + Embed Token
+# Task List — Backend + Embed
 
 ## Mục tiêu
 
-1. **Bỏ Supabase hoàn toàn**: xóa thư mục `packages/web/supabase/`, gỡ deps còn dư, verify `grep -r "supabase" packages/` = 0
-2. **Hoàn thiện backend .NET**: implement 19 FastEndpoints theo VSP (hiện 19/19 file `.cs`)
-3. **Embed/Token**: app chạy trong iframe nhận token qua `postMessage`; dev mode có UI nhập token thủ công + fallback admin local
+1. **Hoàn thiện backend .NET**: implement tất cả FastEndpoints theo BRD Appendix B (19 spec) + 3 thêm (DevLogin, My, Departments)
+2. **Audit log**: `LeaveRequestAudit` entity + logging mutations (deferred, không block sprint)
+3. **Embed/Token**: app chạy trong iframe nhận token qua `postMessage`; dev mode có UI nhập token thủ công
+4. **Supabase cleanup**: xóa folder + deps, verify grep = 0
 
 ## Tham chiếu
 
-- BRD: [docs/vision/brd.md](../../docs/vision/brd.md) — BR-001 → BR-006, AC-001 → AC-016
-- SRS: [docs/vision/srs.md](../../docs/vision/srs.md) — FR-01 → FR-10
-- Plan cũ: [plans/260513-0221-dotnet-migration-refactor/plan.md](../260513-0221-dotnet-migration-refactor/plan.md)
+- BRD: [docs/vision/brd.md](../../docs/vision/brd.md) — BR-001→BR-008, AC-001→AC-021
+- SRS: [docs/vision/srs.md](../../docs/vision/srs.md) — FR-01→FR-11
+- UC: [docs/usecase/usecase.md](../../docs/usecase/usecase.md) — UC-01→UC-07
+- Business Rules: BRULE-001→BRULE-011
 
-## Trạng thái khởi điểm (2026-05-14)
+---
+
+## Trạng thái khởi điểm (2026-05-21)
 
 | Hạng mục | Trạng thái | Ghi chú |
 |----------|------------|---------|
-| API scaffold + EF Core + Entities | ✅ Done | 7 entities, AppDbContext, Migrations |
-| System tables (`USER_MASTER`, `DM_DONVI`) read-only | ✅ Done | |
-| `CurrentUserMiddleware` + dev fallback | ✅ Done | Now JWT Bearer + ICurrentUserProvider (gateway headers removed) |
-| Frontend `api/client.ts` + AuthContext | ✅ Done | Đã listen postMessage |
-| **Backend Endpoint `.cs` files (19 cái)** | ✅ **19/19 (100%)** | All endpoints implemented (+2 so với 17 ban đầu — thêm Departments slice) |
-| Supabase folder cleanup | ❌ Pending | `packages/web/supabase/` còn config + migrations |
-| Dev mode token input UI | ❌ Pending | Chưa có form nhập token |
-| Tests (unit + integration) | ❌ Pending | |
-| Docs sync (`docs/`) | 🟡 Partial | Roadmap cần update |
+| API scaffold + EF Core + Entities (7/8) | ✅ Done | Thiếu `LeaveRequestAudit` entity |
+| System tables read-only | ✅ Done | |
+| JWT Bearer + ICurrentUserProvider | ✅ Done | |
+| Frontend api/client.ts + AuthContext | ✅ Done | |
+| **Endpoint `.cs` files (20/23)** | ✅ **87%** | Thiếu: UpdateByApprover, History, Reports/Export |
+| DevLogin endpoint | ✅ Done | Build-time toggle |
+| CSP frame-ancestors middleware | ❌ Pending | NFR-002 |
+| Dev mode token input UI | ❌ Pending | FR-01.8 |
+| Embed host sample + doc | ❌ Pending | FR-070→FR-072 |
+| Supabase removal | ❌ Pending | BR §9.1 |
+| Audit log (entity + wiring) | ❌ Deferred | BRULE-010, không block |
+| Integration tests | ❌ Pending | AC-001→AC-021 |
+| Docs sync | 🟡 Partial | |
+
+### Endpoint checklist (BRD Appendix B)
+
+| # | Method | Path | Status | BRD ID |
+|---|--------|------|--------|--------|
+| 1 | GET | /api/auth/me | ✅ | FR-002 |
+| 2 | GET | /api/leave-types | ✅ | FR-030 |
+| 3 | POST | /api/leave-types | ✅ | FR-031 |
+| 4 | PUT | /api/leave-types/{id} | ✅ | FR-031 |
+| 5 | DELETE | /api/leave-types/{id} | ✅ | FR-031 |
+| 6 | GET | /api/leave-requests | ✅ | FR-040 |
+| 7 | POST | /api/leave-requests | ✅ | FR-041 |
+| 8 | PUT | /api/leave-requests/{id} | ✅ | FR-042 |
+| 9 | PUT | /api/leave-requests/{id}/update-by-approver | ❌ | FR-046 |
+| 10 | PUT | /api/leave-requests/{id}/approve | ✅ | FR-043 |
+| 11 | PUT | /api/leave-requests/{id}/reject | ✅ | FR-044 |
+| 12 | DELETE | /api/leave-requests/{id} (cancel) | ✅ | FR-045 |
+| 13 | GET | /api/leave-requests/history | ❌ | FR-047 |
+| 14 | GET | /api/leave-balances | ✅ | FR-050 |
+| 15 | GET | /api/leave-balances/my | ✅ | FR-051 |
+| 16 | GET | /api/config | ✅ | FR-060 |
+| 17 | PUT | /api/config/{key} | ✅ | FR-061 |
+| 18 | PUT | /api/config/user-role/{userId} | ✅ | FR-011 |
+| 19 | GET | /api/reports/export | ❌ | FR-054 |
+| +1 | POST | /api/auth/dev-login | ✅ | FR-004 (dev) |
+| +2 | GET | /api/leave-requests/my | ✅ | FR-04 (convenience) |
+| +3 | GET | /api/departments | ✅ | FR-020 |
+| +4 | GET | /api/departments/{id} | ✅ | FR-020 |
 
 ---
 
-## Tuần 1 — Backend Endpoints + Auth Wiring
+## Done tasks
 
-### Day 1 (2026-05-14, Thứ 5) — Auth slice + smoke test
+<details>
+<summary>✅ Completed (click to expand)</summary>
 
-**[UPDATED] Approach changed: Gateway headers → JWT Bearer**
+- **Auth slice**: JWT Bearer + ICurrentUserProvider + MeEndpoint + DevLogin — `933511c`, `92bfee8`
+- **LeaveTypes CRUD**: List/Create/Update/Delete — `ff53235`
+- **LeaveRequests P1**: List/Create/Update + business days + overlap — `4d419e2`
+- **LeaveRequests P2**: Approve/Reject/Cancel + state machine — `a004ebd`
+- **LeaveBalances + Config + Departments**: List/My/Get/Update/UserRole + Depts — `e95a3cc`
+- **CORS fix**: Frontend port 8081 — `a69842c`
+- **LeaveRequest.RequestedApproverId**: nullable field added per decision #2
 
-- [x] `packages/api/QLNP.Api.csproj` — add `Microsoft.AspNetCore.Authentication.JwtBearer` v10.0.8
-- [x] `appsettings.json` / `appsettings.Development.json` — replace `GatewayHeaders` with `Jwt: { Issuer, Audience, SigningKey }`
-- [x] `Program.cs` — `AddAuthentication(JwtBearerDefaults).AddJwtBearer(...)` + `UseAuthentication()` + `UseAuthorization()`
-- [x] `Middleware/CurrentUser.cs` — update record shape to match JWT claims: `(UserId, DisplayName, UnitId, PhongBanId, DeviceId, Roles, UserIdUBTP, PhongBanIdUBTP, DonViIdUBTP)`
-- [x] `Auth/ICurrentUserProvider.cs` + `Auth/CurrentUserProvider.cs` — typed provider reading `ClaimsPrincipal` from JWT
-- [x] `Features/Auth/Me/MeEndpoint.cs` — inject `ICurrentUserProvider`; remove `HttpContext.Items["CurrentUser"]` usage
-- [x] **Deleted** `Middleware/CurrentUserMiddleware.cs` — no longer needed
-- [x] `dotnet build packages/api` — 0 errors, 0 warnings
-- [x] Commit: `feat(api): replace gateway header auth with JWT + ICurrentUserProvider` (933511c)
-- [x] Docs commit: `docs(planning): add 2-week migration plan + JWT auth plan` (92bfee8)
-
-### Day 2 (2026-05-15, Thứ 6) — LeaveTypes slice (4 endpoints)
-
-- [x] `Features/LeaveTypes/List/ListLeaveTypesEndpoint.cs` — GET `/api/leave-types`
-- [x] `Features/LeaveTypes/Create/CreateLeaveTypeEndpoint.cs` — POST, FluentValidation (Name, Code unique, DefaultDays > 0), role guard QTHT
-- [x] `Features/LeaveTypes/Update/UpdateLeaveTypeEndpoint.cs` — PUT `/api/leave-types/{id}`
-- [x] `Features/LeaveTypes/Delete/DeleteLeaveTypeEndpoint.cs` — DELETE, chặn xóa nếu có `LeaveRequests` tham chiếu
-- [x] Commit
-
-### Day 3 (2026-05-18, Thứ 2) — LeaveRequests P1 (List/Create/Update)
-
-- [x] `Features/LeaveRequests/List/ListLeaveRequestsEndpoint.cs` — role-based filtering (CB.PCM own / LD.PCM dept / GD.PGD all)
-- [x] `Features/LeaveRequests/Create/CreateLeaveRequestEndpoint.cs` — validator: start ≤ end, start ≥ today, reason non-empty; tính business days (Mon-Fri); detect overlap với approved
-- [x] `Features/LeaveRequests/Update/UpdateLeaveRequestEndpoint.cs` — chỉ sửa khi status=pending (BRULE-007)
-- [x] Commit: `feat(api): Leave Requests P1 + Auto Migration (#4)` (4d419e2)
-
-### Day 4 (2026-05-19, Thứ 3) — LeaveRequests P2 (Approve/Reject/Cancel)
-
-- [x] `Features/LeaveRequests/Approve/ApproveLeaveRequestEndpoint.cs` — state machine: pending→approved_leader (LD.PCM) / approved_leader→approved_director (GD.PGD); cập nhật `LeaveBalances.UsedDays` khi approved_director (FR-052)
-- [x] `Features/LeaveRequests/Reject/RejectLeaveRequestEndpoint.cs` — set status=rejected + `rejected_reason`
-- [x] `Features/LeaveRequests/Cancel/CancelLeaveRequestEndpoint.cs` — chỉ cancel khi status ∈ {pending, approved_leader} (BRULE-006)
-- [x] Commit: `feat(api): LeaveRequests P2 - Approve/Reject/Cancel (#5)` (a004ebd)
-
-### Day 5 (2026-05-20, Thứ 4) — LeaveBalances + Config + Departments slices
-
-- [x] `Features/LeaveBalances/List/ListLeaveBalancesEndpoint.cs` — GET `/api/leave-balances`, role GD.PGD, QTHT, LD.PCM
-- [x] `Features/LeaveBalances/My/MyLeaveBalanceEndpoint.cs` — GET `/api/leave-balances/my`
-- [x] `Features/Config/Get/GetConfigEndpoint.cs` — đọc cấu hình (any auth)
-- [x] `Features/Config/Update/UpdateConfigEndpoint.cs` — upsert (FR-10.7), role QTHT
-- [x] `Features/Config/UserRole/GetUserRoleEndpoint.cs` — GET (không phải PUT), lấy role theo userId, role QTHT
-- [x] `Features/Departments/List/ListDepartmentsEndpoint.cs` — GET `/api/departments`
-- [x] `Features/Departments/Get/GetDepartmentEndpoint.cs` — GET `/api/departments/{id}`
-- [x] Commit: `feat(api): add Config, Departments, LeaveBalances, MyLeaveRequests endpoints + CORS` (a9d6e70)
+</details>
 
 ---
 
-## Tuần 2 — Embed/Token, Supabase Cleanup, Tests, Release
+## Pending tasks
 
-### Day 6 (2026-05-21, Thứ 5) — Dev token input UI
+### T-01: `LeaveRequestAudit` entity + migration
 
-- [ ] `packages/web/src/contexts/AuthContext.tsx` — bổ sung `setManualToken(token: string)` method
-- [ ] `packages/web/src/pages/LoginPage.tsx` — thêm UI nhập token thủ công khi **không** ở chế độ embed VÀ `import.meta.env.DEV === true`:
-  - Input field "JWT/Dev Token"
-  - Button "Đăng nhập với token"
-  - Lưu vào `localStorage.jwt` → gọi `authApi.me()` → redirect `/`
-- [ ] Vẫn giữ logic embed (postMessage listener) như cũ
-- [ ] Test thủ công: chạy `pnpm dev`, nhập token dev, vào dashboard OK
-- [ ] Commit: `feat(web): add manual token input for dev mode`
+- **What**: Tạo entity `LeaveRequestAudit` + DbSet + migration. Fields: `Id`, `LeaveRequestId` (FK), `ChangedBy` (FK USER_MASTER), `ChangedAt`, `FieldName`, `OldValue`, `NewValue`
+- **Refs**: BRULE-010, FR-05.7/05.8, SRS §4.2, UC-02 A-2/A-3, UC-01 A-1
+- **Dependencies**: —
+- **Files**:
+  - Create: `packages/api/Entities/LeaveRequestAudit.cs`
+  - Modify: `packages/api/Data/AppDbContext.cs` — add DbSet + FK config
+  - Run: `dotnet ef migrations add AddLeaveRequestAudit`
+- **AC**: `dotnet build` 0 errors; migration up/down sạch; FK `LeaveRequestAudits → LeaveRequests` + `LeaveRequestAudits → USER_MASTER`
+- **Priority**: Low (deferred — không block T-02/T-03/T-04, nhưng T-02/T-03/T-04 cần entity nếu muốn persist audit)
 
-### Day 7 (2026-05-22, Thứ 6) — Host integration sample + iframe smoke test
+### T-02: `UpdateByApprover` endpoint
 
-- [ ] Tạo `packages/web/public/embed-host-sample.html` — trang demo host: textarea token + button "Send via postMessage" + iframe trỏ về `/`
-- [ ] Verify flow: mở `embed-host-sample.html` → gửi `{ type: "auth", token }` → iframe gọi `/api/auth/me` → dashboard hiển thị
-- [ ] Doc cho host team: `docs/embed-integration.md` (≤ 200 dòng) — postMessage contract, JWT token expected, CSP/X-Frame-Options note
-- [ ] Commit
+- **What**: `PUT /api/leave-requests/{id}/update-by-approver`. Cho phép LĐ.PCM/GĐ.PGD cập nhật StartDate, EndDate, Reason khi phê duyệt. Chỉ khi status ∈ {pending, approved_leader}. Ghi audit log nếu T-01 done, nếu chưa thì skip audit (log warning).
+- **Refs**: FR-046, AC-018, BRULE-010, UC-02 A-2
+- **Dependencies**: T-01 (soft — hoạt động không audit nếu T-01 chưa done)
+- **Files**:
+  - Create: `packages/api/Features/LeaveRequests/UpdateByApprover/Endpoint.cs` + Data.cs + Models.cs
+- **AC**: LĐ.PCM update đơn pending trong phòng → 200; GĐ.PGD update đơn approved_leader → 200; CB.PCM → 403; đơn approved_director → 400; nếu T-01 done → audit row created
+- **Priority**: P0
 
-### Day 8 (2026-05-25, Thứ 2) — Supabase removal
+### T-03: Audit logging wiring (Create/Update/UpdateByApprover/Approve/Reject)
 
-- [ ] Xóa `packages/web/supabase/` toàn bộ (config.toml + migrations/)
-- [ ] Gỡ deps khỏi `packages/web/package.json`: `@supabase/supabase-js` nếu còn
-- [ ] `pnpm install` → `pnpm -F @qlnp/web build` không lỗi
-- [ ] Verify: `grep -r "supabase" packages/ --include="*.ts" --include="*.tsx" --include="*.json"` = 0 kết quả (AC: tiêu chí nghiệm thu BRD §9.1)
-- [ ] Cập nhật `README.md` — bỏ phần Supabase setup
-- [ ] Commit: `chore(web): remove supabase folder and dependencies`
+- **What**: Thêm audit write vào mutation endpoints: Create (log initial values), Update (log changed fields), UpdateByApprover (log changed fields), Approve (log status change + approved_by), Reject (log status change + reason). Ghi vào `LeaveRequestAudits` table.
+- **Refs**: BRULE-010, FR-05.7/05.8, FR-11.3, UC-02 A-2/A-3, UC-01 A-1
+- **Dependencies**: T-01 (hard — cần entity + table)
+- **Files**:
+  - Modify: `packages/api/Features/LeaveRequests/Create/Endpoint.cs`
+  - Modify: `packages/api/Features/LeaveRequests/Update/Endpoint.cs`
+  - Modify: `packages/api/Features/LeaveRequests/Approve/Endpoint.cs`
+  - Modify: `packages/api/Features/LeaveRequests/Reject/Endpoint.cs`
+  - If T-02 done: `packages/api/Features/LeaveRequests/UpdateByApprover/Endpoint.cs`
+- **AC**: Sau mỗi mutation → `LeaveRequestAudits` có row với ChangedBy = current user, ChangedAt = UTC now, FieldName/OldValue/NewValue đúng
+- **Priority**: Low (deferred)
 
-### Day 9 (2026-05-26, Thứ 3) — Integration testing + bug fixes
+### T-04: `History` endpoint (ListHistory)
 
-- [ ] E2E flow theo AC-001 → AC-016:
-  - [ ] AC-005 tạo đơn → list
-  - [ ] AC-006 trùng lịch → 409
-  - [ ] AC-007/008 approve 2 cấp + cộng dồn used_days
-  - [ ] AC-009 reject có lý do
-  - [ ] AC-010 cancel
-  - [ ] AC-011 role filtering (LD.PCM chỉ thấy dept)
-  - [ ] AC-014 embed: postMessage → me → dashboard
-- [ ] Fix bug DTO mismatch frontend↔backend nếu có
-- [ ] Commit
+- **What**: `GET /api/leave-requests/history`. Role-based: CB.PCM xem đơn mình, LĐ.PCM xem đơn phòng, GĐ/PGĐ xem tất cả. Include audit logs nếu T-01 done. Filter: date range, status, leave type.
+- **Refs**: FR-047, AC-020, BRULE-011, UC-01 A-4, UC-03 A-5, SRS FR-11
+- **Dependencies**: T-01 (soft — hoạt động không audit data nếu T-01 chưa done)
+- **Files**:
+  - Create: `packages/api/Features/LeaveRequests/History/Endpoint.cs` + Data.cs + Models.cs
+- **AC**: CB.PCM chỉ thấy đơn mình; LĐ.PCM thấy đơn phòng; GĐ/PGĐ thấy tất cả; filter status/loại phép/thời gian hoạt động; nếu T-01 done → include audits trong response
+- **Priority**: P0
 
-### Day 10 (2026-05-27, Thứ 4) — Tests + docs + release
+### T-05: `Reports/Export` endpoint
 
-- [ ] Unit tests: business days calculation, overlap detection, state machine transitions (`packages/api.tests/` hoặc xUnit project)
-- [ ] Integration test mẫu cho JWT auth (JWT claims vs anonymous dev fallback)
-- [ ] Cập nhật `docs/development-roadmap.md` — đánh dấu phase 1 + 2 Complete
-- [ ] Cập nhật `docs/project-changelog.md` — entry migration done
-- [ ] Cập nhật `docs/system-architecture.md` nếu cần
-- [ ] Tag release `v1.0.0-dotnet-migration`; merge `feat/efcore-migration-net9-fastendpoints` → `main`
-- [ ] Commit + PR
+- **What**: `GET /api/reports/export`. Export leave requests ra Excel .xlsx. Chỉ GD.PGD. Filter: status, date range. Format: bold header, auto-width columns, auto-filter, UTF-8.
+- **Refs**: FR-054, AC-019, BR-008, SRS FR-08.4, UC-06 A-3
+- **Dependencies**: —
+- **Files**:
+  - Create: `packages/api/Features/Reports/Export/Endpoint.cs` + Data.cs + Models.cs
+  - May need: `ClosedXML` hoặc `EPPlus` NuGet package
+- **AC**: GD.PGD → 200 + .xlsx file download; CB.PCM → 403; file mở được trong Excel, bold header, auto-width, auto-filter, UTF-8
+- **Priority**: P1
+
+### T-06: Dev mode manual token input UI
+
+- **What**: Frontend LoginPage thêm UI nhập token thủ công khi không ở embed mode VÀ `import.meta.env.DEV === true`. Input "JWT/Dev Token" + button "Đăng nhập với token". Lưu `localStorage.jwt` → gọi `authApi.me()` → redirect `/`.
+- **Refs**: FR-01.8, SRS FR-01.8, UC-01 pre-condition
+- **Dependencies**: —
+- **Files**:
+  - Modify: `packages/web/src/contexts/AuthContext.tsx` — thêm `setManualToken(token)`
+  - Modify: `packages/web/src/pages/LoginPage.tsx` — thêm token input UI
+- **AC**: Chạy `pnpm dev` → trang login hiện token input → nhập token → dashboard hiển thị; production build → ẩn input
+- **Priority**: P0
+
+### T-07: Embed host sample + postMessage doc
+
+- **What**: Tạo `packages/web/public/embed-host-sample.html` — trang demo host: textarea token + button "Send via postMessage" + iframe trỏ `/`. Doc `docs/embed-integration.md` (≤ 200 dòng).
+- **Refs**: FR-070→FR-072, AC-013, AC-014, BR-003, UC-07 (US-007)
+- **Dependencies**: T-06 (soft — sample dùng được cả manual lẫn embed flow)
+- **Files**:
+  - Create: `packages/web/public/embed-host-sample.html`
+  - Create: `docs/embed-integration.md`
+- **AC**: Mở `embed-host-sample.html` → gửi `{ type: "auth", token }` → iframe gọi `/api/auth/me` → dashboard hiển thị
+- **Priority**: P1
+
+### T-08: CSP `frame-ancestors` middleware
+
+- **What**: ASP.NET middleware set `Content-Security-Policy: frame-ancestors ${Security:FrameAncestors}` + `X-Frame-Options` tương ứng. Config qua env var `Security:FrameAncestors` (CSV domains). Dev default: `'self'`.
+- **Refs**: NFR-002, BRD §4.2 note, CST-005, SRS §5.3
+- **Dependencies**: —
+- **Files**:
+  - Create: `packages/api/Middleware/CspMiddleware.cs`
+  - Modify: `packages/api/Program.cs` — `app.UseMiddleware<CspMiddleware>()`
+  - Modify: `packages/api/appsettings.json` — thêm `Security:FrameAncestors`
+- **AC**: Response header chứa CSP frame-ancestors; dev = `'self'`; configurable qua env var
+- **Priority**: P1
+
+### T-09: Supabase removal
+
+- **What**: Xóa `packages/web/supabase/` toàn bộ. Gỡ deps khỏi `package.json`. Verify grep = 0.
+- **Refs**: BR-005, BRD §9.1 AC, SRS §6.3
+- **Dependencies**: —
+- **Files**:
+  - Delete: `packages/web/supabase/` (recursive)
+  - Modify: `packages/web/package.json` — remove `@supabase/supabase-js`
+  - Verify: `grep -r "supabase" packages/ --include="*.ts" --include="*.tsx" --include="*.json"` = 0
+  - Modify: `README.md` — bỏ phần Supabase setup
+- **AC**: `pnpm install` OK; `pnpm -F @qlnp/web build` OK; grep = 0 kết quả
+- **Priority**: P0
+
+### T-10: Integration tests (AC-001→AC-021)
+
+- **What**: E2E/integration test flow theo BRD AC checklist. Cover: auth flow, CRUD đơn, state machine, role filtering, overlap detection, balance update, embed token.
+- **Refs**: AC-001→AC-021, SRS §6
+- **Dependencies**: T-02, T-04, T-05 (test các endpoint mới); T-08 (test CSP); T-09 (test build sau supabase removal)
+- **Files**:
+  - Create: `packages/api.tests/` hoặc xUnit project
+- **AC**: Tất cả AC pass
+- **Priority**: P0 (nhưng chạy sau khi các endpoint task done)
+
+### T-11: Docs sync
+
+- **What**: Cập nhật `docs/development-roadmap.md`, `docs/project-changelog.md`, `docs/system-architecture.md` nếu cần. Tag release.
+- **Refs**: —
+- **Dependencies**: T-09, T-10
+- **Files**:
+  - Modify: `docs/development-roadmap.md`
+  - Modify: `docs/project-changelog.md`
+  - Modify: `docs/system-architecture.md` (if needed)
+- **AC**: Roadmap phase 1+2 marked Complete; changelog entry migration done; `dotnet build` + `pnpm build` OK
+- **Priority**: P1
+
+---
+
+## Dependency graph
+
+```mermaid
+graph LR
+    T01[T-01: LeaveRequestAudit entity] --> T03[T-03: Audit wiring]
+    T01 -.-> T02[T-02: UpdateByApprover]
+    T01 -.-> T04[T-04: History endpoint]
+
+    T06[T-06: Dev token UI] -.-> T07[T-07: Embed sample+doc]
+    T08[T-08: CSP middleware]
+
+    T09[T-09: Supabase removal]
+
+    T02 --> T10[T-10: Integration tests]
+    T04 --> T10
+    T05[T-05: Reports/Export] --> T10
+    T08 --> T10
+    T09 --> T10
+    T09 --> T11[T-11: Docs sync]
+    T10 --> T11
+```
+
+Solid arrow = hard dependency. Dotted = soft (works without, feature reduced).
 
 ---
 
 ## Checklist nghiệm thu (BRD §9.1)
 
-- [ ] 19/19 FastEndpoints hoạt động, response format consistent
+- [ ] 23/23 endpoints hoạt động (19 BRD + 4 extras), response format consistent
 - [ ] `grep -r "supabase" packages/web/src/` = 0
 - [ ] `packages/web/supabase/` xóa hoàn toàn
-- [ ] QLNP không lưu/verify password (đảm bảo không có endpoint `/login` nhận password)
-- [ ] Embed flow: host postMessage → `/api/auth/me` → dashboard hoạt động
+- [ ] QLNP không lưu/verify password
+- [ ] Embed flow: host postMessage → `/api/auth/me` → dashboard
 - [ ] Dev mode token input UI hoạt động khi `import.meta.env.DEV`
 - [ ] Approval 2 cấp đúng state machine; business days đúng (bỏ T7/CN)
-- [ ] UI giữ nguyên layout
 - [ ] `dotnet build` + `pnpm build` không lỗi
+- [ ] AC-001→AC-021 pass
+
+---
 
 ## Rủi ro & Mitigation
 
 | Rủi ro | Mức độ | Mitigation |
 |--------|--------|-----------|
-| DTO frontend mismatch backend khi build endpoints | High | Day 9 dành riêng cho integration fix; align từng slice ngay khi viết endpoint |
-| JWT validation config sai (Issuer/Audience/SigningKey) trong production | Medium | Day 1 verify JWT config; Day 7 viết doc rõ cho host team |
-| LeaveBalances.UsedDays cộng dồn sai khi approve | Medium | Unit test ở Day 10; thử AC-008 ở Day 9 |
-| Supabase migrations folder có info hữu ích cho SQL Server migration | Low | Backup folder ra `archive/` trước khi xóa nếu cần tham chiếu |
-| Iframe bị block bởi X-Frame-Options | Medium | Day 7 cấu hình ASP.NET `Content-Security-Policy: frame-ancestors` cho host domain |
+| DTO frontend mismatch backend | High | T-10 integration tests catch mismatches |
+| JWT validation config sai production | Medium | T-07 doc cho host team rõ config |
+| LeaveBalances.UsedDays cộng dồn sai khi approve | Medium | T-10 test AC-012 |
+| Iframe bị block bởi X-Frame-Options | Medium | T-08 CSP middleware |
+| Audit entity thêm migration lớn | Low | T-01 isolated, rollback dễ |
+| ClosedXML/EPPlus license (Reports/Export) | Low | Chọn package có license phù hợp (ClosedXML = MIT) |
+| Supabase migrations folder có info hữu ích | Low | Backup `archive/` trước khi xóa |
 
-## Quyết định kỹ thuật (chốt 2026-05-14)
+---
 
-1. **Định mức ngày nghỉ**: KHÔNG hardcode 12. Nguồn truth: `LeaveType.DefaultDays` → seed/upsert vào `LeaveBalance.TotalDays` cho từng user-leaveType-year. Frontend đọc `LeaveBalance.TotalDays - LeaveBalance.UsedDays` (FR-02.5, FR-09 dùng cùng nguồn).
-2. **`ApprovedBy` ambiguity**: tách field `RequestedApproverId` + `ActualApproverId` **DEFER** ra sprint sau, NHƯNG sprint này **PHẢI FIX**: khi `Create` đơn lưu approver được chọn vào field tạm `RequestedApproverId` (nullable); khi `Approve`/`Reject` ghi đè `ApprovedBy` = current user (người duyệt thực tế). Tránh nhập nhằng nghĩa.
-3. **Endpoint approve/reject**: dùng **sub-resource** `PUT /api/leave-requests/{id}/approve` và `/reject` (theo BRD Appendix B).
-4. **CSP `frame-ancestors`**: cấu hình qua env var `Security:FrameAncestors` (CSV domains) trong `appsettings.json`. Sprint này wire sẵn middleware đọc env var; danh sách domain cụ thể chờ Host Team — tạm để `'self'` cho dev.
+## Quyết định kỹ thuật
 
-## Action items phát sinh từ quyết định
-
-- **Day 3 (Create)**: thêm field `RequestedApproverId` (nullable Guid) vào `LeaveRequest` entity + migration nhỏ; lưu khi tạo đơn
-- **Day 4 (Approve/Reject)**: ghi `ApprovedBy = currentUser.Id` (không dùng giá trị từ request body)
-- **Day 5 (Config + LeaveTypes/Balances)**: thêm logic seed/upsert `LeaveBalance` khi:
-  - Tạo `LeaveType` mới → tạo balance cho toàn bộ user-năm hiện tại với `TotalDays = DefaultDays`
-  - Job khởi đầu năm (manual endpoint hoặc startup task) → tạo balance năm mới
-  - Hoặc lazy: khi `GetMyBalance` không thấy row → tự seed
-- **Day 6 (Frontend)**: bỏ hardcode `12` trong FR-02.5 dashboard, FR-09.1 violations → đọc `LeaveBalance.TotalDays`
-- **Day 1 hoặc Day 7 (Security)**: middleware/header set `Content-Security-Policy: frame-ancestors ${env:Security:FrameAncestors}` + `X-Frame-Options` tương ứng
-
-## Unresolved Questions
-
-- ~~Domain cụ thể để whitelist trong `Security:FrameAncestors` (chờ Host Website Team)~~ → **Không block sprint** — cơ chế env var `Security:FrameAncestors` đã wire sẵn, Host Team cung cấp domain list bất cứ lúc nào
-- Seed `LeaveBalance` cho năm mới: **xu hướng lazy + manual endpoint QTHT** (YAGNI, không dùng background job) — sẽ chốt rõ ở Day 5 khi implement Config/Balances slice
+1. **Định mức ngày nghỉ**: KHÔNG hardcode 12. Source: `LeaveType.DefaultDays` → seed/upsert vào `LeaveBalance.TotalDays`. Frontend đọc `TotalDays - UsedDays`.
+2. **`ApprovedBy` ambiguity**: Tách `RequestedApproverId` + `ApprovedBy` — RequestedApproverId lưu khi Create, ApprovedBy ghi đè khi Approve/Reject = current user.
+3. **Endpoint approve/reject**: Sub-resource `PUT /api/leave-requests/{id}/approve` và `/reject`.
+4. **CSP `frame-ancestors`**: Config qua `Security:FrameAncestors` env var. Dev default `'self'`.
+5. **Audit logging**: Full audit (all mutations + status transitions) nhưng **deferred** — không block sprint. T-01 entity tạo sẵn, T-03 wiring làm sau.
+6. **Reports/Export**: Dùng ClosedXML (MIT license) cho .xlsx generation.
