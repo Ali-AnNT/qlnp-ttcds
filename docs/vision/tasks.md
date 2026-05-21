@@ -42,7 +42,7 @@ source:
 | **Endpoint `.cs` files (20/23)** | ✅ **87%** | Thiếu: UpdateByApprover, History, Reports/Export |
 | DevLogin endpoint | ✅ Done | Build-time toggle |
 | CSP frame-ancestors middleware | ❌ Pending | NFR-002 |
-| Dev mode token input UI | ❌ Pending | FR-01.8 |
+| Dev mode manual token via postMessage | ✅ Done | FR-01.8, listener always active |
 | Embed host sample + doc | ❌ Pending | FR-070→FR-072 |
 | Supabase removal | ✅ Done | BR §9.1 |
 | Audit log (entity + wiring) | ❌ Deferred | BRULE-010, không block |
