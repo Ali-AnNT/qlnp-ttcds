@@ -44,7 +44,7 @@ source:
 | CSP frame-ancestors middleware | ❌ Pending | NFR-002 |
 | Dev mode token input UI | ❌ Pending | FR-01.8 |
 | Embed host sample + doc | ❌ Pending | FR-070→FR-072 |
-| Supabase removal | ❌ Pending | BR §9.1 |
+| Supabase removal | ✅ Done | BR §9.1 |
 | Audit log (entity + wiring) | ❌ Deferred | BRULE-010, không block |
 | Integration tests | ❌ Pending | AC-001→AC-021 |
 | Docs sync | 🟡 Partial | |
@@ -91,6 +91,7 @@ source:
 - **LeaveBalances + Config + Departments**: List/My/Get/Update/UserRole + Depts — `e95a3cc`
 - **CORS fix**: Frontend port 8081 — `a69842c`
 - **LeaveRequest.RequestedApproverId**: nullable field added per decision #2
+- **Supabase cleanup**: Deleted `packages/web/supabase/`, removed env vars, updated README — `archive/supabase-migrations/`
 
 </details>
 
@@ -189,17 +190,18 @@ source:
 - **AC**: Response header chứa CSP frame-ancestors; dev = `'self'`; configurable qua env var
 - **Priority**: P1
 
-### T-09: Supabase removal
+### T-09: Supabase removal ✅ DONE
 
 - **What**: Xóa `packages/web/supabase/` toàn bộ. Gỡ deps khỏi `package.json`. Verify grep = 0.
 - **Refs**: BR-005, BRD §9.1 AC, SRS §6.3
 - **Dependencies**: —
 - **Files**:
   - Delete: `packages/web/supabase/` (recursive)
-  - Modify: `packages/web/package.json` — remove `@supabase/supabase-js`
-  - Verify: `grep -r "supabase" packages/ --include="*.ts" --include="*.tsx" --include="*.json"` = 0
+  - Modify: `packages/web/package.json` — remove `@supabase/supabase-js` (already absent)
+  - Modify: `packages/web/.env` — removed `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_PROJECT_ID`
   - Modify: `README.md` — bỏ phần Supabase setup
-- **AC**: `pnpm install` OK; `pnpm -F @qlnp/web build` OK; grep = 0 kết quả
+  - Verify: `grep -r "supabase" packages/ --include="*.ts" --include="*.tsx" --include="*.json"` = 0 ✅
+- **AC**: `pnpm install` OK ✅; `pnpm -F @qlnp/web build` OK ✅; grep = 0 kết quả ✅
 - **Priority**: P0
 
 ### T-10: Integration tests (AC-001→AC-021)

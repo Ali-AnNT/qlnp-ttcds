@@ -13,7 +13,6 @@ He thong quan ly nghi phep danh cho Trung Tam Chuyen Doi So. Quan ly don xin ngh
 | Routing | React Router DOM 6 |
 | Charts | Recharts 3 |
 | Forms | React Hook Form 7 + Zod 4 |
-| Backend | Supabase (PostgreSQL) |
 | Package Manager | Bun + pnpm |
 
 ## Quick Start
@@ -23,10 +22,6 @@ He thong quan ly nghi phep danh cho Trung Tam Chuyen Doi So. Quan ly don xin ngh
 bun install
 # or
 pnpm install
-
-# Set up environment variables
-cp .env .env.local
-# Edit .env.local with your Supabase project URL and anon key
 
 # Start dev server (port 8080)
 bun run dev
@@ -46,7 +41,6 @@ src/
     AppSidebar.tsx          # Role-based sidebar with collapsible menu
     ui/                     # ~40 shadcn/ui components
   hooks/                    # Custom hooks (useIsMobile, useToast)
-  integrations/supabase/    # Supabase client + generated types
   lib/                      # Shared types (leave-data.ts), utils (cn, formatDate)
   pages/                    # Feature pages (see routing below)
   store/useStore.ts         # Zustand store: auth + CRUD + data loading
