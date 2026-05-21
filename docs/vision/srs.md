@@ -45,9 +45,12 @@ SRS này mô tả đầy đủ yêu cầu chức năng và phi chức năng củ
 | Dashboard + Calendar | R/W own | R/W dept | R all | R all |
 | Tạo đơn nghỉ phép | W own | W own | — | — |
 | Xem đơn của mình | R own | R own | — | — |
-| Sửa/Hủy đơn (pending) | W own | W own | — | — |
+| Sửa/Hủy đơn (pending) | W own | W own + W dept pending | — | — |
+| Sửa đơn phòng (pending) | — | W dept | — | — |
 | Phê duyệt cấp phòng | — | W dept | W all | W all |
 | Phê duyệt cấp giám đốc | — | — | W all | W all |
+| Cập nhật nội dung đơn (phê duyệt) | — | W dept | W all | — |
+| Xem lịch sử đơn | R own | R dept | R all | — |
 | Tổng hợp (Summary) | — | — | R all | — |
 | Báo cáo (Reports) | — | — | R all | — |
 | Vi phạm (Violations) | — | — | R all | — |
@@ -115,9 +118,10 @@ SRS này mô tả đầy đủ yêu cầu chức năng và phi chức năng củ
 |----|-------------|----------|
 | FR-04.1 | Hiển thị tất cả đơn của user hiện tại dạng bảng: STT, loại phép, start/end, số ngày, lý do, trạng thái, ngày gửi, thao tác | P0 |
 | FR-04.2 | Filter theo trạng thái: Tất cả, Chờ duyệt, LĐ đã duyệt, GĐ đã duyệt, Từ chối, Đã hủy | P1 |
-| FR-04.3 | Sửa đơn (chỉ khi status = "pending"): mở dialog, cho phép sửa loại phép, ngày, lý do, người duyệt, có validation + check trùng lịch, lưu và reset status về "pending" | P0 |
-| FR-04.4 | Hủy đơn (chỉ khi status = "pending"): set status = "cancelled" | P0 |
+| FR-04.3 | Sửa đơn (chỉ khi status = "pending"): CB.PCM sửa đơn của mình, LĐ.PCM sửa đơn pending trong phòng mình quản lý — mở dialog, cho phép sửa loại phép, ngày, lý do, người duyệt, có validation + check trùng lịch, lưu và reset status về "pending" | P0 |
+| FR-04.4 | Hủy đơn (chỉ khi status = "pending"): CB.PCM hủy đơn của mình, LĐ.PCM hủy đơn pending trong phòng — set status = "cancelled" | P0 |
 | FR-04.5 | Các đơn không còn "pending" không hiển thị nút thao tác | P1 |
+| FR-04.6 | History view: tab/filter riêng xem lịch sử tất cả đơn đã gửi, bao gồm audit log các thay đổi (sửa bởi owner, cập nhật bởi approver) | P1 |
 
 **Verification:** Test filter, sửa/hủy đơn pending, verify không sửa được đơn đã duyệt.
 
@@ -133,6 +137,8 @@ SRS này mô tả đầy đủ yêu cầu chức năng và phi chức năng củ
 | FR-05.4 | Phê duyệt: set status = "approved_leader" (nếu LD.PCM) hoặc "approved_director" (nếu GD.PGD), ghi approved_by | P0 |
 | FR-05.5 | Từ chối: mở dialog nhập lý do, set status = "rejected" + rejected_reason | P0 |
 | FR-05.6 | Xem chi tiết đơn: dialog hiển thị đầy đủ thông tin | P1 |
+| FR-05.7 | Approver (LĐ.PCM, GĐ/PGĐ) cập nhật nội dung đơn (ngày bắt đầu/kết thúc, lý do) khi phê duyệt. Mọi thay đổi lưu audit log: người sửa, trường thay đổi, giá trị cũ, giá trị mới, thời điểm | P1 |
+| FR-05.8 | Hiển thị audit log trong chi tiết đơn: danh sách các thay đổi, ai sửa, khi nào, giá trị cũ → mới | P1 |
 
 **Verification:** Test phê duyệt từng cấp, từ chối có lý do, verify LD.PCM không thấy đơn phòng khác.
 
@@ -164,6 +170,7 @@ SRS này mô tả đầy đủ yêu cầu chức năng và phi chức năng củ
 | FR-07.5 | Click chi tiết từng cán bộ: dialog hiển thị các đơn của người đó | P1 |
 | FR-07.6 | Biểu đồ tròn (PieChart): phân bổ ngày nghỉ theo loại phép | P1 |
 | FR-07.7 | Chỉ hiển thị đơn approved (leader hoặc director) | P0 |
+| FR-07.8 | Lọc theo trạng thái đơn: chưa duyệt (pending), đã duyệt (approved_leader + approved_director), bị từ chối (rejected) | P1 |
 
 **Verification:** Test filter, click hierarchy (phòng -> CB -> đơn), verify số liệu khớp.
 
@@ -176,7 +183,9 @@ SRS này mô tả đầy đủ yêu cầu chức năng và phi chức năng củ
 | FR-08.1 | KPI cards: Tổng ngày nghỉ đã duyệt, Tỷ lệ duyệt (%), Đơn bị từ chối | P0 |
 | FR-08.2 | Biểu đồ cột (BarChart): ngày nghỉ theo phòng ban | P1 |
 | FR-08.3 | Biểu đồ tròn (PieChart): phân bổ theo loại phép | P1 |
-| FR-08.4 | Export CSV: tất cả đơn (họ tên, phòng ban, loại phép, ngày, số ngày, trạng thái), UTF-8 BOM | P0 |
+| FR-08.4 | Export Excel (.xlsx): tất cả đơn (họ tên, phòng ban, loại phép, ngày, số ngày, trạng thái), bold header, auto-width columns, auto-filter, UTF-8 | P0 |
+| FR-08.5 | Lọc báo cáo theo trạng thái đơn: đã duyệt, chưa duyệt, bị từ chối | P1 |
+| FR-08.6 | Báo cáo theo tháng/quý: selector chọn kỳ (tháng, quý, năm), aggregate số liệu theo kỳ đã chọn | P1 |
 
 **Verification:** Test export CSV mở được trong Excel, verify số liệu charts khớp với DB.
 
@@ -218,6 +227,19 @@ SRS này mô tả đầy đủ yêu cầu chức năng và phi chức năng củ
 
 ---
 
+### FR-11: Lịch Sử Đơn Nghỉ Phép (Leave History)
+
+| ID | Requirement | Priority |
+|----|-------------|----------|
+| FR-11.1 | CB.PCM xem lịch sử đơn của mình, LĐ.PCM xem của phòng, GĐ/PGĐ xem tất cả — role-based filtering | P1 |
+| FR-11.2 | Filter theo: khoảng thời gian (từ ngày → đến ngày), trạng thái (pending/approved_leader/approved_director/rejected/cancelled), loại phép | P1 |
+| FR-11.3 | Mỗi lần thay đổi đơn (sửa bởi owner, cập nhật bởi approver) được ghi nhận: trường thay đổi, giá trị cũ, giá trị mới, người thực hiện, thời điểm | P1 |
+| FR-11.4 | Route: /leave/history, component: LeaveHistoryPage, access: AuthGuard (all roles, role-filtered) | P1 |
+
+**Verification:** Load history page per role, verify CB.PCM thấy đơn của mình, LĐ.PCM thấy đơn phòng, GĐ/PGĐ thấy tất cả.
+
+---
+
 ## 4. Data Requirements
 
 ### 4.1 Entity-Relationship Summary
@@ -231,6 +253,7 @@ LeaveTypes  1---* LeaveRequests
 LeaveTypes  1---* LeaveBalances
 LeaveTypes  1---* LeaveConfigs
 USER_MASTER 1---* LeaveRequests (ApprovedBy)
+LeaveRequests 1---* LeaveRequestAudits
 ```
 
 ### 4.2 Database Tables
@@ -244,6 +267,7 @@ USER_MASTER 1---* LeaveRequests (ApprovedBy)
 | `LeaveRequests` | Đơn nghỉ phép | Id, UserId (FK USER_MASTER), LeaveTypeId, StartDate, EndDate, TotalDays, Status, ApprovedBy (FK USER_MASTER) |
 | `LeaveBalances` | Số dư phép | Id, UserId, LeaveTypeId, Year, TotalDays, UsedDays, UNIQUE(UserId, LeaveTypeId, Year) |
 | `LeaveConfigs` | Cấu hình cấp duyệt | Id, LeaveTypeId, ApprovalLevel, ApproverRole |
+| `LeaveRequestAudits` | Audit log thay đổi đơn | Id, LeaveRequestId (FK LeaveRequests), ChangedBy (FK USER_MASTER), ChangedAt, FieldName, OldValue, NewValue |
 
 ### 4.3 Auth & Security Model
 
@@ -268,6 +292,8 @@ USER_MASTER 1---* LeaveRequests (ApprovedBy)
 | Unique UserId+LeaveTypeId+Year | Database unique index |
 | Current user required | ICurrentUserProvider (JWT claims) + endpoint guard |
 | Role-based endpoint access | FastEndpoints endpoint guard + role checks |
+| LĐ.PCM chỉ sửa đơn trong phòng | Endpoint validation: PhongBanId của current user match PhongBanId của request owner |
+| Approver cập nhật đơn chỉ khi pending/approved_leader | Endpoint validation: status check trước khi cho phép cập nhật |
 
 ---
 
@@ -327,9 +353,10 @@ USER_MASTER 1---* LeaveRequests (ApprovedBy)
 | FR-05 | Integration | Approve/reject by LD.PCM, GD.PGD | Status transitions đúng, scope filter đúng |
 | FR-06 | Manual | Navigate calendar, filter dept | Đúng ngày nghỉ hiển thị |
 | FR-07 | Integration | Filter year/type, click drill-down | Số liệu khớp aggregate SQL |
-| FR-08 | Manual | Export CSV, open in Excel | UTF-8 hiển thị đúng, đủ cột |
+| FR-08 | Manual + Integration | Export Excel (.xlsx), filter status, period selector | File .xlsx mở được trong Excel, bold header, auto-width, auto-filter, số liệu khớp DB |
 | FR-09 | Integration | Verify violation calculation, filter period | Overage = total_used - LeaveBalance.TotalDays, per user |
 | FR-10 | Integration | CRUD leave types, approval configs, general settings | Đúng persist trong DB |
+| FR-11 | Integration | Load history page per role | CB.PCM thấy đơn của mình, LĐ.PCM thấy đơn phòng, GĐ/PGĐ thấy tất cả |
 
 ### 6.2 Test Data Requirements
 - Tối thiểu 3 phòng ban từ `DM_DONVI`
@@ -345,8 +372,9 @@ USER_MASTER 1---* LeaveRequests (ApprovedBy)
 | Không có CSRF protection | **MEDIUM** | Add CSRF token cho mutation endpoints |
 | Không có rate limiting ở gateway auth | **MEDIUM** | Thực hiện rate limit tại reverse proxy/gateway hoặc FastEndpoints PreProcessor cho mutation endpoints |
 | Không có audit log | **LOW** | Log approval/rejection actions với timestamp + actor |
-| Không có pagination server-side | **LOW** | Data lớn sẽ chậm load; add pagination trong handler |
+| Không có pagination server-side | **LOW** | Data lớn sẽ chậm load; add pagination trong handler. History view và reports cần pagination khi data lớn |
 | approved_by field dùng chung cho cả người duyệt được chọn và người thực tế duyệt | **MEDIUM** | Đã tách: `RequestedApproverId` (nullable) lưu khi tạo đơn, `ApprovedBy` ghi đè khi duyệt thực tế. Xem tasks.md decision #2 |
+| Audit log chưa có UI dedicated | **LOW** | Hiện chỉ hiển thị trong chi tiết đơn. Tạo trang audit log riêng nếu cần |
 
 ---
 
@@ -360,6 +388,7 @@ USER_MASTER 1---* LeaveRequests (ApprovedBy)
 | `/` | DashboardPage | AuthGuard |
 | `/leave/new` | LeaveNewPage | AuthGuard (render only CB/LD) |
 | `/leave/my` | LeaveMyPage | AuthGuard (render only CB/LD) |
+| `/leave/history` | LeaveHistoryPage | AuthGuard (all roles, role-filtered) |
 | `/approval` | ApprovalPage | AuthGuard (render only LD/GD/QTHT) |
 | `/calendar` | CalendarPage | AuthGuard (all) |
 | `/summary` | SummaryPage | AuthGuard (render only GD) |
@@ -398,12 +427,14 @@ packages/api/
 │   ├── LeaveType.cs
 │   ├── LeaveBalance.cs
 │   ├── LeaveRequest.cs
+│   ├── LeaveRequestAudit.cs
 │   └── LeaveConfig.cs
 └── Features/
     ├── Auth/Me/
     ├── LeaveTypes/{List,Create,Update,Delete}/
-    ├── LeaveRequests/{List,Create,Update,Approve,Reject,Cancel}/
+    ├── LeaveRequests/{List,Create,Update,UpdateByApprover,Approve,Reject,Cancel,History}/
     ├── LeaveBalances/{List,My}/
+    ├── Reports/{Export}/
     └── Config/{Get,Update,UserRole}/
 ```
 

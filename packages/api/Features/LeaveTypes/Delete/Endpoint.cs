@@ -12,6 +12,7 @@ internal sealed class Endpoint : EndpointWithoutRequest
     {
         Delete("/api/leave-types/{id}");
         Roles("QLNP.QTHT");
+        Tags("Leave Types");
     }
 
     public override async Task HandleAsync(CancellationToken ct)

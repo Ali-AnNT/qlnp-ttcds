@@ -1,10 +1,11 @@
 ---
 day: 10
 title: Backend Endpoints P2
-status: planned
+status: completed
 priority: P0
 effort: 1 day
 date: 2026-05-15
+completed: 2026-05-18
 ---
 
 # Day 10: Backend Endpoints P2
@@ -41,44 +42,41 @@ Endpoint handler owns use-case logic. Shared private helper methods are acceptab
 
 | Action | File |
 |--------|------|
-| Create | `packages/api/Features/LeaveRequests/List/ListLeaveRequestsEndpoint.cs` |
-| Create | `packages/api/Features/LeaveRequests/Create/CreateLeaveRequestEndpoint.cs` |
-| Create | `packages/api/Features/LeaveRequests/Update/UpdateLeaveRequestEndpoint.cs` |
-| Create | `packages/api/Features/LeaveRequests/Approve/ApproveLeaveRequestEndpoint.cs` |
-| Create | `packages/api/Features/LeaveRequests/Reject/RejectLeaveRequestEndpoint.cs` |
-| Create | `packages/api/Features/LeaveRequests/Cancel/CancelLeaveRequestEndpoint.cs` |
-| Create | `packages/api/Features/LeaveBalances/List/ListLeaveBalancesEndpoint.cs` |
-| Create | `packages/api/Features/LeaveBalances/My/MyLeaveBalanceEndpoint.cs` |
-| Create | `packages/api/Features/Departments/List/ListDepartmentsEndpoint.cs` if needed |
+| Created | `packages/api/Features/LeaveRequests/List/Endpoint.cs`, `Data.cs`, `Models.cs` |
+| Created | `packages/api/Features/LeaveRequests/Create/Endpoint.cs`, `Data.cs`, `Models.cs`, `Mapper.cs` |
+| Created | `packages/api/Features/LeaveRequests/Update/Endpoint.cs`, `Data.cs`, `Models.cs`, `Mapper.cs` |
+| Created | `packages/api/Features/LeaveRequests/Approve/Endpoint.cs`, `Data.cs`, `Models.cs` |
+| Created | `packages/api/Features/LeaveRequests/Reject/Endpoint.cs`, `Data.cs`, `Models.cs` |
+| Created | `packages/api/Features/LeaveRequests/Cancel/Endpoint.cs`, `Data.cs`, `Models.cs` |
+| Created | `packages/api/Features/LeaveRequests/My/Endpoint.cs`, `Data.cs`, `Models.cs` |
+| Created | `packages/api/Features/LeaveBalances/List/Endpoint.cs`, `Data.cs`, `Models.cs` |
+| Created | `packages/api/Features/LeaveBalances/My/Endpoint.cs`, `Data.cs`, `Models.cs` |
+| Created | `packages/api/Features/Departments/List/Endpoint.cs`, `Data.cs` |
+| Created | `packages/api/Features/Departments/Get/Endpoint.cs`, `Data.cs` |
 
-## Implementation Steps
+## Implementation Notes
 
-1. Implement role-filtered leave request list.
-2. Implement create with date validation, business days, overlap check, active leave type check.
-3. Implement update for owner and editable statuses only.
-4. Implement approve state transitions:
-   - LD.PCM: pending -> approved_leader.
-   - GD.PGD/QTHT: pending or approved_leader -> approved_director.
-5. Update `LeaveBalances.UsedDays` only when final-approved.
-6. Implement reject for pending/approved_leader.
-7. Implement cancel for owner and allowed statuses.
-8. Implement balance list/my.
-9. Build API.
+- LeaveRequests: Already existed, fixed HTTP methods (PUT→POST, DELETE→POST), fixed to return raw DTOs.
+- LeaveRequests My: NEWLY CREATED.
+- LeaveBalances List/My: NEWLY CREATED.
+- Departments List/Get: NEWLY CREATED.
+- LeaveRequestDto now includes donViId and updatedAt fields.
+- All list endpoints return raw arrays instead of wrapped `{items: [...]}`.
 
 ## Todo List
 
-- [ ] Leave request list.
-- [ ] Create/update with validation.
-- [ ] Approve/reject/cancel.
-- [ ] Balance list/my.
-- [ ] Department reference if needed.
-- [ ] `dotnet build packages/api/QLNP.Api.csproj`.
+- [x] Leave request list.
+- [x] Create/update with validation.
+- [x] Approve/reject/cancel.
+- [x] Balance list/my.
+- [x] Department reference endpoint(s).
+- [x] `dotnet build packages/api/QLNP.Api.csproj` — 0 errors.
 
 ## Success Criteria
 
-- Leave workflow compiles and follows SRS status rules.
-- Role filtering enforced server-side.
-- Balance update is transactional with approval.
+- Leave workflow compiles and follows SRS status rules. -- DONE
+- Role filtering enforced server-side. -- DONE
+- Balance update is transactional with approval. -- DONE
 
 ## Risk Assessment
 
@@ -95,4 +93,4 @@ Endpoint handler owns use-case logic. Shared private helper methods are acceptab
 
 ## Next Steps
 
-- Wire frontend to real endpoints.
+- Wire frontend to real endpoints (Day 11).

@@ -23,3 +23,7 @@
 - **NEVER commit directly to `dev` or `main`**.
 - Commit flow: `branch → PR → dev → PR → main`
 - Always create a feature branch before any code change.
+
+## Testing (MANDATORY)
+
+- **NEVER write tests** — testing is delegated to the `tester` agent.

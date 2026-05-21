@@ -54,12 +54,14 @@
 
 | ID | Yêu cầu | Mức độ ưu tiên | Mô tả chi tiết |
 |----|---------|----------------|----------------|
-| BR-001 | Giữ nguyên toàn bộ chức năng nghiệp vụ hiện tại | High | Tạo/quản lý đơn nghỉ phép, phê duyệt 2 cấp, theo dõi lịch, tổng hợp, báo cáo, giám sát vi phạm, cấu hình |
+| BR-001 | Giữ nguyên toàn bộ chức năng nghiệp vụ hiện tại | High | Tạo/quản lý đơn nghỉ phép, phê duyệt 2 cấp, theo dõi lịch, tổng hợp, báo cáo, giám sát vi phạm, cấu hình. LĐ.PCM có thể chỉnh sửa đơn pending trong phòng mình quản lý |
 | BR-002 | Hỗ trợ xác thực qua SSO/gateway | High | Người dùng truy cập từ cổng chính, React app nhận token host qua iframe/postMessage, API resolve user qua gateway headers |
 | BR-003 | Hỗ trợ nhúng vào host website | High | App chạy trong iframe, không yêu cầu form đăng nhập riêng trong QLNP |
 | BR-004 | Bảo mật dữ liệu người dùng | High | QLNP không lưu password; phân quyền theo current user do gateway/API middleware resolve |
 | BR-005 | Tương thích dữ liệu hiện có | High | Migrate dữ liệu nghiệp vụ sang SQL Server không mất mát, giữ nguyên quan hệ khóa ngoại với system tables |
 | BR-006 | Duy trì quy trình phê duyệt 2 cấp | High | LD.PCM → GD.PGD, theo `LeaveConfigs`, state machine giữ nguyên |
+| BR-007 | Approver có thể cập nhật nội dung đơn khi phê duyệt | Medium | LĐ.PCM và GĐ/PGĐ có thể chỉnh sửa thông tin đơn (ngày, lý do) trong quá trình phê duyệt, mọi thay đổi được ghi nhận audit log (ai sửa, trường gì, giá trị cũ/mới) |
+| BR-008 | Hỗ trợ xuất báo cáo nghỉ phép ra file Excel (.xlsx) | Medium | Báo cáo có định dạng: bold header, auto-width columns, auto-filter, UTF-8. Thay thế CSV export hiện tại |
 
 ### 3.2 Vấn đề cần giải quyết
 
@@ -206,10 +208,12 @@ sequenceDiagram
 |----|-----------|-------|------------|-----------|
 | FR-040 | Danh sách đơn nghỉ phép | GET /api/leave-requests, role-based filtering | High | Current user |
 | FR-041 | Tạo đơn nghỉ phép | POST /api/leave-requests, validate business days, phát hiện trùng lịch | High | leave-balances check |
-| FR-042 | Cập nhật đơn | PUT /api/leave-requests/{id}, chỉ khi status=pending | High | — |
+| FR-042 | Cập nhật đơn | PUT /api/leave-requests/{id}, chỉ khi status=pending. CB.PCM sửa đơn của mình, LĐ.PCM sửa đơn pending trong phòng mình quản lý | High | — |
 | FR-043 | Phê duyệt / từ chối cấp 1 | PUT /api/leave-requests/{id}, LD.PCM → approved_leader/rejected | High | `LeaveConfigs` |
 | FR-044 | Phê duyệt / từ chối cấp 2 | PUT /api/leave-requests/{id}, GD.PGD → approved_director/rejected | High | FR-043 |
-| FR-045 | Hủy đơn | DELETE /api/leave-requests/{id}, user tự hủy | Medium | Status = pending/approved_leader |
+| FR-045 | Hủy đơn | DELETE /api/leave-requests/{id}, CB.PCM hủy đơn của mình, LĐ.PCM hủy đơn pending trong phòng | Medium | Status = pending/approved_leader |
+| FR-046 | Approver cập nhật nội dung đơn | PUT /api/leave-requests/{id}/update-by-approver, cho phép LĐ.PCM/GĐ.PGD cập nhật thông tin đơn khi phê duyệt, kèm audit log | Medium | FR-043/FR-044 |
+| FR-047 | Xem lịch sử đơn nghỉ phép | GET /api/leave-requests/history, role-based: CB.PCM xem của mình, LĐ.PCM xem của phòng, GĐ/PGĐ xem tất cả | Medium | Current user |
 
 ### 5.6 Nhóm chức năng: Leave Balances
 
@@ -218,6 +222,8 @@ sequenceDiagram
 | FR-050 | Tổng hợp số dư phép | GET /api/leave-balances, all users (GD.PGD) | High | Current user |
 | FR-051 | Số dư phép của tôi | GET /api/leave-balances/my | High | Current user |
 | FR-052 | Trừ ngày phép khi duyệt | Tự động cập nhật used_days khi approved_director | High | FR-044 |
+| FR-053 | Filter báo cáo theo trạng thái | Lọc báo cáo theo trạng thái đơn: đã duyệt, chưa duyệt, bị từ chối | Medium | — |
+| FR-054 | Báo cáo theo tháng/quý | Aggregate số liệu báo cáo theo tháng hoặc quý, có period selector | Medium | — |
 
 ### 5.7 Nhóm chức năng: System Config
 
@@ -275,9 +281,11 @@ sequenceDiagram
 | BRULE-004 | Phân quyền theo role | CB.PCM: xem đơn của mình; LD.PCM: xem đơn của phòng; GD.PGD: xem tất cả; QTHT: cấu hình | Dựa theo current user + `UserRoles` |
 | BRULE-005 | Giới hạn ngày phép | Mặc định 12 ngày/năm, theo dõi vi phạm khi vượt quá | Cấu hình được trong `LeaveConfigs`/config slice |
 | BRULE-006 | Hủy đơn | Chỉ hủy được khi status = pending hoặc approved_leader | Không hủy được khi đã approved_director |
-| BRULE-007 | Chỉnh sửa đơn | Chỉ sửa được khi status = pending | — |
+| BRULE-007 | Chỉnh sửa đơn | Chỉ sửa được khi status = pending. LĐ.PCM có thể sửa đơn pending trong phòng mình quản lý (không chỉ owner) | CB.PCM sửa đơn của mình, LĐ.PCM sửa đơn của nhân viên trong phòng |
 | BRULE-008 | Password policy | QLNP không lưu hoặc xác minh mật khẩu người dùng | Password thuộc SSO/gateway |
 | BRULE-009 | Gateway trust boundary | API chỉ tin gateway headers từ reverse proxy/host đáng tin cậy | Không expose API trực tiếp bypass gateway trong production |
+| BRULE-010 | Audit log cho thay đổi đơn | Mọi thay đổi nội dung đơn (sửa bởi owner hoặc cập nhật bởi approver) phải được ghi nhận: ai sửa, trường gì, giá trị cũ/mới, thời điểm | Dùng bảng LeaveRequestAudits hoặc EF Core shadow properties |
+| BRULE-011 | Lịch sử đơn nghỉ phép | Hệ thống lưu lịch sử đầy đủ các đơn nghỉ phép theo role: CB.PCM xem của mình, LĐ.PCM xem của phòng, GĐ/PGĐ xem tất cả | Role-based filtering trong endpoint |
 
 ---
 
@@ -341,6 +349,11 @@ sequenceDiagram
 | AC-014 | Host postMessage | Host gửi `{ type: "auth", token }` → app nhận, gọi `/api/auth/me`, vào dashboard | Integration test |
 | AC-015 | DB Migration | Row count mỗi bảng SQL Server = PostgreSQL, FK relationships giữ nguyên | Migration verify script |
 | AC-016 | Auth data boundary | Không migrate password vào QLNP; verify user identity lấy từ `USER_MASTER` + `UserRoles` | Migration/API test |
+| AC-017 | LĐ.PCM sửa đơn pending | LĐ.PCM sửa đơn pending trong phòng → status vẫn pending, audit log ghi nhận thay đổi | API test |
+| AC-018 | Approver cập nhật đơn | Approver cập nhật nội dung đơn khi phê duyệt → audit log ghi nhận trường, giá trị cũ/mới | API test |
+| AC-019 | Export báo cáo Excel | Export báo cáo ra file .xlsx mở được trong Excel, có bold header, auto-width, auto-filter, UTF-8 | Manual test |
+| AC-020 | History view theo role | CB.PCM thấy đơn của mình, LĐ.PCM thấy đơn của phòng, GĐ/PGĐ thấy tất cả | Integration test |
+| AC-021 | Filter báo cáo theo trạng thái | Lọc báo cáo theo trạng thái (đã duyệt, chưa duyệt, bị từ chối) trả về kết quả đúng | Integration test |
 
 ---
 
@@ -367,15 +380,18 @@ Các endpoint được tổ chức theo Vertical Slice Pattern — mỗi endpoin
 | DELETE | /api/leave-types/{id} | DeleteLeaveTypeEndpoint | Current user | QTHT |
 | GET | /api/leave-requests | ListLeaveRequestsEndpoint | Current user | All (role-filtered) |
 | POST | /api/leave-requests | CreateLeaveRequestEndpoint | Current user | CB.PCM, LD.PCM |
-| PUT | /api/leave-requests/{id} | UpdateLeaveRequestEndpoint | Current user | Owner (pending only) |
+| PUT | /api/leave-requests/{id} | UpdateLeaveRequestEndpoint | Current user | Owner (pending only), LĐ.PCM (pending in dept) |
+| PUT | /api/leave-requests/{id}/update-by-approver | UpdateByApproverEndpoint | Current user | LD.PCM, GD.PGD |
 | PUT | /api/leave-requests/{id}/approve | ApproveLeaveRequestEndpoint | Current user | LD.PCM, GD.PGD |
 | PUT | /api/leave-requests/{id}/reject | RejectLeaveRequestEndpoint | Current user | LD.PCM, GD.PGD |
-| DELETE | /api/leave-requests/{id} | CancelLeaveRequestEndpoint | Current user | Owner |
+| DELETE | /api/leave-requests/{id} | CancelLeaveRequestEndpoint | Current user | Owner, LĐ.PCM (in dept) |
+| GET | /api/leave-requests/history | ListHistoryEndpoint | Current user | All (role-filtered) |
 | GET | /api/leave-balances | ListLeaveBalancesEndpoint | Current user | GD.PGD |
 | GET | /api/leave-balances/my | MyLeaveBalanceEndpoint | Current user | All |
 | GET | /api/config | GetConfigEndpoint | Current user | All |
 | PUT | /api/config/{key} | UpdateConfigEndpoint | Current user | QTHT |
 | PUT | /api/config/user-role/{userId} | UpdateUserRoleEndpoint | Current user | QTHT |
+| GET | /api/reports/export | ExportReportEndpoint | Current user | GD.PGD |
 
 ## Appendix C: Phase Breakdown
 
@@ -400,12 +416,16 @@ Features/
 │   ├── List/ListLeaveRequestsEndpoint.cs
 │   ├── Create/CreateLeaveRequestEndpoint.cs
 │   ├── Update/UpdateLeaveRequestEndpoint.cs
+│   ├── UpdateByApprover/UpdateByApproverEndpoint.cs
 │   ├── Approve/ApproveLeaveRequestEndpoint.cs
 │   ├── Reject/RejectLeaveRequestEndpoint.cs
-│   └── Cancel/CancelLeaveRequestEndpoint.cs
+│   ├── Cancel/CancelLeaveRequestEndpoint.cs
+│   └── History/ListHistoryEndpoint.cs
 ├── LeaveBalances/
 │   ├── List/ListLeaveBalancesEndpoint.cs
 │   └── My/MyLeaveBalanceEndpoint.cs
+├── Reports/
+│   └── Export/ExportReportEndpoint.cs
 └── Config/
     ├── Get/GetConfigEndpoint.cs
     ├── Update/UpdateConfigEndpoint.cs

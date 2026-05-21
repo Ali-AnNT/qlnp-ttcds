@@ -36,4 +36,4 @@ internal sealed class Validator : Validator<Request>
     }
 }
 
-internal sealed record Response(LeaveRequestDto LeaveRequest);
+// Response is LeaveRequestDto directly

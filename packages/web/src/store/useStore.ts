@@ -2,12 +2,14 @@ import { create } from "zustand";
 import { departmentsApi, type DepartmentDto } from "@/api/departments.api";
 import { leaveTypesApi, type LeaveTypeDto } from "@/api/leave-types.api";
 import { leaveRequestsApi, type LeaveRequestDto, type CreateLeaveRequestDto } from "@/api/leave-requests.api";
+import { leaveBalancesApi, type LeaveBalanceDto } from "@/api/leave-balances.api";
 import { configApi, type ConfigDto } from "@/api/config.api";
 
 interface AppState {
   departments: DepartmentDto[];
   leaveTypes: LeaveTypeDto[];
   leaveRequests: LeaveRequestDto[];
+  leaveBalances: LeaveBalanceDto[];
   approvalConfigs: ConfigDto[];
 
   loadData: () => Promise<void>;
@@ -22,13 +24,15 @@ export const useStore = create<AppState>((set, get) => ({
   departments: [],
   leaveTypes: [],
   leaveRequests: [],
+  leaveBalances: [],
   approvalConfigs: [],
 
   loadData: async () => {
-    const [deptRes, ltRes, lrRes, acRes] = await Promise.all([
+    const [deptRes, ltRes, lrRes, lbRes, acRes] = await Promise.all([
       departmentsApi.list(),
       leaveTypesApi.list(),
       leaveRequestsApi.list(),
+      leaveBalancesApi.list(),
       configApi.get(),
     ]);
 
@@ -36,6 +40,7 @@ export const useStore = create<AppState>((set, get) => ({
       departments: deptRes.data || [],
       leaveTypes: (ltRes.data || []).filter((t) => t.isActive),
       leaveRequests: lrRes.data || [],
+      leaveBalances: lbRes.data || [],
       approvalConfigs: acRes.data || [],
     });
   },

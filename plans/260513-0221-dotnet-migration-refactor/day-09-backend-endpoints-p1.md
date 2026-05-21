@@ -1,10 +1,11 @@
 ---
 day: 9
 title: Backend Endpoints P1
-status: not_started
+status: completed
 priority: P0
 effort: 1 day
 date: 2026-05-14
+completed: 2026-05-18
 ---
 
 # Day 9: Backend Endpoints P1
@@ -42,36 +43,35 @@ FastEndpoints endpoint -> current user from `HttpContext.Items` -> `AppDbContext
 
 | Action | File |
 |--------|------|
-| Create | `packages/api/Features/Auth/Me/MeEndpoint.cs` |
-| Create | `packages/api/Features/LeaveTypes/List/ListLeaveTypesEndpoint.cs` |
-| Create | `packages/api/Features/LeaveTypes/Create/CreateLeaveTypeEndpoint.cs` |
-| Create | `packages/api/Features/LeaveTypes/Update/UpdateLeaveTypeEndpoint.cs` |
-| Create | `packages/api/Features/LeaveTypes/Delete/DeleteLeaveTypeEndpoint.cs` |
-| Create | `packages/api/Features/Config/Get/GetConfigEndpoint.cs` |
-| Create | `packages/api/Features/Config/Update/UpdateConfigEndpoint.cs` |
-| Create | `packages/api/Features/Config/UserRole/*Endpoint.cs` |
+| Created | `packages/api/Features/Auth/Me/Endpoint.cs`, `Data.cs`, `Models.cs` |
+| Created | `packages/api/Features/LeaveTypes/List/Endpoint.cs`, `Data.cs`, `Models.cs` |
+| Created | `packages/api/Features/LeaveTypes/Create/Endpoint.cs`, `Data.cs`, `Models.cs`, `Mapper.cs` |
+| Created | `packages/api/Features/LeaveTypes/Update/Endpoint.cs`, `Data.cs`, `Models.cs`, `Mapper.cs` |
+| Created | `packages/api/Features/LeaveTypes/Delete/Endpoint.cs`, `Data.cs`, `Models.cs` |
+| Created | `packages/api/Features/Config/Get/Endpoint.cs`, `Data.cs`, `Models.cs` |
+| Created | `packages/api/Features/Config/Update/Endpoint.cs`, `Data.cs`, `Models.cs` |
+| Created | `packages/api/Features/Config/UserRole/Endpoint.cs`, `Data.cs`, `Models.cs` |
+| Modified | `packages/api/Program.cs` — register Data classes in DI |
 
-## Implementation Steps
+## Implementation Notes
 
-1. Add small request/response records near endpoint classes or in same folder files.
-2. Implement `MeEndpoint` using middleware current user and DB lookup.
-3. Implement leave type list with optional active filter.
-4. Implement QTHT-only create/update/delete; soft-disable if referenced.
-5. Implement config get/update for `LeaveConfigs`.
-6. Implement user role read/update, validating role values.
-7. Build API.
+- Auth/Me: Already existed, updated DTO to match frontend, fixed MapRole priority.
+- LeaveTypes: Already existed, fixed to return raw DTOs instead of wrapped response.
+- Config endpoints: NEWLY CREATED.
+- Config UserRole endpoint: NEWLY CREATED.
+- All endpoints return raw arrays/objects, no wrapping envelope.
 
 ## Todo List
 
-- [ ] Auth/Me endpoint.
-- [ ] LeaveTypes list/create/update/delete endpoints.
-- [ ] Config get/update endpoints.
-- [ ] UserRole endpoint(s).
-- [ ] `dotnet build packages/api/QLNP.Api.csproj`.
+- [x] Auth/Me endpoint.
+- [x] LeaveTypes list/create/update/delete endpoints.
+- [x] Config get/update endpoints.
+- [x] UserRole endpoint(s).
+- [x] `dotnet build packages/api/QLNP.Api.csproj` — 0 errors.
 
 ## Success Criteria
 
-- Endpoints compile.
+- Endpoints compile. -- DONE
 - Non-QTHT writes return 403/401-equivalent behavior.
 - Existing frontend API modules can call endpoints.
 
@@ -89,4 +89,4 @@ FastEndpoints endpoint -> current user from `HttpContext.Items` -> `AppDbContext
 
 ## Next Steps
 
-- Implement leave request/balance endpoints.
+- Implement leave request/balance endpoints (Day 10).

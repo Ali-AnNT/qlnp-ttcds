@@ -5,7 +5,7 @@ using QLNP.Api.Features.LeaveRequests;
 
 namespace QLNP.Api.Features.LeaveRequests.Cancel;
 
-internal sealed class Endpoint : EndpointWithoutRequest<Response>
+internal sealed class Endpoint : EndpointWithoutRequest<LeaveRequestDto>
 {
     private readonly Data _data;
     private readonly ICurrentUserProvider _currentUser;
@@ -18,8 +18,9 @@ internal sealed class Endpoint : EndpointWithoutRequest<Response>
 
     public override void Configure()
     {
-        Delete("/api/leave-requests/{id}");
+        Post("/api/leave-requests/{id}/cancel");
         Roles("QLNP.CB.PCM", "QLNP.LD.PCM");
+        Tags("Leave Requests");
     }
 
     public override async Task HandleAsync(CancellationToken ct)
@@ -56,6 +57,6 @@ internal sealed class Endpoint : EndpointWithoutRequest<Response>
             await Send.ErrorsAsync(409, ct); return;
         }
 
-        await Send.OkAsync(new Response(entity.MapToDto()), ct);
+        await Send.OkAsync(entity.MapToDto(), ct);
     }
 }

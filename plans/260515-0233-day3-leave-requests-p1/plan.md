@@ -5,7 +5,8 @@ priority: P0
 effort: "1d"
 branch: feat/leave-requests-p1
 created: 2026-05-15
-blockedBy: [260514-0446-2week-finalization-and-embed]
+blockedBy: []
+blocks: [260515-0839-day4-leave-requests-p2]
 blocks: []
 source:
   - docs/vision/brd.md

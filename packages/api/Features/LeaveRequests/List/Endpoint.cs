@@ -2,7 +2,7 @@ using FastEndpoints;
 
 namespace QLNP.Api.Features.LeaveRequests.List;
 
-internal sealed class Endpoint : EndpointWithoutRequest<Response>
+internal sealed class Endpoint : EndpointWithoutRequest<List<LeaveRequestDto>>
 {
     private readonly Data _data;
 
@@ -12,11 +12,12 @@ internal sealed class Endpoint : EndpointWithoutRequest<Response>
     {
         Get("/api/leave-requests");
         Options(x => x.RequireAuthorization());
+        Tags("Leave Requests");
     }
 
     public override async Task HandleAsync(CancellationToken ct)
     {
         var items = await _data.GetAsync(ct);
-        await Send.OkAsync(new Response(items), ct);
+        await Send.OkAsync(items, ct);
     }
 }
