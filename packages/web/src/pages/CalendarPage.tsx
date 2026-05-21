@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useStore } from "@/store/useStore";
 import { formatDate } from "@/lib/date-utils";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -28,6 +29,7 @@ const statusColor: Record<string, string> = {
 };
 
 const CalendarPage = () => {
+  const { user } = useAuth();
   const leaveRequests = useStore((s) => s.leaveRequests);
   const departments = useStore((s) => s.departments);
   const leaveTypes = useStore((s) => s.leaveTypes);
@@ -35,7 +37,12 @@ const CalendarPage = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [filterDept, setFilterDept] = useState("all");
 
-  const activeRequests = leaveRequests.filter((r) => r.status !== "cancelled" && r.status !== "rejected");
+  const isStaff = user?.role === "CB.PCM";
+  const activeRequests = leaveRequests.filter((r) => {
+    if (r.status === "cancelled" || r.status === "rejected") return false;
+    if (isStaff) return r.status === "approved_leader" || r.status === "approved_director";
+    return true;
+  });
 
   const filteredRequests = activeRequests.filter((r) => {
     if (filterDept === "all") return true;

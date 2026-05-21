@@ -29,6 +29,7 @@ const DashboardPage = () => {
   const { user } = useAuth();
   const leaveRequests = useStore((s) => s.leaveRequests);
   const leaveTypes = useStore((s) => s.leaveTypes);
+  const leaveBalances = useStore((s) => s.leaveBalances);
   const loadData = useStore((s) => s.loadData);
 
   useEffect(() => { loadData(); }, []);
@@ -39,15 +40,18 @@ const DashboardPage = () => {
   const totalDaysUsed = myRequests
     .filter((r) => r.status === "approved_leader" || r.status === "approved_director")
     .reduce((s, r) => s + r.totalDays, 0);
+  const remainingDays = leaveBalances
+    .filter((b) => b.userId === user?.userId)
+    .reduce((s, b) => s + b.remainingDays, 0);
 
   const metrics = [
-    { label: "Ngày phép còn lại", value: 12 - totalDaysUsed, icon: CalendarDays, color: "text-accent" },
+    { label: "Ngày phép còn lại", value: remainingDays, icon: CalendarDays, color: "text-accent" },
     { label: "Đơn đang chờ duyệt", value: user?.role === "CB.PCM" ? myRequests.filter((r) => r.status === "pending").length : pendingApproval.length, icon: Clock, color: "text-warning" },
     { label: "Đơn đã duyệt", value: approvedCount, icon: CheckCircle, color: "text-success" },
     { label: "Tổng ngày đã nghỉ", value: totalDaysUsed, icon: FileText, color: "text-info" },
   ];
 
-  const recentRequests = [...leaveRequests].slice(0, 8);
+  const recentRequests = (user?.role === "CB.PCM" ? myRequests : leaveRequests).slice(0, 8);
 
   return (
     <div className="space-y-6">
