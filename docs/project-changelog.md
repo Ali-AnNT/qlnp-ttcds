@@ -1,5 +1,17 @@
 # Project Changelog - QLNP-TTCDS
 
+## v0.3.1 -- 2026-05-21 -- Supabase Cleanup (T-09)
+
+### Removed
+- `packages/web/supabase/` directory deleted (migrations archived to `archive/supabase-migrations/`)
+- `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_PROJECT_ID` env vars removed from `.env`
+- Supabase references removed from `README.md` (tech stack, quick start, project structure)
+
+### Verified
+- `grep -r "supabase" packages/web/` = 0 results
+- `pnpm install` OK
+- `pnpm -F @qlnp/web build` OK (0 errors)
+
 ## v0.3.0 -- 2026-05-15 -- LeaveRequests P2 (Approve/Reject/Cancel)
 
 ### Added
