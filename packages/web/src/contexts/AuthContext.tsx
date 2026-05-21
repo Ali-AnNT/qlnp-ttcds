@@ -27,16 +27,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const isEmbed = window.self !== window.top;
     if (isEmbed) {
       setState((s) => ({ ...s, isEmbed: true }));
-      const handler = (event: MessageEvent) => {
-        if (event.data?.type === "auth" && event.data?.token) {
-          localStorage.setItem("jwt", event.data.token);
-          fetchUser();
-        }
-      };
-      window.addEventListener("message", handler);
-      return () => window.removeEventListener("message", handler);
     }
+
+    const handler = (event: MessageEvent) => {
+      if (event.data?.type === "auth" && event.data?.token) {
+        localStorage.setItem("jwt", event.data.token);
+        fetchUser();
+      }
+    };
+    window.addEventListener("message", handler);
     fetchUser();
+    return () => window.removeEventListener("message", handler);
   }, [fetchUser]);
 
   return <AuthContext.Provider value={state}>{children}</AuthContext.Provider>;
