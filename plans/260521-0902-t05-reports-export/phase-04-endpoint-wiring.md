@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "Endpoint + Wiring"
-status: pending
+status: completed
 priority: P1
 effort: "1h"
 dependencies: [1, 2, 3]
@@ -97,10 +97,10 @@ Create `Endpoint.cs` that ties Data + ExcelBuilder together. Register `Data` in 
 
 ## Success Criteria
 
-- [ ] `Endpoint.cs` compiles with correct route + role
-- [ ] `Data` registered in `Program.cs`
-- [ ] `dotnet build` 0 errors
-- [ ] GD.PGD → 200 + `.xlsx` with correct Content-Type
-- [ ] Non-GD.PGD → 403
-- [ ] `Content-Disposition: attachment; filename="bao-cao-nghi-phep-*.xlsx"`
-- [ ] File opens in Excel without errors
+- [x] `Endpoint.cs` compiles with correct route + role
+- [x] `Data` registered in `Program.cs`
+- [x] `dotnet build` 0 errors
+- [x] GD.PGD → 200 + `.xlsx` with correct Content-Type
+- [x] Non-GD.PGD → 403
+- [x] `Content-Disposition: attachment; filename="bao-cao-nghi-phep-*.xlsx"`
+- [x] File opens in Excel without errors

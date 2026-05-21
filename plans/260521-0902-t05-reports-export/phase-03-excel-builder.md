@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Excel Builder"
-status: pending
+status: completed
 priority: P1
 effort: "2h"
 dependencies: [1, 2]
@@ -120,14 +120,14 @@ ExcelBuilder (static class)
 
 ## Success Criteria
 
-- [ ] `ExcelBuilder.BuildWorkbook()` returns valid `XLWorkbook`
-- [ ] `period=none` → workbook with 1 sheet "Chi tiết"
-- [ ] `period=month` → workbook with 4 sheets
-- [ ] Detail sheet columns: STT, Họ tên, Phòng ban, Loại phép, Từ ngày, Đến ngày, Số ngày, Trạng thái
-- [ ] Vietnamese status labels used in detail sheet
-- [ ] Headers: bold, gray background, auto-filter enabled
-- [ ] Columns auto-width adjusted
-- [ ] Number format `0.0` on all "Số ngày" columns
-- [ ] Date format `dd/MM/yyyy` on date columns
-- [ ] Empty data → sheets with headers only, no crash
-- [ ] `dotnet build` 0 errors
+- [x] `ExcelBuilder.BuildWorkbook()` returns valid `XLWorkbook`
+- [x] `period=none` → workbook with 1 sheet "Chi tiết"
+- [x] `period=month` → workbook with 4 sheets
+- [x] Detail sheet columns: STT, Họ tên, Phòng ban, Loại phép, Từ ngày, Đến ngày, Số ngày, Trạng thái
+- [x] Vietnamese status labels used in detail sheet
+- [x] Headers: bold, gray background, auto-filter enabled
+- [x] Columns auto-width adjusted
+- [x] Number format `0.0` on all "Số ngày" columns
+- [x] Date format `dd/MM/yyyy` on date columns
+- [x] Empty data → sheets with headers only, no crash
+- [x] `dotnet build` 0 errors

@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Data Layer"
-status: pending
+status: completed
 priority: P1
 effort: "20m"
 dependencies: [1]
@@ -65,7 +65,7 @@ Create `Data.cs` with LeaveRequest query. Includes User → DonVi (DmDonvi) for 
 
 ## Success Criteria
 
-- [ ] `Data.cs` compiles with correct namespace + using
-- [ ] Query includes `User.DonVi` and `LeaveType`
-- [ ] Status + date range filters applied conditionally
-- [ ] `dotnet build` 0 errors
+- [x] `Data.cs` compiles with correct namespace + using
+- [x] Query includes `User.DonVi` and `LeaveType`
+- [x] Status + date range filters applied conditionally
+- [x] `dotnet build` 0 errors

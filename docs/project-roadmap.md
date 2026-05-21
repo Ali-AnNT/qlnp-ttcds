@@ -50,7 +50,7 @@ All Supabase-related issues resolved by architecture migration:
 
 **Priority:** P0 -- Complete backend behavior behind the already-refactored frontend.
 **Target window:** 2026-05-14 to 2026-05-21.
-**Progress:** 11/17 endpoint implementations (65%), 88% overall migration.
+**Progress:** 12/18 endpoint implementations (67%), 89% overall migration.
 
 | Task | Status | Target |
 |------|--------|--------|
@@ -58,6 +58,7 @@ All Supabase-related issues resolved by architecture migration:
 | LeaveTypes CRUD endpoints (Roles "QTHT") | Done | 2026-05-14 |
 | LeaveRequests P1: List/Create/Update | Done | 2026-05-15 |
 | LeaveRequests P2: Approve/Reject/Cancel | Done | 2026-05-15 |
+| Reports Export endpoint (.xlsx, GD.PGD) | Done | 2026-05-21 |
 | LeaveBalances, Department reference endpoints | Planned | 2026-05-17 |
 | Frontend integration against real API | Planned | 2026-05-18 |
 | API integration tests + Vitest updates | Planned | 2026-05-19 |
@@ -103,7 +104,7 @@ May 2026 (COMPLETED): Phase 1 - Architecture Migration
     - Features directory scaffolded, 8/17 endpoints implemented
 
 May 14-21 2026 (IN PROGRESS): Phase 1.1 - Endpoint Implementation & Release Readiness
-    - 11 endpoints done: Auth/Me, LeaveTypes CRUD, LeaveRequests List/Create/Update/Approve/Reject/Cancel
+    - 12 endpoints done: Auth/Me, LeaveTypes CRUD, LeaveRequests List/Create/Update/Approve/Reject/Cancel, Reports Export
     - 6 remaining: LeaveBalances List/My, Config Get/Update/UserRole
     - Integration testing
     - Documentation/deployment sync

@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Setup + Models"
-status: pending
+status: completed
 priority: P1
 effort: "30m"
 dependencies: []
@@ -89,7 +89,7 @@ Add ClosedXML NuGet package. Create `Models.cs` with Request record, FluentValid
 
 ## Success Criteria
 
-- [ ] ClosedXML in csproj `<PackageReference>`
-- [ ] `dotnet build` 0 errors
-- [ ] `Request` record with 4 fields + `Validator` with 3 rules
-- [ ] `StatusLabels.ToVietnamese()` maps all 5 statuses
+- [x] ClosedXML in csproj `<PackageReference>`
+- [x] `dotnet build` 0 errors
+- [x] `Request` record with 4 fields + `Validator` with 3 rules
+- [x] `StatusLabels.ToVietnamese()` maps all 5 statuses

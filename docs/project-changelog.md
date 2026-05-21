@@ -1,5 +1,30 @@
 # Project Changelog - QLNP-TTCDS
 
+## v0.4.0 -- 2026-05-21 -- Reports Export Endpoint (T-05)
+
+### Added
+- **GET /api/reports/export** -- Export leave requests to .xlsx (Roles: GD.PGD only):
+  - ClosedXML 0.105.0 for Excel generation
+  - Query params: `status`, `from`, `to` (DateOnly), `period` (none|month|quarter|year)
+  - `period=none` → 1 sheet ("Chi tiết" -- raw detail with STT, Họ tên, Phòng ban, Loại phép, Từ ngày, Đến ngày, Số ngày, Trạng thái)
+  - `period=month|quarter|year` → 4 sheets (detail + 3 aggregated)
+  - Aggregated sheets: Employee×LeaveType×Period, Department×Period, Period summary
+  - Period grouping by StartDate (request attributed to period of its StartDate)
+  - Vietnamese status labels (Chờ duyệt, Đã duyệt LĐ, Đã duyệt GĐ, Từ chối, Đã hủy)
+  - Formatting: bold headers, gray background (#F0F0F0), auto-filter, auto-width
+  - Date format `dd/MM/yyyy`, number format `0.0` for day counts
+  - Empty data → valid .xlsx with headers only, no crash
+  - File download via `Send.StreamAsync()` with `Content-Disposition: attachment`
+
+### Added (supporting)
+- `packages/api/Features/Reports/Export/` feature directory:
+  - `Models.cs` -- Request record, FluentValidation, StatusLabels
+  - `Data.cs` -- EF Core query with User.DonVi + LeaveType includes, status/date filters
+  - `ExcelBuilder.cs` -- pure ClosedXML logic, static class, no DI
+  - `Endpoint.cs` -- `GET /api/reports/export`, `Roles("QLNP.GD.PGD")`
+- `QLNP.Api.csproj`: `ClosedXML` 0.105.0 package reference
+- `Program.cs`: scoped DI registration for `Reports.Export.Data`
+
 ## v0.3.1 -- 2026-05-21 -- Supabase Cleanup (T-09)
 
 ### Removed
