@@ -23,7 +23,7 @@ internal sealed class Endpoint : EndpointWithoutRequest<List<LeaveBalanceDto>>
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        var year = Query<int?>("year");
+        var year = Query<int?>("year", isRequired: false);
         var user = _currentUser.GetCurrentUser();
         var userId = user.Roles.Contains("QLNP.CB.PCM") ? user.UserId : (long?)null;
         var items = await _data.GetAllAsync(year, userId, ct);
