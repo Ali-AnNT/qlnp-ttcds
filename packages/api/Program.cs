@@ -80,6 +80,7 @@ builder.Services.AddScoped<QLNP.Api.Features.LeaveBalances.List.Data>();
 builder.Services.AddScoped<QLNP.Api.Features.LeaveBalances.My.Data>();
 builder.Services.AddScoped<QLNP.Api.Features.Departments.List.Data>();
 builder.Services.AddScoped<QLNP.Api.Features.Departments.Get.Data>();
+builder.Services.AddScoped<QLNP.Api.Features.Reports.Export.Data>();
 
 var app = builder.Build();
 
