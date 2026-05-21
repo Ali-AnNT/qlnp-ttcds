@@ -9,7 +9,7 @@ internal sealed class Data
 
     public Data(AppDbContext db) => _db = db;
 
-    public async Task<List<LeaveBalanceDto>> GetAllAsync(int? year, CancellationToken ct)
+    public async Task<List<LeaveBalanceDto>> GetAllAsync(int? year, long? userId, CancellationToken ct)
     {
         var query = _db.LeaveBalances
             .Include(b => b.LeaveType)
@@ -17,6 +17,9 @@ internal sealed class Data
 
         if (year.HasValue)
             query = query.Where(b => b.Year == year.Value);
+
+        if (userId.HasValue)
+            query = query.Where(b => b.UserId == userId.Value);
 
         return await query
             .OrderBy(b => b.UserId).ThenBy(b => b.LeaveTypeId)
