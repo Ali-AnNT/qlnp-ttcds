@@ -5,6 +5,7 @@
 - See [PROJECT_RULE.md](./PROJECT_RULE.md) for all project rules.
 
 <!-- gitnexus:start -->
+
 # GitNexus — Code Intelligence
 
 This project is indexed by GitNexus as **qlnp-ttcds** (855 symbols, 1751 relationships, 15 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
