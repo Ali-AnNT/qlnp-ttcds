@@ -151,13 +151,6 @@ public partial class AppDbContext : DbContext
             new LeaveType { Id = 3, Name = "Việc riêng", Code = "personal", DefaultDays = 3, IsActive = true }
         );
 
-        modelBuilder.Entity<UserMaster>().HasData(
-            new UserMaster { UserMasterId = 1, UserName = "user1", HoTen = "User One", PhongBanId = 1, DonViId = 1, Used = true },
-            new UserMaster { UserMasterId = 2, UserName = "user2", HoTen = "User Two", PhongBanId = 1, DonViId = 1, Used = true },
-            new UserMaster { UserMasterId = 3, UserName = "user3", HoTen = "User Three", PhongBanId = 1, DonViId = 1, Used = true },
-            new UserMaster { UserMasterId = 4, UserName = "user4", HoTen = "User Four", PhongBanId = 1, DonViId = 1, Used = true }
-        );
-
         modelBuilder.Entity<UserRole>().HasData(
             new UserRole { UserId = 1, Role = "QLNP.QTHT" },
             new UserRole { UserId = 2, Role = "QLNP.CB.PCM" },
