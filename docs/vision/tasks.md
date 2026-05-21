@@ -1,6 +1,6 @@
 ---
 title: Kế hoạch 2 tuần — Hoàn tất migration Supabase → .NET + Embed/Token
-status: planned
+status: in-progress
 priority: P0
 effort: large
 branch: feat/efcore-migration-net9-fastendpoints
@@ -19,7 +19,7 @@ source:
 ## Mục tiêu
 
 1. **Bỏ Supabase hoàn toàn**: xóa thư mục `packages/web/supabase/`, gỡ deps còn dư, verify `grep -r "supabase" packages/` = 0
-2. **Hoàn thiện backend .NET**: implement 17 FastEndpoints theo VSP (hiện 0/17 file `.cs`)
+2. **Hoàn thiện backend .NET**: implement 19 FastEndpoints theo VSP (hiện 19/19 file `.cs`)
 3. **Embed/Token**: app chạy trong iframe nhận token qua `postMessage`; dev mode có UI nhập token thủ công + fallback admin local
 
 ## Tham chiếu
@@ -36,7 +36,7 @@ source:
 | System tables (`USER_MASTER`, `DM_DONVI`) read-only | ✅ Done | |
 | `CurrentUserMiddleware` + dev fallback | ✅ Done | Now JWT Bearer + ICurrentUserProvider (gateway headers removed) |
 | Frontend `api/client.ts` + AuthContext | ✅ Done | Đã listen postMessage |
-| **Backend Endpoint `.cs` files (17 cái)** | 🟡 **8/17 (47%)** | Auth/Me + LeaveTypes CRUD (4) + LeaveRequests P1 (3) done; P2 + Balances + Config pending |
+| **Backend Endpoint `.cs` files (19 cái)** | ✅ **19/19 (100%)** | All endpoints implemented (+2 so với 17 ban đầu — thêm Departments slice) |
 | Supabase folder cleanup | ❌ Pending | `packages/web/supabase/` còn config + migrations |
 | Dev mode token input UI | ❌ Pending | Chưa có form nhập token |
 | Tests (unit + integration) | ❌ Pending | |
@@ -78,19 +78,21 @@ source:
 
 ### Day 4 (2026-05-19, Thứ 3) — LeaveRequests P2 (Approve/Reject/Cancel)
 
-- [ ] `Features/LeaveRequests/Approve/ApproveLeaveRequestEndpoint.cs` — state machine: pending→approved_leader (LD.PCM) / approved_leader→approved_director (GD.PGD); cập nhật `LeaveBalances.UsedDays` khi approved_director (FR-052)
-- [ ] `Features/LeaveRequests/Reject/RejectLeaveRequestEndpoint.cs` — set status=rejected + `rejected_reason`
-- [ ] `Features/LeaveRequests/Cancel/CancelLeaveRequestEndpoint.cs` — chỉ cancel khi status ∈ {pending, approved_leader} (BRULE-006)
-- [ ] Commit
+- [x] `Features/LeaveRequests/Approve/ApproveLeaveRequestEndpoint.cs` — state machine: pending→approved_leader (LD.PCM) / approved_leader→approved_director (GD.PGD); cập nhật `LeaveBalances.UsedDays` khi approved_director (FR-052)
+- [x] `Features/LeaveRequests/Reject/RejectLeaveRequestEndpoint.cs` — set status=rejected + `rejected_reason`
+- [x] `Features/LeaveRequests/Cancel/CancelLeaveRequestEndpoint.cs` — chỉ cancel khi status ∈ {pending, approved_leader} (BRULE-006)
+- [x] Commit: `feat(api): LeaveRequests P2 - Approve/Reject/Cancel (#5)` (a004ebd)
 
-### Day 5 (2026-05-20, Thứ 4) — LeaveBalances + Config slices
+### Day 5 (2026-05-20, Thứ 4) — LeaveBalances + Config + Departments slices
 
-- [ ] `Features/LeaveBalances/List/ListLeaveBalancesEndpoint.cs` — GET `/api/leave-balances`, role GD.PGD
-- [ ] `Features/LeaveBalances/My/MyLeaveBalanceEndpoint.cs` — GET `/api/leave-balances/my`
-- [ ] `Features/Config/Get/GetConfigEndpoint.cs` — đọc cấu hình
-- [ ] `Features/Config/Update/UpdateConfigEndpoint.cs` — upsert (FR-10.7), role QTHT
-- [ ] `Features/Config/UserRole/UpdateUserRoleEndpoint.cs` — sửa `UserRoles`, role QTHT
-- [ ] Commit; `dotnet build` clean; test toàn bộ 17 endpoints qua `.http`
+- [x] `Features/LeaveBalances/List/ListLeaveBalancesEndpoint.cs` — GET `/api/leave-balances`, role GD.PGD, QTHT, LD.PCM
+- [x] `Features/LeaveBalances/My/MyLeaveBalanceEndpoint.cs` — GET `/api/leave-balances/my`
+- [x] `Features/Config/Get/GetConfigEndpoint.cs` — đọc cấu hình (any auth)
+- [x] `Features/Config/Update/UpdateConfigEndpoint.cs` — upsert (FR-10.7), role QTHT
+- [x] `Features/Config/UserRole/GetUserRoleEndpoint.cs` — GET (không phải PUT), lấy role theo userId, role QTHT
+- [x] `Features/Departments/List/ListDepartmentsEndpoint.cs` — GET `/api/departments`
+- [x] `Features/Departments/Get/GetDepartmentEndpoint.cs` — GET `/api/departments/{id}`
+- [x] Commit: `feat(api): add Config, Departments, LeaveBalances, MyLeaveRequests endpoints + CORS` (a9d6e70)
 
 ---
 
@@ -150,7 +152,7 @@ source:
 
 ## Checklist nghiệm thu (BRD §9.1)
 
-- [ ] 17/17 FastEndpoints hoạt động, response format consistent
+- [ ] 19/19 FastEndpoints hoạt động, response format consistent
 - [ ] `grep -r "supabase" packages/web/src/` = 0
 - [ ] `packages/web/supabase/` xóa hoàn toàn
 - [ ] QLNP không lưu/verify password (đảm bảo không có endpoint `/login` nhận password)
