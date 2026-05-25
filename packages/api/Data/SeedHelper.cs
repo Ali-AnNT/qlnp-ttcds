@@ -6,7 +6,7 @@ namespace QLNP.Api.Data;
 
 /// <summary>
 /// One-time and yearly startup seed for LeaveBalances.
-/// Creates balance rows for all QLNP-role users × active leave types for the current year.
+/// Creates balance rows for all active users × active leave types for the current year.
 /// Idempotent — safe to run on every app start.
 /// </summary>
 public static class SeedHelper
@@ -15,9 +15,9 @@ public static class SeedHelper
     {
         var year = DateTime.UtcNow.Year;
 
-        // Get all user IDs that have QLNP roles (UserId is PK, so Distinct is unnecessary)
-        var userIds = await db.UserRoles
-            .Select(ur => ur.UserId)
+        var userIds = await db.UserMaster
+            .Where(u => u.Used == true)
+            .Select(u => (long)u.UserMasterId)
             .ToListAsync();
 
         if (userIds.Count == 0) return;

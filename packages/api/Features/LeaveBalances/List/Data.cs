@@ -21,9 +21,10 @@ internal sealed class Data
         }
         else
         {
-            // Admin view — seed for all users with QLNP roles
-            var userIds = await _db.UserRoles
-                .Select(ur => ur.UserId)
+            // Admin view — seed for all active users
+            var userIds = await _db.UserMaster
+                .Where(u => u.Used == true)
+                .Select(u => (long)u.UserMasterId)
                 .ToListAsync(ct);
             await Seed.Data.EnsureBalancesForUsersAsync(_db, userIds, effectiveYear, ct);
         }
