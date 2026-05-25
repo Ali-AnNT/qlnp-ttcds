@@ -24,6 +24,13 @@
 - Commit flow: `branch → PR → dev → PR → main`
 - Always create a feature branch before any code change.
 
+## Use Case Checklist (MANDATORY)
+
+- **MUST update `docs/usecase/usecase-checklist.md`** after every code change that affects a use case feature.
+- Check `[x]` completed items, update progress counts and percentages.
+- Cross-cutting concerns (audit log, `/leave/history`, backend APIs) affect multiple UCs — update all relevant sections.
+- Use the checklist to preview progress per UC before planning next work.
+
 ## Testing (MANDATORY)
 
 - **NEVER write tests** — testing is delegated to the `tester` agent.
