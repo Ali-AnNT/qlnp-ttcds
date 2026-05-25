@@ -22,6 +22,7 @@ public partial class AppDbContext : DbContext
     public DbSet<LeaveBalance> LeaveBalances { get; set; }
     public DbSet<LeaveRequest> LeaveRequests { get; set; }
     public DbSet<LeaveConfig> LeaveConfigs { get; set; }
+    public DbSet<LeaveRequestAudit> LeaveRequestAudits { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -141,6 +142,20 @@ public partial class AppDbContext : DbContext
                 .WithMany(lt => lt.Configs)
                 .HasForeignKey(e => e.LeaveTypeId);
             entity.ToTable(t => t.HasCheckConstraint("CK_LeaveConfig_ApprovalLevel", "ApprovalLevel >= 1"));
+        });
+
+        modelBuilder.Entity<LeaveRequestAudit>(entity =>
+        {
+            entity.HasIndex(e => e.LeaveRequestId);
+            entity.HasOne(e => e.LeaveRequest)
+                .WithMany(lr => lr.Audits)
+                .HasForeignKey(e => e.LeaveRequestId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.ChangedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.ChangedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.Property(e => e.ChangedAt).HasDefaultValueSql("SYSUTCDATETIME()");
         });
 
         // ---- Seed data ----

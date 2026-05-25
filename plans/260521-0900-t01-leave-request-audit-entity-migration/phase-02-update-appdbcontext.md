@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Update AppDbContext"
-status: pending
+status: complete
 effort: "10min"
 dependencies: [1]
 ---
