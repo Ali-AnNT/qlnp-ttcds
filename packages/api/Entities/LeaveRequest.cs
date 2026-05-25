@@ -45,4 +45,5 @@ public class LeaveRequest
     public LeaveType LeaveType { get; set; } = null!;
     public UserMaster? Approver { get; set; }
     public UserMaster? RequestedApprover { get; set; }
+    public ICollection<LeaveRequestAudit> Audits { get; set; } = new List<LeaveRequestAudit>();
 }

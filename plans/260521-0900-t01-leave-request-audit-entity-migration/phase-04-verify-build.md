@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "Verify Build"
-status: pending
+status: complete
 effort: "5min"
 dependencies: [3]
 ---

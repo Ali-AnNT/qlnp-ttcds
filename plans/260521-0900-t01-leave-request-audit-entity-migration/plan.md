@@ -1,7 +1,7 @@
 ---
 title: "T-01: LeaveRequestAudit Entity + Migration"
 description: "Create LeaveRequestAudit entity + DbSet + FK config + EF Core migration. Strictly entity layer — no service/interface/wiring (T-03 handles wiring later)."
-status: pending
+status: complete
 priority: P1
 branch: "dev"
 tags: [dotnet, ef-core, audit, entity]
@@ -53,10 +53,10 @@ Nav props:
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | [Create Entity](./phase-01-create-entity.md) | Pending |
-| 2 | [Update AppDbContext](./phase-02-update-appdbcontext.md) | Pending |
-| 3 | [Generate Migration](./phase-03-generate-migration.md) | Pending |
-| 4 | [Verify Build](./phase-04-verify-build.md) | Pending |
+| 1 | [Create Entity](./phase-01-create-entity.md) | Complete |
+| 2 | [Update AppDbContext](./phase-02-update-appdbcontext.md) | Complete |
+| 3 | [Generate Migration](./phase-03-generate-migration.md) | Complete |
+| 4 | [Verify Build](./phase-04-verify-build.md) | Complete |
 
 ## Dependencies
 

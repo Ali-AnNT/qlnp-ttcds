@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Generate Migration"
-status: pending
+status: complete
 effort: "5min"
 dependencies: [2]
 ---

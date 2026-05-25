@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Create Entity"
-status: pending
+status: complete
 effort: "15min"
 dependencies: []
 ---
