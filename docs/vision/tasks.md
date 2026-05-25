@@ -228,6 +228,20 @@ source:
 - **AC**: Roadmap phase 1+2 marked Complete; changelog entry migration done; `dotnet build` + `pnpm build` OK
 - **Priority**: P1
 
+### T-08: Lazy Seed LeaveBalances
+
+- **What**: Auto-seed LeaveBalance records when users access leave balances. When `/leave-balances/my` or `/leave-balances` is called, create missing balance rows for active LeaveTypes. Also add startup seed for existing QLNP users. Dashboard shows per-type balance cards with loading state.
+- **Refs**: FR-050, FR-051, BRULE-003
+- **Status**: ✅ Complete
+- **Files**:
+  - Create: `packages/api/Features/LeaveBalances/Seed/Data.cs` — lazy-seed logic (EnsureBalancesAsync, EnsureBalancesForUsersAsync)
+  - Create: `packages/api/Data/SeedHelper.cs` — startup seed for QLNP users
+  - Modify: `packages/api/Features/LeaveBalances/My/Data.cs` — call EnsureBalancesAsync before query
+  - Modify: `packages/api/Features/LeaveBalances/List/Data.cs` — call EnsureBalancesAsync/EnsureBalancesForUsersAsync before query
+  - Modify: `packages/api/Program.cs` — call SeedHelper.SeedLeaveBalancesAsync after migration
+  - Modify: `packages/web/src/pages/DashboardPage.tsx` — per-type LeaveBalanceCard + loading state
+- **AC**: `/leave-balances/my` returns all active leave types even for new users; Dashboard shows non-zero "Ngày phép còn lại"; idempotent; race-condition safe
+
 ---
 
 ## Dependency graph
