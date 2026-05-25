@@ -174,10 +174,10 @@ packages/api/
 ├── Entities/                         # Domain entities
 │   ├── UserMaster.cs                 # Scaffolded from USER_MASTER
 │   ├── DmDonvi.cs                    # Scaffolded from DM_DONVI
-│   ├── UserRole.cs                   # Code First
 │   ├── LeaveType.cs                  # Code First
 │   ├── LeaveBalance.cs               # Code First
 │   ├── LeaveRequest.cs               # Code First
+│   ├── LeaveRequestAudit.cs          # Code First
 │   └── LeaveConfig.cs                # Code First
 ├── Data/
 │   ├── AppDbContext.cs               # EF Core context + OnModelCreating + seed data
@@ -185,13 +185,16 @@ packages/api/
 │   └── Migrations/                   # EF Core migrations
 ├── Features/                         # Vertical slices
 │   ├── Auth/Me/                      # MeEndpoint (implemented)
-│   ├── Config/Get, Update, UserRole/ # Config endpoints
-│   ├── LeaveBalances/List, My/
+│   ├── Config/Get, Update/           # Config endpoints
+│   ├── Departments/List, Get/        # Department reference endpoints
+│   ├── LeaveBalances/List, My, Seed/ # Balance endpoints + seed helpers
 │   ├── LeaveRequests/
 │   │   ├── List/ Create/ Update/     # P1 implemented (role-based filtering, business days, overlap)
-│   │   ├── Approve/ Reject/ Cancel/  # Scaffolded (P2)
+│   │   ├── Approve/ Reject/ Cancel/  # Implemented state-machine endpoints
+│   │   ├── History/ UpdateByApprover/# Scaffolded gaps
 │   │   ├── BusinessDayCalculator.cs  # T2-T6 inclusive count
 │   │   └── LeaveRequestDto.cs        # Shared DTO
+│   ├── Reports/Export/               # ClosedXML .xlsx export
 │   └── LeaveTypes/List, Create, Update, Delete/  # Roles("QTHT")
 ├── Auth/
 │   ├── ICurrentUserProvider.cs       # Interface for current user resolution

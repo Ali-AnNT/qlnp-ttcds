@@ -35,13 +35,13 @@ source:
 
 | Hạng mục | Trạng thái | Ghi chú |
 |----------|------------|---------|
-| API scaffold + EF Core + Entities (7/8) | ✅ Done | Thiếu `LeaveRequestAudit` entity |
+| API scaffold + EF Core + Entities (8/8) | ✅ Done | `LeaveRequestAudit` entity + migration added |
 | System tables read-only | ✅ Done | |
 | JWT Bearer + ICurrentUserProvider | ✅ Done | |
 | Frontend api/client.ts + AuthContext | ✅ Done | |
-| **Endpoint `.cs` files (21/23)** | ✅ **91%** | Thiếu: UpdateByApprover, History |
+| **Endpoint `.cs` files** | 🟡 In Progress | Core slices done; missing: UpdateByApprover, History, Config/UserRole |
 | DevLogin endpoint | ✅ Done | Build-time toggle |
-| CSP frame-ancestors middleware | ❌ Pending | NFR-002 |
+| CSP frame-ancestors header | ✅ Done | Inline middleware in `Program.cs`, config: `Security:FrameAncestors` |
 | Dev mode manual token via postMessage | ✅ Done | FR-01.8, listener always active |
 | Embed host sample + doc | ❌ Pending | FR-070→FR-072 |
 | Supabase removal | ✅ Done | BR §9.1 |
@@ -62,17 +62,17 @@ source:
 | 7 | POST | /api/leave-requests | ✅ | FR-041 |
 | 8 | PUT | /api/leave-requests/{id} | ✅ | FR-042 |
 | 9 | PUT | /api/leave-requests/{id}/update-by-approver | ❌ | FR-046 |
-| 10 | PUT | /api/leave-requests/{id}/approve | ✅ | FR-043 |
-| 11 | PUT | /api/leave-requests/{id}/reject | ✅ | FR-044 |
-| 12 | DELETE | /api/leave-requests/{id} (cancel) | ✅ | FR-045 |
+| 10 | POST | /api/leave-requests/{id}/approve | ✅ | FR-043 |
+| 11 | POST | /api/leave-requests/{id}/reject | ✅ | FR-044 |
+| 12 | POST | /api/leave-requests/{id}/cancel | ✅ | FR-045 |
 | 13 | GET | /api/leave-requests/history | ❌ | FR-047 |
 | 14 | GET | /api/leave-balances | ✅ | FR-050 |
 | 15 | GET | /api/leave-balances/my | ✅ | FR-051 |
 | 16 | GET | /api/config | ✅ | FR-060 |
-| 17 | PUT | /api/config/{key} | ✅ | FR-061 |
-| 18 | PUT | /api/config/user-role/{userId} | ✅ | FR-011 |
+| 17 | PUT | /api/config | ✅ | FR-061 |
+| 18 | PUT | /api/config/user-role/{userId} | ❌ | FR-011 |
 | 19 | GET | /api/reports/export | ✅ | FR-054 |
-| +1 | POST | /api/auth/dev-login | ✅ | FR-004 (dev) |
+| +1 | POST | /api/auth/dev/login | ✅ | FR-004 (dev) |
 | +2 | GET | /api/leave-requests/my | ✅ | FR-04 (convenience) |
 | +3 | GET | /api/departments | ✅ | FR-020 |
 | +4 | GET | /api/departments/{id} | ✅ | FR-020 |
@@ -88,7 +88,7 @@ source:
 - **LeaveTypes CRUD**: List/Create/Update/Delete — `ff53235`
 - **LeaveRequests P1**: List/Create/Update + business days + overlap — `4d419e2`
 - **LeaveRequests P2**: Approve/Reject/Cancel + state machine — `a004ebd`
-- **LeaveBalances + Config + Departments**: List/My/Get/Update/UserRole + Depts — `e95a3cc`
+- **LeaveBalances + Config + Departments**: List/My/Get/Update + Depts — `e95a3cc`
 - **CORS fix**: Frontend port 8081 — `a69842c`
 - **LeaveRequest.RequestedApproverId**: nullable field added per decision #2
 - **Reports/Export**: GET /api/reports/export + ClosedXML .xlsx generation — detail + aggregated sheets (month/quarter/year), Vietnamese labels, overlaps date filter — `Features/Reports/Export/`
@@ -100,7 +100,7 @@ source:
 
 ## Pending tasks
 
-### T-01: `LeaveRequestAudit` entity + migration
+### T-01: `LeaveRequestAudit` entity + migration ✅ DONE
 
 - **What**: Tạo entity `LeaveRequestAudit` + DbSet + migration. Fields: `Id`, `LeaveRequestId` (FK), `ChangedBy` (FK USER_MASTER), `ChangedAt`, `FieldName`, `OldValue`, `NewValue`
 - **Refs**: BRULE-010, FR-05.7/05.8, SRS §4.2, UC-02 A-2/A-3, UC-01 A-1
@@ -110,7 +110,8 @@ source:
   - Modify: `packages/api/Data/AppDbContext.cs` — add DbSet + FK config
   - Run: `dotnet ef migrations add AddLeaveRequestAudit`
 - **AC**: `dotnet build` 0 errors; migration up/down sạch; FK `LeaveRequestAudits → LeaveRequests` + `LeaveRequestAudits → USER_MASTER`
-- **Priority**: Low (deferred — không block T-02/T-03/T-04, nhưng T-02/T-03/T-04 cần entity nếu muốn persist audit)
+- **Status**: ✅ Complete — entity, DbSet/config, and migration `20260525041739_AddLeaveRequestAudit`
+- **Priority**: Low (T-03 audit wiring still pending)
 
 ### T-02: `UpdateByApprover` endpoint
 
@@ -180,16 +181,15 @@ source:
 - **AC**: Mở `embed-host-sample.html` → gửi `{ type: "auth", token }` → iframe gọi `/api/auth/me` → dashboard hiển thị
 - **Priority**: P1
 
-### T-08: CSP `frame-ancestors` middleware
+### T-08: CSP `frame-ancestors` header ✅ DONE
 
-- **What**: ASP.NET middleware set `Content-Security-Policy: frame-ancestors ${Security:FrameAncestors}` + `X-Frame-Options` tương ứng. Config qua env var `Security:FrameAncestors` (CSV domains). Dev default: `'self'`.
+- **What**: ASP.NET middleware set `Content-Security-Policy: frame-ancestors ${Security:FrameAncestors}`. Config qua env var `Security:FrameAncestors` (CSV domains). Dev default: `'self'`.
 - **Refs**: NFR-002, BRD §4.2 note, CST-005, SRS §5.3
 - **Dependencies**: —
 - **Files**:
-  - Create: `packages/api/Middleware/CspMiddleware.cs`
-  - Modify: `packages/api/Program.cs` — `app.UseMiddleware<CspMiddleware>()`
-  - Modify: `packages/api/appsettings.json` — thêm `Security:FrameAncestors`
-- **AC**: Response header chứa CSP frame-ancestors; dev = `'self'`; configurable qua env var
+  - Modify: `packages/api/Program.cs` — inline middleware appends `Content-Security-Policy: frame-ancestors ...`
+  - Modify: `packages/api/appsettings.json` — `Security:FrameAncestors`
+- **AC**: Response header chứa CSP frame-ancestors; dev = `'self'`; configurable qua env var ✅
 - **Priority**: P1
 
 ### T-09: Supabase removal ✅ DONE
@@ -291,7 +291,7 @@ Solid arrow = hard dependency. Dotted = soft (works without, feature reduced).
 | DTO frontend mismatch backend | High | T-10 integration tests catch mismatches |
 | JWT validation config sai production | Medium | T-07 doc cho host team rõ config |
 | LeaveBalances.UsedDays cộng dồn sai khi approve | Medium | T-10 test AC-012 |
-| Iframe bị block bởi X-Frame-Options | Medium | T-08 CSP middleware |
+| Iframe bị block bởi frame policy | Medium | T-08 CSP frame-ancestors header |
 | Audit entity thêm migration lớn | Low | T-01 isolated, rollback dễ |
 | ClosedXML/EPPlus license (Reports/Export) | ~~Low~~ ✅ Resolved | ClosedXML 0.105.0 (MIT license) chosen and integrated |
 | Supabase migrations folder có info hữu ích | Low | Backup `archive/` trước khi xóa |

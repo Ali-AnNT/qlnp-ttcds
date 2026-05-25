@@ -8,7 +8,7 @@
 | **Organization** | Trung Tam Chuyen Doi So (TTCDS) |
 | **Domain** | Quan ly nghi phep noi bo |
 | **Platform** | Web application (SPA) |
-| **Current Version** | 0.1.0 (Phase 1 migration complete) |
+| **Current Version** | 0.3.2 (backend/API readiness in progress) |
 
 ## 2. Purpose
 
@@ -60,7 +60,7 @@ Xay dung he thong noi bo thay the quy trinh xin nghi phep thu cong (giay to, ema
 - KPI cards: tong don, tong ngay nghi, so nhan vien nghi
 - Bieu do cot theo phong ban
 - Bieu do tron theo loai nghi phep
-- Xuat CSV
+- Backend ho tro xuat Excel `.xlsx`; frontend hien tai van xuat CSV cuc bo tren trang bao cao
 
 ### 4.6 Giam Sat Vuot Muc Quy Dinh (GD.PGD)
 - Theo doi nhan vien vuot qua han muc 12 ngay/nam
@@ -82,7 +82,7 @@ Xay dung he thong noi bo thay the quy trinh xin nghi phep thu cong (giay to, ema
 | **Security** | JWT Bearer auth (SSO Portal delegates), ICurrentUserProvider (claims-based), role-based endpoint authorization |
 | **Usability** | Giao dien tieng Viet, responsive mobile + desktop |
 | **Browser Support** | Chrome, Firefox, Edge (latest 2 versions) |
-| **Data Integrity** | Unique constraints tranh trung lap du lieu balance |
+| **Data Integrity** | Unique constraints tranh trung lap du lieu balance; lazy seed tao balance cho user/nam/loai phep |
 
 ## 6. Success Criteria
 
@@ -100,8 +100,9 @@ Xay dung he thong noi bo thay the quy trinh xin nghi phep thu cong (giay to, ema
 - Backend: FastEndpoints v8.1.0 + Vertical Slice Architecture + EF Core 9 + SQL Server
 - Frontend: SPA React, khong SSR
 - Database: SQL Server (existing VI_NGHIPHEP database)
-- Auth: JWT Bearer (SSO Portal issues token, iframe embeds via postMessage). API resolves via ICurrentUserProvider reading claims. Dev mode: anonymous fallback with admin user
+- Auth: JWT Bearer (SSO Portal issues token, iframe embeds via postMessage). API resolves via ICurrentUserProvider reading claims. Dev mode uses `/api/auth/dev/login` to issue local test JWTs
 - Hosting: Vercel / Netlify / Nginx (frontend), IIS (API reverse proxy)
+- Embed: iframe host gui JWT qua `postMessage`; API tra CSP `frame-ancestors` theo cau hinh
 
 ## 8. Dependencies
 

@@ -1,18 +1,21 @@
 # QLNP-TTCDS - He Thong Quan Ly Nghi Phep
 
-He thong quan ly nghi phep danh cho Trung Tam Chuyen Doi So. Quan ly don xin nghi phep, phe duyet, theo doi lich nghi, thong ke bao cao va giam sat vi pham.
+He thong quan ly nghi phep danh cho Trung Tam Chuyen Doi So. Ung dung gom React SPA va ASP.NET FastEndpoints API de quan ly don xin nghi phep, phe duyet, lich nghi, thong ke bao cao va giam sat vi pham.
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|------------|
 | Frontend | React 18 + Vite 5 + TypeScript 5 |
+| Backend | .NET 10 + FastEndpoints 8 + EF Core 9 |
+| Database | SQL Server |
 | Styling | Tailwind CSS 3 + shadcn/ui (Radix UI) |
 | State | Zustand 5 |
 | Server State | TanStack React Query 5 |
 | Routing | React Router DOM 6 |
 | Charts | Recharts 3 |
 | Forms | React Hook Form 7 + Zod 4 |
+| Export | ClosedXML |
 | Package Manager | Bun + pnpm |
 
 ## Quick Start
@@ -23,27 +26,32 @@ bun install
 # or
 pnpm install
 
-# Start dev server (port 8080)
+# Start web dev server (port 8080)
 bun run dev
 # or
 pnpm dev
+
+# Start API
+pnpm api:watch
 ```
 
 ## Project Structure
 
 ```
-src/
-  App.tsx                   # Root: QueryClient + Router + AuthGuard
-  main.tsx                  # ReactDOM entry
-  index.css                 # Tailwind + shadcn CSS variables + Be Vietnam Pro font
-  components/
-    AppHeader.tsx           # Top bar: breadcrumb, notifications, avatar
-    AppSidebar.tsx          # Role-based sidebar with collapsible menu
-    ui/                     # ~40 shadcn/ui components
-  hooks/                    # Custom hooks (useIsMobile, useToast)
-  lib/                      # Shared types (leave-data.ts), utils (cn, formatDate)
-  pages/                    # Feature pages (see routing below)
-  store/useStore.ts         # Zustand store: auth + CRUD + data loading
+packages/
+  api/                      # ASP.NET 10 FastEndpoints API
+    Auth/                   # ICurrentUserProvider + claims-based current user
+    Data/                   # AppDbContext, EF Core migrations, startup seed
+    Entities/               # SQL Server entities
+    Features/               # Vertical slices by use case
+  web/
+    src/
+      api/                  # Fetch API modules
+      components/           # App layout + shadcn/ui components
+      contexts/             # AuthContext with JWT/postMessage support
+      lib/                  # Shared types and date/utils helpers
+      pages/                # Feature pages
+      store/useStore.ts     # Zustand data store
 ```
 
 ## User Roles
@@ -78,3 +86,4 @@ src/
 | `bun run build` | Production build |
 | `bun run test` | Run vitest suite |
 | `bun run lint` | ESLint check |
+| `pnpm api:watch` | Start API with dotnet watch |

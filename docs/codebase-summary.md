@@ -85,14 +85,14 @@ User Action -> Component -> useStore action -> api module -> fetch("/api/...")
 
 | File | Route | Purpose |
 |------|-------|---------|
-| `LoginPage.tsx` | /login | Username/password form. Calls store.login(), on success navigates to /. Sonner toast for errors |
-| `DashboardPage.tsx` | / | Welcome banner + 4 metric cards (remaining days, pending, approved, total used) + quick action buttons + recent activity list (last 8 requests with status badges) |
+| `LoginPage.tsx` | /login | SSO waiting screen plus dev-only user selector when `VITE_DEV_MODE=true`. Calls `/api/auth/dev/login` and stores JWT |
+| `DashboardPage.tsx` | / | Welcome banner + metric cards + per-type leave balance cards + quick actions + recent activity |
 | `LeaveNewPage.tsx` | /leave/new | Form: leave type select, date range picker (business days calculation), reason textarea, approver display. Overlap detection against existing approved requests. Submit creates via store.addLeaveRequest |
 | `LeaveMyPage.tsx` | /leave/my | Table of user's requests with status filter dropdown. Edit dialog (pre-submit), cancel action |
 | `ApprovalPage.tsx` | /approval | Pending requests table. Approve/reject actions with detail view dialog. Status transitions: LD.PCM -> approved_leader, GD.PGD -> approved_director |
 | `CalendarPage.tsx` | /calendar | Month grid with leave indicators + list view toggle. Department filter. date-fns month navigation |
 | `SummaryPage.tsx` | /summary | Year/type filter. Per-department table (clickable -> employee detail sub-table). Pie chart by leave type |
-| `ReportsPage.tsx` | /reports | 3 KPI cards (total requests, total days, employees on leave). Bar chart by department. Pie chart by type. CSV export via data-to-CSV conversion |
+| `ReportsPage.tsx` | /reports | 3 KPI cards, bar chart by department, pie chart by type. UI still exports local CSV; backend `/api/reports/export` supports formatted `.xlsx` |
 | `ViolationsPage.tsx` | /violations | Employees exceeding 12-day limit. Per-employee + per-department tables. Pie + bar charts. Period filter (year/quarter/month) |
 | `ConfigPage.tsx` | /config | 3 tabs: General config (cycle year, default days per role), Leave Types CRUD, Approval Config CRUD (leave_type + level + approver_role) |
 | `NotFound.tsx` | * | 404 page |
@@ -146,39 +146,46 @@ Authorization via `CurrentUser.Role` from AuthContext:
 - `DM_DONVI` - DonViId, MaDonVi, TenDonVi, TenVietTat, DonViCapChaId, Cap, CapDonViId, LoaiDonViId, ... (22 props total)
 
 ### QLNP Tables (Code First, managed by EF Core migrations)
-- `UserRoles` - UserId (PK/FK to USER_MASTER), Role (max 10)
 - `LeaveTypes` - Id, Name, Code (unique), DefaultDays, Description, IsActive
 - `LeaveBalances` - Id, UserId, LeaveTypeId, Year, TotalDays, UsedDays. UNIQUE(UserId, LeaveTypeId, Year)
 - `LeaveRequests` - Id, UserId, LeaveTypeId, StartDate, EndDate, TotalDays, Reason, Status, RequestedApproverId (nullable), ApprovedBy, ApprovedAt, RejectedReason, CreatedAt, UpdatedAt. Nav props: User, LeaveType, Approver, RequestedApprover
-- `USER_MASTER` - UserMasterId, UserName, HoTen, PhongBanId, DonViId, UserPortalId, CanBoId, LaDonViChinh, Used. Nav prop: DonVi
 - `LeaveConfigs` - Id, LeaveTypeId, ApprovalLevel (CK >= 1), ApproverRole
+- `LeaveRequestAudits` - Id, LeaveRequestId, ChangedBy, ChangedAt, FieldName, OldValue, NewValue
 
 ### Seed Data
 - 3 LeaveTypes: annual (12d), sick (0d), personal (3d)
-- 4 UserRoles: userId=1 QTHT, userId=2 CB.PCM, userId=3 LD.PCM, userId=4 GD.PGD
+- LeaveBalances are seeded at startup for active `USER_MASTER` users and lazily on `/leave-balances` reads for active leave types in the current year
+- Roles are resolved from JWT claims. Dev-login maps known usernames to test roles; `UserRoles` table was dropped by migration
 
-## Current API Endpoints (8 implemented)
+## Current API Endpoints
 
 | Method | Route | Auth | Description |
 |--------|-------|------|-------------|
-| GET | /api/auth/me | Anonymous (dev fallback) | Returns current user from JWT claims |
+| GET | /api/auth/me | Authenticated | Returns current user from JWT claims |
+| POST | /api/auth/dev/login | Dev only | Issues dev JWT for configured test users |
 | GET | /api/leave-types | Authenticated | List all leave types |
 | POST | /api/leave-types | QTHT | Create leave type (FluentValidation) |
 | PUT | /api/leave-types/{id} | QTHT | Update leave type |
 | DELETE | /api/leave-types/{id} | QTHT | Soft delete leave type |
+| GET | /api/departments | Authenticated | List departments |
+| GET | /api/departments/{id} | Authenticated | Get department by id |
 | GET | /api/leave-requests | Authenticated (role-filtered) | List requests: own/dept/all by role |
+| GET | /api/leave-requests/my | Authenticated | List current user's requests |
 | POST | /api/leave-requests | CB.PCM, LD.PCM | Create request (business days, overlap check) |
-| PUT | /api/leave-requests/{id} | CB.PCM, LD.PCM (owner only, pending) | Update pending request |
+| PUT | /api/leave-requests/{id} | CB.PCM, LD.PCM | Update pending request |
+| POST | /api/leave-requests/{id}/approve | LD.PCM, GD.PGD | Approve request and update balance on final approval |
+| POST | /api/leave-requests/{id}/reject | LD.PCM, GD.PGD | Reject request with reason |
+| POST | /api/leave-requests/{id}/cancel | CB.PCM, LD.PCM | Cancel pending/leader-approved request |
+| GET | /api/leave-balances | Authenticated | List balances, with startup/lazy seed support |
+| GET | /api/leave-balances/my | Authenticated | List current user's balances, lazily seeded |
+| GET | /api/config | Authenticated | List config and approval config |
+| PUT | /api/config | QTHT | Replace approval config items |
+| GET | /api/reports/export | GD.PGD | Export formatted `.xlsx` report |
 
-## Scaffolded but Not Implemented (empty directories)
+## Remaining Backend Gaps
 
-| Directory | Endpoints |
-|-----------|-----------|
-| LeaveRequests/Approve | PUT /api/leave-requests/{id}/approve |
-| LeaveRequests/Reject | PUT /api/leave-requests/{id}/reject |
-| LeaveRequests/Cancel | PUT /api/leave-requests/{id}/cancel |
-| LeaveBalances/List | GET /api/leave-balances |
-| LeaveBalances/My | GET /api/leave-balances/my |
-| Config/Get | GET /api/config |
-| Config/Update | PUT /api/config |
-| Config/UserRole | PUT /api/config/user-role |
+| Directory | Status |
+|-----------|--------|
+| LeaveRequests/UpdateByApprover | Directory scaffold exists; endpoint not implemented |
+| LeaveRequests/History | Directory scaffold exists; endpoint not implemented |
+| Audit logging wiring | `LeaveRequestAudit` table exists; mutation endpoints do not yet write audit rows |

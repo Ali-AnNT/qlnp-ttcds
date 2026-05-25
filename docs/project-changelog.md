@@ -1,5 +1,21 @@
 # Project Changelog - QLNP-TTCDS
 
+## v0.3.2 -- 2026-05-25 -- Balance Seeding + Audit Entity Docs Sync
+
+### Added
+- `LeaveRequestAudit` entity and EF migration for future audit-log write wiring.
+- Startup and lazy `LeaveBalance` seeding so active users receive balance rows for active leave types before first approval.
+- CSP `frame-ancestors` header configured from `Security:FrameAncestors`.
+
+### Changed
+- `UserRoles` table dropped; roles now come from JWT claims/dev-login mapping.
+- Earlier changelog references to `UserRole`/`UserRoles` describe historical migrations before this drop.
+- Dashboard balance documentation updated to reflect per-type balance cards and lazy-seeded data.
+- Roadmap and architecture docs updated with current endpoint status and remaining gaps.
+
+### Remaining
+- `UpdateByApprover` endpoint, History endpoint, audit writes from mutation endpoints, embed host sample, and integration tests remain pending.
+
 ## v0.3.1 -- 2026-05-21 -- Supabase Cleanup (T-09)
 
 ### Removed

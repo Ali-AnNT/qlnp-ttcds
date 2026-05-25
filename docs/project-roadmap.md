@@ -27,12 +27,15 @@ All Supabase-related issues resolved by architecture migration:
 |------|--------|
 | .NET 10 API project (packages/api/) with FastEndpoints v8.1.0, EF Core 9.0.0, SQL Server | Done |
 | Scaffold USER_MASTER (9 props) and DM_DONVI (22 props) from existing DB | Done |
-| 5 Code First entities: UserRole, LeaveType, LeaveBalance, LeaveRequest, LeaveConfig | Done |
+| 5 Code First entities: LeaveType, LeaveBalance, LeaveRequest, LeaveConfig, LeaveRequestAudit | Done |
 | AppDbContext with ExcludeFromMigrations() for system tables, seed data | Done |
 | JWT Bearer authentication (ICurrentUserProvider, Claims-based) | Done |
 | Initial EF Core migration (InitialCreate) | Done |
 | Features directory scaffolded (Auth/Me, Config, LeaveBalances, LeaveRequests, LeaveTypes) | Done |
-| Endpoint .cs implementations | **IN PROGRESS** (11/17 implemented; LeaveBalances, Config pending) |
+| Endpoint .cs implementations | **IN PROGRESS** (core endpoints implemented; UpdateByApprover + History pending) |
+| LeaveRequestAudit entity + EF migration | Done |
+| CSP frame-ancestors response header | Done |
+| Lazy/startup LeaveBalance seeding | Done |
 
 ### 1.2 Frontend Refactor -- COMPLETED
 | Task | Status |
@@ -50,7 +53,7 @@ All Supabase-related issues resolved by architecture migration:
 
 **Priority:** P0 -- Complete backend behavior behind the already-refactored frontend.
 **Target window:** 2026-05-14 to 2026-05-21.
-**Progress:** 11/17 endpoint implementations (65%), 88% overall migration.
+**Progress:** Core backend/API release readiness in progress; remaining blockers are UpdateByApprover, History, audit wiring, embed sample, and integration tests.
 
 | Task | Status | Target |
 |------|--------|--------|
@@ -58,11 +61,14 @@ All Supabase-related issues resolved by architecture migration:
 | LeaveTypes CRUD endpoints (Roles "QTHT") | Done | 2026-05-14 |
 | LeaveRequests P1: List/Create/Update | Done | 2026-05-15 |
 | LeaveRequests P2: Approve/Reject/Cancel | Done | 2026-05-15 |
-| LeaveBalances, Department reference endpoints | Planned | 2026-05-17 |
-| Frontend integration against real API | Planned | 2026-05-18 |
-| API integration tests + Vitest updates | Planned | 2026-05-19 |
-| README/deployment/docs sync | Planned | 2026-05-20 |
-| Final build/test/manual validation | Planned | 2026-05-21 |
+| LeaveBalances, Department reference endpoints | Done | 2026-05-17 |
+| Reports export endpoint | Done | 2026-05-21 |
+| LeaveRequestAudit entity + migration | Done | 2026-05-25 |
+| Lazy/startup LeaveBalance seeding | Done | 2026-05-25 |
+| Frontend integration against real API | In progress | 2026-05-25 |
+| API integration tests + Vitest updates | Planned | TBD |
+| README/deployment/docs sync | In progress | 2026-05-25 |
+| Final build/test/manual validation | Planned | TBD |
 
 ## Phase 2: Feature Enhancements (Planned)
 
@@ -100,11 +106,11 @@ May 2026 (COMPLETED): Phase 1 - Architecture Migration
     - Scaffolded existing SQL Server tables (USER_MASTER, DM_DONVI)
     - Frontend fully refactored (Supabase dependency removed)
     - JWT Bearer auth + ICurrentUserProvider
-    - Features directory scaffolded, 8/17 endpoints implemented
+    - Features directory scaffolded, core endpoints implemented
 
-May 14-21 2026 (IN PROGRESS): Phase 1.1 - Endpoint Implementation & Release Readiness
-    - 11 endpoints done: Auth/Me, LeaveTypes CRUD, LeaveRequests List/Create/Update/Approve/Reject/Cancel
-    - 6 remaining: LeaveBalances List/My, Config Get/Update/UserRole
+May 14-25 2026 (IN PROGRESS): Phase 1.1 - Endpoint Implementation & Release Readiness
+    - Done: Auth/Me, DevLogin, LeaveTypes CRUD, Departments, LeaveBalances List/My/Seed, Config Get/Update, LeaveRequests List/My/Create/Update/Approve/Reject/Cancel, Reports Export
+    - Remaining: UpdateByApprover, History, audit write wiring, embed host sample, integration testing
     - Integration testing
     - Documentation/deployment sync
 
