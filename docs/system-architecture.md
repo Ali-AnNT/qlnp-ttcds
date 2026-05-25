@@ -21,15 +21,17 @@ ASP.NET 10 FastEndpoints API
   ├─ ICurrentUserProvider (reads ClaimsPrincipal from JWT, returns CurrentUser record)
   ├─ Features/                     ← Vertical Slices
   │   ├─ Auth/Me/                  MeEndpoint (implemented)
-  │   ├─ Config/Get, Update, UserRole/  ← scaffolded dirs (no .cs yet)
-  │   ├─ LeaveBalances/List, My/  ← scaffolded dirs (no .cs yet)
+  │   ├─ Config/Get, Update/       config endpoints implemented
+  │   ├─ Departments/List, Get/    department reference endpoints
+  │   ├─ LeaveBalances/List, My, Seed/  lazy/startup balance seeding
   │   ├─ LeaveRequests/List, Create, Update, Approve, Reject, Cancel/  ← P1+P2 implemented
   │   │   ├─ LeaveRequestMapping.cs (shared DRY DTO mapping)
   │   │   └─ BusinessDayCalculator.cs (T2-T6 inclusive)
+  │   ├─ Reports/Export/           ClosedXML .xlsx export
   │   └─ LeaveTypes/List, Create, Update, Delete/  ← Roles("QTHT")
   ├─ Data/AppDbContext              (EF Core 9 + SQL Server)
   │   ├─ System tables: USER_MASTER, DM_DONVI (ExcludeFromMigrations)
-  │   └─ App tables: UserRoles, LeaveTypes, LeaveBalances, LeaveRequests, LeaveConfigs
+  │   └─ App tables: LeaveTypes, LeaveBalances, LeaveRequests, LeaveConfigs, LeaveRequestAudits
   └─ SQL Server (existing `VI_NGHIPHEP` database)
 ```
 
@@ -144,15 +146,10 @@ sequenceDiagram
 
 ```mermaid
 erDiagram
-    USER_MASTER ||--o{ UserRoles : "has role"
     USER_MASTER ||--o{ LeaveRequests : "creates"
     USER_MASTER ||--o{ LeaveBalances : "has"
+    USER_MASTER ||--o{ LeaveRequestAudits : "changes"
     DM_DONVI ||--o{ USER_MASTER : "belongs to"
-
-    UserRoles {
-        bigint UserId PK_FK
-        string Role "max 10"
-    }
     LeaveTypes ||--o{ LeaveRequests : "categorizes"
     LeaveTypes ||--o{ LeaveBalances : "tracks"
     LeaveTypes ||--o{ LeaveConfigs : "configured"
@@ -181,6 +178,16 @@ erDiagram
         datetime2 UpdatedAt_nullable
     }
     USER_MASTER ||--o| LeaveRequests : "requested approver"
+    LeaveRequests ||--o{ LeaveRequestAudits : "audited by"
+    LeaveRequestAudits {
+        bigint Id PK
+        bigint LeaveRequestId FK
+        bigint ChangedBy FK
+        datetime2 ChangedAt
+        string FieldName
+        string OldValue
+        string NewValue
+    }
     LeaveBalances {
         bigint Id PK
         bigint UserId FK
@@ -199,7 +206,8 @@ erDiagram
 
 ### Seed Data
 - LeaveTypes: `annual` (12 days), `sick` (0 days), `personal` (3 days)
-- UserRoles: userId=1 QTHT, userId=2 CB.PCM, userId=3 LD.PCM, userId=4 GD.PGD
+- LeaveBalances: seeded on startup for active `USER_MASTER` users and lazily during `/leave-balances` reads
+- Roles: resolved from JWT claims; dev-login maps known test users to roles. `UserRoles` table was dropped.
 
 ## Authentication Flow
 
@@ -217,7 +225,7 @@ sequenceDiagram
     R->>R: AuthContext stores JWT in localStorage
     R->>API: GET /api/auth/me (Bearer JWT)
     API->>API: JWT validation + ICurrentUserProvider reads claims
-    API->>DB: Lookup USER_MASTER + UserRoles
+    API->>DB: Lookup USER_MASTER; roles come from JWT claims
     API-->>R: { userId, displayName, roles, ... }
     R->>R: AuthState updated, app rendered
 ```

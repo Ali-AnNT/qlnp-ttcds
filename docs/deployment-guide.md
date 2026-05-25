@@ -21,12 +21,13 @@ cd packages/api
 dotnet ef database update
 ```
 
-This creates: UserRoles, LeaveTypes, LeaveBalances, LeaveRequests, LeaveConfigs.
+This creates the managed QLNP tables: LeaveTypes, LeaveBalances, LeaveRequests, LeaveConfigs, LeaveRequestAudits. System tables USER_MASTER and DM_DONVI must already exist and are excluded from migrations.
 
 ### Seed Data (automatic)
-EF Core seeds 3 leave types + 4 user roles on first migration:
+EF Core seeds 3 leave types on first migration:
 - annual (12 days), sick (0 days), personal (3 days)
-- userId=1 QTHT, userId=2 CB.PCM, userId=3 LD.PCM, userId=4 GD.PGD
+
+LeaveBalances are also seeded at app startup for active USER_MASTER users and lazily when `/leave-balances` endpoints are called. Roles are resolved from JWT claims; dev-login uses hardcoded local test-account mapping.
 
 ## 2. Environment Variables
 
