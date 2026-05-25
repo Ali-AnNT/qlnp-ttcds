@@ -39,7 +39,7 @@ source:
 | System tables read-only | ✅ Done | |
 | JWT Bearer + ICurrentUserProvider | ✅ Done | |
 | Frontend api/client.ts + AuthContext | ✅ Done | |
-| **Endpoint `.cs` files (20/23)** | ✅ **87%** | Thiếu: UpdateByApprover, History, Reports/Export |
+| **Endpoint `.cs` files (21/23)** | ✅ **91%** | Thiếu: UpdateByApprover, History |
 | DevLogin endpoint | ✅ Done | Build-time toggle |
 | CSP frame-ancestors middleware | ❌ Pending | NFR-002 |
 | Dev mode manual token via postMessage | ✅ Done | FR-01.8, listener always active |
@@ -71,7 +71,7 @@ source:
 | 16 | GET | /api/config | ✅ | FR-060 |
 | 17 | PUT | /api/config/{key} | ✅ | FR-061 |
 | 18 | PUT | /api/config/user-role/{userId} | ✅ | FR-011 |
-| 19 | GET | /api/reports/export | ❌ | FR-054 |
+| 19 | GET | /api/reports/export | ✅ | FR-054 |
 | +1 | POST | /api/auth/dev-login | ✅ | FR-004 (dev) |
 | +2 | GET | /api/leave-requests/my | ✅ | FR-04 (convenience) |
 | +3 | GET | /api/departments | ✅ | FR-020 |
@@ -91,6 +91,7 @@ source:
 - **LeaveBalances + Config + Departments**: List/My/Get/Update/UserRole + Depts — `e95a3cc`
 - **CORS fix**: Frontend port 8081 — `a69842c`
 - **LeaveRequest.RequestedApproverId**: nullable field added per decision #2
+- **Reports/Export**: GET /api/reports/export + ClosedXML .xlsx generation — detail + aggregated sheets (month/quarter/year), Vietnamese labels, overlaps date filter — `Features/Reports/Export/`
 - **Supabase cleanup**: Deleted `packages/web/supabase/`, removed env vars, updated README — `archive/supabase-migrations/`
 
 </details>
@@ -145,15 +146,16 @@ source:
 - **AC**: CB.PCM chỉ thấy đơn mình; LĐ.PCM thấy đơn phòng; GĐ/PGĐ thấy tất cả; filter status/loại phép/thời gian hoạt động; nếu T-01 done → include audits trong response
 - **Priority**: P0
 
-### T-05: `Reports/Export` endpoint
+### T-05: `Reports/Export` endpoint ✅ DONE
 
-- **What**: `GET /api/reports/export`. Export leave requests ra Excel .xlsx. Chỉ GD.PGD. Filter: status, date range. Format: bold header, auto-width columns, auto-filter, UTF-8.
+- **What**: `GET /api/reports/export`. Export leave requests ra Excel .xlsx. Chỉ GD.PGD. Filter: status, from, to, period (none/month/quarter/year). Format: bold header, auto-width columns, auto-filter, UTF-8, Vietnamese status labels. period=none → 1 detail sheet; period=month|quarter|year → 4 sheets (detail + employee-leave-type + department + summary).
 - **Refs**: FR-054, AC-019, BR-008, SRS FR-08.4, UC-06 A-3
 - **Dependencies**: —
 - **Files**:
-  - Create: `packages/api/Features/Reports/Export/Endpoint.cs` + Data.cs + Models.cs
-  - May need: `ClosedXML` hoặc `EPPlus` NuGet package
-- **AC**: GD.PGD → 200 + .xlsx file download; CB.PCM → 403; file mở được trong Excel, bold header, auto-width, auto-filter, UTF-8
+  - Created: `packages/api/Features/Reports/Export/Endpoint.cs` + Data.cs + Models.cs + ExcelBuilder.cs
+  - Modified: `packages/api/QLNP.Api.csproj` (added ClosedXML 0.105.0)
+  - Modified: `packages/api/Program.cs` (added Data DI registration)
+- **AC**: GD.PGD → 200 + .xlsx file download; other roles → 403; file mở được trong Excel, bold header, auto-width, auto-filter, UTF-8 ✅
 - **Priority**: P1
 
 ### T-06: Dev mode manual token input UI
@@ -277,7 +279,7 @@ Solid arrow = hard dependency. Dotted = soft (works without, feature reduced).
 | LeaveBalances.UsedDays cộng dồn sai khi approve | Medium | T-10 test AC-012 |
 | Iframe bị block bởi X-Frame-Options | Medium | T-08 CSP middleware |
 | Audit entity thêm migration lớn | Low | T-01 isolated, rollback dễ |
-| ClosedXML/EPPlus license (Reports/Export) | Low | Chọn package có license phù hợp (ClosedXML = MIT) |
+| ClosedXML/EPPlus license (Reports/Export) | ~~Low~~ ✅ Resolved | ClosedXML 0.105.0 (MIT license) chosen and integrated |
 | Supabase migrations folder có info hữu ích | Low | Backup `archive/` trước khi xóa |
 
 ---
@@ -289,4 +291,4 @@ Solid arrow = hard dependency. Dotted = soft (works without, feature reduced).
 3. **Endpoint approve/reject**: Sub-resource `PUT /api/leave-requests/{id}/approve` và `/reject`.
 4. **CSP `frame-ancestors`**: Config qua `Security:FrameAncestors` env var. Dev default `'self'`.
 5. **Audit logging**: Full audit (all mutations + status transitions) nhưng **deferred** — không block sprint. T-01 entity tạo sẵn, T-03 wiring làm sau.
-6. **Reports/Export**: Dùng ClosedXML (MIT license) cho .xlsx generation.
+6. **Reports/Export**: Dùng ClosedXML 0.105.0 (MIT license) cho .xlsx generation. `period=none` → 1 detail sheet; `period=month|quarter|year` → 4 sheets (Chi tiết, Nhân viên - Loại phép, Theo phòng ban, Tổng hợp). Date range dùng "overlaps" semantics (StartDate <= to && EndDate >= from). Period grouping theo StartDate.
