@@ -1,7 +1,7 @@
 ---
 title: "T-05: Reports/Export Endpoint"
 description: "GET /api/reports/export — Export leave requests to .xlsx (ClosedXML). Raw detail + month/quarter/year aggregation. GD.PGD only. FR-054, FR-08.4, FR-08.5, FR-08.6, AC-019."
-status: pending
+status: complete
 priority: P1
 branch: "dev"
 tags: [dotnet, fastendpoints, closedxml, reports, export]
@@ -36,10 +36,10 @@ GD.PGD exports leave requests as .xlsx. Raw detail sheet always present. When `p
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | [Setup + Models](./phase-01-setup-models.md) | Pending |
-| 2 | [Data Layer](./phase-02-data-layer.md) | Pending |
-| 3 | [Excel Builder](./phase-03-excel-builder.md) | Pending |
-| 4 | [Endpoint + Wiring](./phase-04-endpoint-wiring.md) | Pending |
+| 1 | [Setup + Models](./phase-01-setup-models.md) | Complete |
+| 2 | [Data Layer](./phase-02-data-layer.md) | Complete |
+| 3 | [Excel Builder](./phase-03-excel-builder.md) | Complete |
+| 4 | [Endpoint + Wiring](./phase-04-endpoint-wiring.md) | Complete |
 
 ## Dependencies
 
@@ -48,12 +48,12 @@ GD.PGD exports leave requests as .xlsx. Raw detail sheet always present. When `p
 
 ## Success Criteria (AC-019)
 
-- [ ] GD.PGD → 200 + .xlsx download; other roles → 403
-- [ ] File opens in Excel/Google Sheets
-- [ ] Bold header, auto-width, auto-filter, UTF-8 on all sheets
-- [ ] `period=none` → 1 sheet; `period=month|quarter|year` → 4 sheets
-- [ ] Vietnamese status labels render correctly
-- [ ] `dotnet build` 0 errors
+- [x] GD.PGD → 200 + .xlsx download; other roles → 403
+- [x] File opens in Excel/Google Sheets
+- [x] Bold header, auto-width, auto-filter, UTF-8 on all sheets
+- [x] `period=none` → 1 sheet; `period=month|quarter|year` → 4 sheets
+- [x] Vietnamese status labels render correctly
+- [x] `dotnet build` 0 errors
 
 ## Validation Log
 

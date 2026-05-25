@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStore } from "@/store/useStore";
 import { formatDate } from "@/lib/date-utils";
@@ -8,6 +8,7 @@ import { CalendarDays, Clock, CheckCircle, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { LeaveBalanceCard } from "@/components/LeaveBalanceCard";
 
 const statusLabels: Record<string, string> = {
   pending: "Chờ duyệt",
@@ -31,8 +32,16 @@ const DashboardPage = () => {
   const leaveTypes = useStore((s) => s.leaveTypes);
   const leaveBalances = useStore((s) => s.leaveBalances);
   const loadData = useStore((s) => s.loadData);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    setLoading(true);
+    loadData().finally(() => setLoading(false));
+  }, []);
+
+  const currentYear = new Date().getFullYear();
+  const myBalances = leaveBalances
+    .filter((b) => b.userId === user?.userId && b.year === currentYear);
 
   const myRequests = leaveRequests.filter((r) => r.userId === user?.userId);
   const pendingApproval = leaveRequests.filter((r) => r.status === "pending");
@@ -40,9 +49,7 @@ const DashboardPage = () => {
   const totalDaysUsed = myRequests
     .filter((r) => r.status === "approved_leader" || r.status === "approved_director")
     .reduce((s, r) => s + r.totalDays, 0);
-  const remainingDays = leaveBalances
-    .filter((b) => b.userId === user?.userId)
-    .reduce((s, b) => s + b.remainingDays, 0);
+  const remainingDays = myBalances.reduce((s, b) => s + b.remainingDays, 0);
 
   const metrics = [
     { label: "Ngày phép còn lại", value: remainingDays, icon: CalendarDays, color: "text-accent" },
@@ -68,13 +75,32 @@ const DashboardPage = () => {
                 <m.icon className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{m.value}</p>
+                <p className="text-2xl font-bold">{loading ? "—" : m.value}</p>
                 <p className="text-xs text-muted-foreground">{m.label}</p>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
+
+      {!loading && myBalances.length > 0 && (
+        <div>
+          <h2 className="text-base font-semibold mb-3">Chi tiết ngày phép ({currentYear})</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {myBalances.map((b) => (
+              <LeaveBalanceCard
+                key={b.id}
+                balance={{
+                  label: b.leaveTypeName || `Loại phép #${b.leaveTypeId}`,
+                  total: b.totalDays,
+                  used: b.usedDays,
+                  remaining: b.remainingDays,
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-2">
         {(user?.role === "CB.PCM" || user?.role === "LD.PCM") && (

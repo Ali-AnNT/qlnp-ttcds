@@ -17,7 +17,6 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<UserMaster> UserMaster { get; set; }
 
     // QLNP tables (Code First)
-    public DbSet<UserRole> UserRoles { get; set; }
     public DbSet<LeaveType> LeaveTypes { get; set; }
     public DbSet<LeaveBalance> LeaveBalances { get; set; }
     public DbSet<LeaveRequest> LeaveRequests { get; set; }
@@ -90,15 +89,6 @@ public partial class AppDbContext : DbContext
 
         // ---- QLNP tables (Code First) ----
 
-        modelBuilder.Entity<UserRole>(entity =>
-        {
-            entity.HasKey(e => e.UserId);
-            entity.Property(e => e.Role).HasMaxLength(20);
-            entity.HasOne(e => e.User)
-                .WithMany()
-                .HasForeignKey(e => e.UserId);
-        });
-
         modelBuilder.Entity<LeaveType>(entity =>
         {
             entity.HasIndex(e => e.Code).IsUnique();
@@ -164,13 +154,6 @@ public partial class AppDbContext : DbContext
             new LeaveType { Id = 1, Name = "Nghỉ phép năm", Code = "annual", DefaultDays = 12, IsActive = true },
             new LeaveType { Id = 2, Name = "Ốm đau", Code = "sick", DefaultDays = 0, IsActive = true },
             new LeaveType { Id = 3, Name = "Việc riêng", Code = "personal", DefaultDays = 3, IsActive = true }
-        );
-
-        modelBuilder.Entity<UserRole>().HasData(
-            new UserRole { UserId = 1, Role = "QLNP.QTHT" },
-            new UserRole { UserId = 2, Role = "QLNP.CB.PCM" },
-            new UserRole { UserId = 3, Role = "QLNP.LD.PCM" },
-            new UserRole { UserId = 4, Role = "QLNP.GD.PGD" }
         );
 
         OnModelCreatingPartial(modelBuilder);

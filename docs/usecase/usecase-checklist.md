@@ -197,7 +197,7 @@
 
 - [x] A-06.1: Hover/click biểu đồ cột → tooltip chi tiết phòng
 - [x] A-06.2: Biểu đồ tròn tỷ lệ loại phép
-- [ ] A-06.3: Xuất Excel `.xlsx` (bold header, auto-width, auto-filter, UTF-8)
+- [x] A-06.3: Xuất Excel `.xlsx` (bold header, auto-width, auto-filter, UTF-8)
 - [ ] A-06.4: Báo cáo theo tháng/quý (aggregate + cập nhật biểu đồ/KPI)
 
 ### Exception Flows
@@ -210,7 +210,7 @@
 - [x] BRULE-001: Báo cáo tính theo ngày làm việc
 - [ ] Chỉ GĐ/PGĐ mới có quyền xem báo cáo (server enforce)
 
-**UC-06 Progress: 7/14** `████████░░░░░░░░░░░░ 50%`
+**UC-06 Progress: 8/14** `████████░░░░░░░░░░░░ 57%`
 
 ---
 
@@ -253,9 +253,9 @@
 
 - [ ] Audit Log entity + table + API (yêu cầu UC-01, UC-02, UC-03)
 - [ ] Route `/leave/history` (yêu cầu UC-01, UC-03, UC-04)
-- [ ] Backend Reports API (`/api/reports/*`)
+- [x] Backend Reports API (`/api/reports/*`)
 - [ ] Backend Violations API (`/api/violations/*`)
-- [ ] Excel export thư viện (ClosedXML/EPPlus)
+- [x] Excel export thư viện (ClosedXML/EPPlus)
 - [ ] Approver selection dropdown trong form tạo đơn
 - [ ] LĐ.PCM chỉnh sửa/hủy đơn pending của cấp dưới trên ApprovalPage
 
@@ -270,9 +270,9 @@
 | UC-03 | Theo dõi đơn | 10 | 17 | 59% |
 | UC-04 | Tổng hợp lịch nghỉ | 10 | 14 | 71% |
 | UC-05 | Cấu hình quy định | 9 | 15 | 60% |
-| UC-06 | Thống kê báo cáo | 7 | 14 | 50% |
+| UC-06 | Thống kê báo cáo | 8 | 14 | 57% |
 | UC-07 | Vượt mức quy định | 13 | 15 | 87% |
-| **Cross** | **Cross-cutting** | **0** | **7** | **0%** |
-| **TOTAL** | | **74** | **133** | **56%** |
+| **Cross** | **Cross-cutting** | **2** | **7** | **29%** |
+| **TOTAL** | | **76** | **133** | **57%** |
 
-> Cập nhật lần cuối: 2026-05-21
+> Cập nhật lần cuối: 2026-05-25

@@ -75,21 +75,22 @@ builder.Services.AddScoped<QLNP.Api.Features.LeaveRequests.Reject.Data>();
 builder.Services.AddScoped<QLNP.Api.Features.LeaveRequests.Cancel.Data>();
 builder.Services.AddScoped<QLNP.Api.Features.Config.Get.Data>();
 builder.Services.AddScoped<QLNP.Api.Features.Config.Update.Data>();
-builder.Services.AddScoped<QLNP.Api.Features.Config.UserRole.Data>();
 builder.Services.AddScoped<QLNP.Api.Features.LeaveBalances.List.Data>();
 builder.Services.AddScoped<QLNP.Api.Features.LeaveBalances.My.Data>();
 builder.Services.AddScoped<QLNP.Api.Features.Departments.List.Data>();
 builder.Services.AddScoped<QLNP.Api.Features.Departments.Get.Data>();
+builder.Services.AddScoped<QLNP.Api.Features.Reports.Export.Data>();
 
 var app = builder.Build();
 
-// Auto-apply pending EF Core migrations on startup (skip in test environment)
+// Auto-apply pending EF Core migrations and seed leave balances (skip in test environment)
 if (!app.Environment.IsEnvironment("Test"))
 {
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         db.Database.Migrate();
+        await SeedHelper.SeedLeaveBalancesAsync(db);
     }
 }
 
