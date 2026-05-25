@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using QLNP.Api.Data;
+using QLNP.Api.Features.LeaveBalances.Seed;
 
 namespace QLNP.Api.Features.LeaveBalances.My;
 
@@ -11,6 +12,11 @@ internal sealed class Data
 
     public async Task<List<LeaveBalanceDto>> GetByUserIdAsync(long userId, int? year, CancellationToken ct)
     {
+        var effectiveYear = year ?? DateTime.UtcNow.Year;
+
+        // Lazy-seed: ensure balance rows exist for all active leave types
+        await Seed.Data.EnsureBalancesAsync(_db, userId, effectiveYear, ct);
+
         var query = _db.LeaveBalances
             .Include(b => b.LeaveType)
             .Where(b => b.UserId == userId);

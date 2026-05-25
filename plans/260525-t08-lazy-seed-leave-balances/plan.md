@@ -1,7 +1,7 @@
 ---
 title: "T-08: Lazy Seed LeaveBalances - Phương án C"
 description: "Auto-seed LeaveBalance records lazily when users access leave balances, ensuring 'Ngày phép còn lại' always shows correct data instead of 0"
-status: pending
+status: complete
 priority: P2
 branch: "plans/t01-t05-implementation-plans"
 tags: [leave-balances, bug-fix, backend, frontend]
@@ -32,10 +32,10 @@ Root cause: `RemainingDays = TotalDays - UsedDays` được tính từ DB, nhưn
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | [Seed Logic](./phase-01-seed-logic.md) | Pending |
-| 2 | [Seed Script](./phase-02-seed-script.md) | Pending |
-| 3 | [Frontend Fallback](./phase-03-frontend-fallback.md) | Pending |
-| 4 | [Verification](./phase-04-verification.md) | Pending |
+| 1 | [Seed Logic](./phase-01-seed-logic.md) | Complete |
+| 2 | [Seed Script](./phase-02-seed-script.md) | Complete |
+| 3 | [Frontend Fallback](./phase-03-frontend-fallback.md) | Complete |
+| 4 | [Verification](./phase-04-verification.md) | Complete |
 
 ## Key Files
 

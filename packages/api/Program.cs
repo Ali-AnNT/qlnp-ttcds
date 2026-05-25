@@ -83,13 +83,14 @@ builder.Services.AddScoped<QLNP.Api.Features.Departments.Get.Data>();
 
 var app = builder.Build();
 
-// Auto-apply pending EF Core migrations on startup (skip in test environment)
+// Auto-apply pending EF Core migrations and seed leave balances (skip in test environment)
 if (!app.Environment.IsEnvironment("Test"))
 {
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         db.Database.Migrate();
+        await SeedHelper.SeedLeaveBalancesAsync(db);
     }
 }
 
