@@ -2,8 +2,6 @@
 
 ## Pre-Task Requirements (MANDATORY)
 
-- **MUST read BRD** (`docs/vision/brd.md`) before implementing any feature/task — ensures alignment with business requirements (BR-001→BR-006, AC-001→AC-016).
-- **MUST read SRS** (`docs/vision/srs.md`) before implementing any feature/task — ensures compliance with functional requirements (FR-01→FR-10).
 - These documents are the source of truth for scope, acceptance criteria, and business rules. Do not implement without consulting them.
 
 ## Post-Task Requirements (MANDATORY)
