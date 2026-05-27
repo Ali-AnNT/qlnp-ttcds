@@ -20,7 +20,7 @@ internal sealed class Endpoint : Endpoint<Request, LeaveRequestDto>
     public override void Configure()
     {
         Post("/api/leave-requests/{id}/reject");
-        Roles("QLNP.LD.PCM", "QLNP.GD.PGD", "QLNP.QTHT");
+        Roles(AppRoles.Leader, AppRoles.Director, AppRoles.Admin);
         Tags("Leave Requests");
     }
 

@@ -17,7 +17,7 @@ internal sealed class Endpoint : EndpointWithoutRequest<List<LeaveBalanceDto>>
     public override void Configure()
     {
         Get("/api/leave-balances");
-        Roles("QLNP.GD.PGD", "QLNP.QTHT", "QLNP.LD.PCM", "QLNP.CB.PCM");
+        Roles(AppRoles.Director, AppRoles.Admin, AppRoles.Leader, AppRoles.Staff);
         Tags("Leave Balances");
     }
 
@@ -25,7 +25,7 @@ internal sealed class Endpoint : EndpointWithoutRequest<List<LeaveBalanceDto>>
     {
         var year = Query<int?>("year", isRequired: false);
         var user = _currentUser.GetCurrentUser();
-        var userId = user.Roles.Contains("QLNP.CB.PCM") ? user.UserId : (long?)null;
+        var userId = user.Roles.Contains(AppRoles.Staff) ? user.UserId : (long?)null;
         var items = await _data.GetAllAsync(year, userId, ct);
         await Send.OkAsync(items, ct);
     }

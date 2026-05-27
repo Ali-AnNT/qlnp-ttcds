@@ -1,5 +1,6 @@
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
+using QLNP.Api.Auth;
 
 namespace QLNP.Api.Features.LeaveTypes.Create;
 
@@ -12,7 +13,7 @@ internal sealed class Endpoint : Endpoint<Request, LeaveTypeDto, Mapper>
     public override void Configure()
     {
         Post("/api/leave-types");
-        Roles("QLNP.QTHT");
+        Roles(AppRoles.Admin);
         Tags("Leave Types");
     }
 

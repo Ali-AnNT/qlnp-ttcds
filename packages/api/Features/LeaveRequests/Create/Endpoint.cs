@@ -18,7 +18,7 @@ internal sealed class Endpoint : Endpoint<Request, LeaveRequestDto, Mapper>
     public override void Configure()
     {
         Post("/api/leave-requests");
-        Roles("QLNP.CB.PCM", "QLNP.LD.PCM");
+        Roles(AppRoles.Staff, AppRoles.Leader);
         Tags("Leave Requests");
     }
 

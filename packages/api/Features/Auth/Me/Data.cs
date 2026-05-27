@@ -35,13 +35,11 @@ internal sealed class Data
         );
     }
 
-    private static readonly string[] RolePriority = ["QLNP.QTHT", "QLNP.GD.PGD", "QLNP.LD.PCM", "QLNP.CB.PCM"];
-
     private static string MapRole(List<string> roles)
     {
-        foreach (var r in RolePriority)
+        foreach (var r in AppRoles.Priority)
             if (roles.Contains(r))
-                return r == "QLNP.QTHT" ? "quantri" : r.Replace("QLNP.", "");
+                return r;
         return "user";
     }
 }

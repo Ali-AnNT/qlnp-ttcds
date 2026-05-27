@@ -24,11 +24,11 @@ internal sealed class Data
             .Include(lr => lr.LeaveType)
             .AsQueryable();
 
-        if (user.Roles.Contains("QLNP.GD.PGD") || user.Roles.Contains("QLNP.QTHT"))
+        if (user.Roles.Contains(AppRoles.Director) || user.Roles.Contains(AppRoles.Admin))
         {
             // No filter
         }
-        else if (user.Roles.Contains("QLNP.LD.PCM"))
+        else if (user.Roles.Contains(AppRoles.Leader))
         {
             query = query.Where(lr => lr.User.PhongBanId == user.PhongBanId);
         }

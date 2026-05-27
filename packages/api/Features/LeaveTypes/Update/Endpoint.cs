@@ -1,4 +1,5 @@
 using FastEndpoints;
+using QLNP.Api.Auth;
 
 namespace QLNP.Api.Features.LeaveTypes.Update;
 
@@ -11,7 +12,7 @@ internal sealed class Endpoint : Endpoint<Request, LeaveTypeDto, Mapper>
     public override void Configure()
     {
         Put("/api/leave-types/{id}");
-        Roles("QLNP.QTHT");
+        Roles(AppRoles.Admin);
         Tags("Leave Types");
     }
 

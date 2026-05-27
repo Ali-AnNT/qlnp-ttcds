@@ -19,7 +19,7 @@ internal sealed class Endpoint : EndpointWithoutRequest<LeaveRequestDto>
     public override void Configure()
     {
         Post("/api/leave-requests/{id}/cancel");
-        Roles("QLNP.CB.PCM", "QLNP.LD.PCM");
+        Roles(AppRoles.Staff, AppRoles.Leader);
         Tags("Leave Requests");
     }
 

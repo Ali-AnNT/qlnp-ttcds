@@ -12,7 +12,7 @@ public class LeaveConfig
     public long LeaveTypeId { get; set; }
     public int ApprovalLevel { get; set; }
 
-    [MaxLength(10)]
+    [MaxLength(20)]
     public string ApproverRole { get; set; } = null!;
 
     public LeaveType LeaveType { get; set; } = null!;

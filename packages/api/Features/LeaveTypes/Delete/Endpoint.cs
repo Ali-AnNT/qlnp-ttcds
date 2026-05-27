@@ -1,4 +1,5 @@
 using FastEndpoints;
+using QLNP.Api.Auth;
 
 namespace QLNP.Api.Features.LeaveTypes.Delete;
 
@@ -11,7 +12,7 @@ internal sealed class Endpoint : EndpointWithoutRequest
     public override void Configure()
     {
         Delete("/api/leave-types/{id}");
-        Roles("QLNP.QTHT");
+        Roles(AppRoles.Admin);
         Tags("Leave Types");
     }
 

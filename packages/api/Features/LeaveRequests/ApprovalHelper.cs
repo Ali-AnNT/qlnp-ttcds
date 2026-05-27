@@ -10,25 +10,16 @@ namespace QLNP.Api.Features.LeaveRequests;
 /// </summary>
 public static class ApprovalHelper
 {
-    private const string RolePrefix = "QLNP.";
-
-    /// <summary>
-    /// Normalizes a role string to full form (with QLNP. prefix).
-    /// Config may store short form (LD.PCM) but user roles use full form (QLNP.LD.PCM).
-    /// </summary>
-    private static string NormalizeRole(string role) =>
-        role.StartsWith(RolePrefix) ? role : $"{RolePrefix}{role}";
-
     /// <summary>
     /// Groups LeaveConfigs by ApprovalLevel, returning a sorted dictionary
-    /// where key = level (1-based) and value = list of normalized approver roles.
+    /// where key = level (1-based) and value = list of approver roles for that level.
     /// </summary>
     public static Dictionary<int, List<string>> GetApprovalFlow(List<LeaveConfig> configs)
     {
         return configs
             .GroupBy(c => c.ApprovalLevel)
             .OrderBy(g => g.Key)
-            .ToDictionary(g => g.Key, g => g.Select(c => NormalizeRole(c.ApproverRole)).ToList());
+            .ToDictionary(g => g.Key, g => g.Select(c => c.ApproverRole).ToList());
     }
 
     /// <summary>
@@ -56,7 +47,7 @@ public static class ApprovalHelper
             return (false, "Bạn không có quyền phê duyệt ở cấp này");
 
         // Scope check: LD.PCM can only approve requests from same department, not own requests
-        if (userRoleAtLevel == "QLNP.LD.PCM")
+        if (userRoleAtLevel == AppRoles.Leader)
         {
             if (request.UserId == user.UserId)
                 return (false, "Không thể phê duyệt đơn của chính mình");
@@ -69,7 +60,7 @@ public static class ApprovalHelper
     }
 
     /// <summary>
-    /// Gets the normalized roles that can approve at the next level for a request.
+    /// Gets the roles that can approve at the next level for a request.
     /// Returns null if no config exists (request cannot be approved).
     /// </summary>
     public static List<string>? GetNextLevelRoles(Dictionary<int, List<string>> flow, int currentApprovedLevel)

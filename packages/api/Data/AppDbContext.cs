@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using QLNP.Api.Auth;
 using QLNP.Api.Entities;
 
 namespace QLNP.Api.Data;
@@ -161,15 +162,15 @@ public partial class AppDbContext : DbContext
 
         // Initial baseline only — runtime updates via Config/Update endpoint (ReplaceAllAsync) will replace these rows
         modelBuilder.Entity<LeaveConfig>().HasData(
-            new LeaveConfig { Id = 1, LeaveTypeId = 1, ApprovalLevel = 1, ApproverRole = "LD.PCM" },
-            new LeaveConfig { Id = 2, LeaveTypeId = 1, ApprovalLevel = 2, ApproverRole = "GD.PGD" },
-            new LeaveConfig { Id = 3, LeaveTypeId = 2, ApprovalLevel = 1, ApproverRole = "LD.PCM" },
-            new LeaveConfig { Id = 4, LeaveTypeId = 2, ApprovalLevel = 2, ApproverRole = "GD.PGD" },
-            new LeaveConfig { Id = 5, LeaveTypeId = 3, ApprovalLevel = 1, ApproverRole = "LD.PCM" },
-            new LeaveConfig { Id = 6, LeaveTypeId = 3, ApprovalLevel = 2, ApproverRole = "GD.PGD" },
-            new LeaveConfig { Id = 7, LeaveTypeId = 4, ApprovalLevel = 1, ApproverRole = "LD.PCM" },
-            new LeaveConfig { Id = 8, LeaveTypeId = 5, ApprovalLevel = 1, ApproverRole = "LD.PCM" },
-            new LeaveConfig { Id = 9, LeaveTypeId = 5, ApprovalLevel = 2, ApproverRole = "GD.PGD" }
+            new LeaveConfig { Id = 1, LeaveTypeId = 1, ApprovalLevel = 1, ApproverRole = AppRoles.Leader },
+            new LeaveConfig { Id = 2, LeaveTypeId = 1, ApprovalLevel = 2, ApproverRole = AppRoles.Director },
+            new LeaveConfig { Id = 3, LeaveTypeId = 2, ApprovalLevel = 1, ApproverRole = AppRoles.Leader },
+            new LeaveConfig { Id = 4, LeaveTypeId = 2, ApprovalLevel = 2, ApproverRole = AppRoles.Director },
+            new LeaveConfig { Id = 5, LeaveTypeId = 3, ApprovalLevel = 1, ApproverRole = AppRoles.Leader },
+            new LeaveConfig { Id = 6, LeaveTypeId = 3, ApprovalLevel = 2, ApproverRole = AppRoles.Director },
+            new LeaveConfig { Id = 7, LeaveTypeId = 4, ApprovalLevel = 1, ApproverRole = AppRoles.Leader },
+            new LeaveConfig { Id = 8, LeaveTypeId = 5, ApprovalLevel = 1, ApproverRole = AppRoles.Leader },
+            new LeaveConfig { Id = 9, LeaveTypeId = 5, ApprovalLevel = 2, ApproverRole = AppRoles.Director }
         );
 
         OnModelCreatingPartial(modelBuilder);

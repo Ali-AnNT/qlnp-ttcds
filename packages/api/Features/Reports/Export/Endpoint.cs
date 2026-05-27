@@ -1,4 +1,5 @@
 using FastEndpoints;
+using QLNP.Api.Auth;
 
 namespace QLNP.Api.Features.Reports.Export;
 
@@ -14,7 +15,7 @@ internal sealed class Endpoint : Endpoint<Request>
     public override void Configure()
     {
         Get("/api/reports/export");
-        Roles("QLNP.GD.PGD");
+        Roles(AppRoles.Director);
         Tags("Reports");
     }
 

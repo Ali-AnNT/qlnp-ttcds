@@ -5,6 +5,7 @@ using System.Text;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using QLNP.Api.Auth;
 using QLNP.Api.Data;
 
 namespace QLNP.Api.Features.Auth.DevLogin;
@@ -41,13 +42,13 @@ internal sealed class Endpoint : Endpoint<Request, Response>
             return;
         }
 
-        // Hardcoded role map for dev test accounts — no UserRoles/service dependency
+        // Dev role map using centralized constants
         var devRoles = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
-            ["quantri"] = "QLNP.QTHT",
-            ["trinh.vo"] = "QLNP.GD.PGD",
-            ["nvhau.ttcds"] = "QLNP.LD.PCM",
-            ["htquy.ttcds"] = "QLNP.CB.PCM",
+            ["quantri"] = AppRoles.Admin,
+            ["trinh.vo"] = AppRoles.Director,
+            ["nvhau.ttcds"] = AppRoles.Leader,
+            ["htquy.ttcds"] = AppRoles.Staff,
         };
 
         if (!devRoles.TryGetValue(req.UserName, out var role))

@@ -1,5 +1,6 @@
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
+using QLNP.Api.Auth;
 
 namespace QLNP.Api.Features.Config.Update;
 
@@ -12,7 +13,7 @@ internal sealed class Endpoint : Endpoint<Request, Response>
     public override void Configure()
     {
         Put("/api/config");
-        Roles("QLNP.QTHT");
+        Roles(AppRoles.Admin);
         Tags("Config");
     }
 
