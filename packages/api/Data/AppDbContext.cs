@@ -151,9 +151,11 @@ public partial class AppDbContext : DbContext
         // ---- Seed data ----
 
         modelBuilder.Entity<LeaveType>().HasData(
-            new LeaveType { Id = 1, Name = "Nghỉ phép năm", Code = "annual", DefaultDays = 12, IsActive = true },
-            new LeaveType { Id = 2, Name = "Ốm đau", Code = "sick", DefaultDays = 0, IsActive = true },
-            new LeaveType { Id = 3, Name = "Việc riêng", Code = "personal", DefaultDays = 3, IsActive = true }
+            new LeaveType { Id = 1, Name = "Nghỉ phép năm", Code = "NPN", DefaultDays = 12, Description = "Nghỉ phép năm theo quy định", IsActive = true },
+            new LeaveType { Id = 2, Name = "Nghỉ ốm", Code = "NO", DefaultDays = 30, Description = "Nghỉ ốm đau có giấy xác nhận", IsActive = true },
+            new LeaveType { Id = 3, Name = "Nghỉ việc riêng", Code = "NVR", DefaultDays = 3, Description = "Nghỉ việc riêng có lương", IsActive = true },
+            new LeaveType { Id = 4, Name = "Nghỉ không lương", Code = "NKL", DefaultDays = 0, Description = "Nghỉ không hưởng lương", IsActive = true },
+            new LeaveType { Id = 5, Name = "Nghỉ thai sản", Code = "NTS", DefaultDays = 180, Description = "Nghỉ thai sản", IsActive = true }
         );
 
         OnModelCreatingPartial(modelBuilder);
