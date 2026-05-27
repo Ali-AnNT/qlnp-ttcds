@@ -49,7 +49,7 @@ const ViolationsPage = () => {
 
   const filteredApproved = useMemo(() => {
     return leaveRequests.filter((r) => {
-      if (r.status !== "approved_leader" && r.status !== "approved_director") return false;
+      if (r.status !== "approved_leader" && r.status !== "approved") return false;
       const d = new Date(r.startDate);
       if (d.getFullYear() !== Number(year)) return false;
       if (period === "month" && d.getMonth() + 1 !== Number(month)) return false;

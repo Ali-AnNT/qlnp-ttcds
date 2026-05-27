@@ -3,13 +3,13 @@
   "private": true,
   "packageManager": "pnpm@10.20.0",
   "scripts": {
-    "dev": "pnpm --filter @qlnp/web dev",
+    "web": "pnpm --filter @qlnp/web dev",
     "build": "pnpm --filter @qlnp/web build",
     "build:dev": "pnpm --filter @qlnp/web build:dev",
     "lint": "pnpm --filter @qlnp/web lint",
     "preview": "pnpm --filter @qlnp/web preview",
     "test": "pnpm --filter @qlnp/web test",
     "test:watch": "pnpm --filter @qlnp/web test:watch",
-    "api:watch": "dotnet watch --project packages/api/QLNP.Api.csproj"
+    "api": "dotnet watch --project packages/api/QLNP.Api.csproj"
   }
 }

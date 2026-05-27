@@ -1,4 +1,11 @@
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  type ReactNode,
+} from "react";
 import { authApi, type AuthUser } from "@/api/auth.api";
 
 interface AuthState {
@@ -7,17 +14,29 @@ interface AuthState {
   isEmbed: boolean;
 }
 
-const AuthContext = createContext<AuthState>({ user: null, loading: true, isEmbed: false });
+const AuthContext = createContext<AuthState>({
+  user: null,
+  loading: true,
+  isEmbed: false,
+});
 
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [state, setState] = useState<AuthState>({ user: null, loading: true, isEmbed: false });
+  const [state, setState] = useState<AuthState>({
+    user: null,
+    loading: true,
+    isEmbed: false,
+  });
 
   const fetchUser = useCallback(async () => {
     const { data, error } = await authApi.me();
     if (!error && data) {
-      setState({ user: data, loading: false, isEmbed: window.self !== window.top });
+      setState({
+        user: data,
+        loading: false,
+        isEmbed: window.self !== window.top,
+      });
     } else {
       setState((s) => ({ ...s, loading: false }));
     }

@@ -17,7 +17,7 @@ const ReportsPage = () => {
 
   useEffect(() => { loadData(); }, []);
 
-  const approved = leaveRequests.filter((r) => r.status === "approved_leader" || r.status === "approved_director");
+  const approved = leaveRequests.filter((r) => r.status === "approved_leader" || r.status === "approved");
   const rejected = leaveRequests.filter((r) => r.status === "rejected");
   const totalDays = approved.reduce((s, r) => s + Number(r.totalDays), 0);
   const approvedRatio = leaveRequests.length > 0 ? Math.round((approved.length / leaveRequests.length) * 100) : 0;

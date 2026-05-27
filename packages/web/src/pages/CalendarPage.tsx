@@ -16,6 +16,7 @@ const statusLabels: Record<string, string> = {
   pending: "Chờ duyệt",
   approved_leader: "TP đã duyệt",
   approved_director: "BGĐ đã duyệt",
+  approved: "Đã duyệt",
   rejected: "Từ chối",
   cancelled: "Đã hủy",
 };
@@ -24,6 +25,7 @@ const statusColor: Record<string, string> = {
   pending: "bg-warning/10 text-warning border-warning/30",
   approved_leader: "bg-blue-100 text-blue-700 border-blue-300",
   approved_director: "bg-success/10 text-success border-success/30",
+  approved: "bg-success/10 text-success border-success/30",
   rejected: "bg-destructive/10 text-destructive border-destructive/30",
   cancelled: "bg-muted text-muted-foreground",
 };
@@ -40,7 +42,7 @@ const CalendarPage = () => {
   const isStaff = user?.role === "CB.PCM";
   const activeRequests = leaveRequests.filter((r) => {
     if (r.status === "cancelled" || r.status === "rejected") return false;
-    if (isStaff) return r.status === "approved_leader" || r.status === "approved_director";
+    if (isStaff) return r.status === "approved_leader" || r.status === "approved";
     return true;
   });
 

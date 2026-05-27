@@ -34,25 +34,53 @@ internal sealed class Endpoint : Endpoint<Request, LeaveRequestDto>
         var isLeader = currentUser.Roles.Contains("QLNP.LD.PCM");
         var isDirector = currentUser.Roles.Contains("QLNP.GD.PGD");
 
-        // State machine — auto-select role based on entity status (handles dual-role users)
-        if (isDirector && entity.Status == "approved_leader")
+        // Determine approval flow from LeaveConfig
+        var approvalLevels = await _data.GetApprovalLevelsAsync(entity.LeaveTypeId, ct);
+        var maxLevel = approvalLevels.Count > 0 ? approvalLevels.Max() : 2;
+        var isSingleLevel = maxLevel <= 1;
+
+        if (isSingleLevel)
         {
-            // GD.PGD rejects approved_leader — no scope check needed
-        }
-        else if (isLeader && entity.Status == "pending")
-        {
-            // LD.PCM rejects pending — apply scope check
-            if (entity.UserId == currentUser.UserId ||
-                entity.User.PhongBanId == null ||
-                entity.User.PhongBanId != currentUser.PhongBanId)
+            // 1-level: LD.PCM or GD.PGD can reject pending requests
+            if (entity.Status != "pending")
             {
-                await Send.ForbiddenAsync(ct); return;
+                AddError("Không thể từ chối đơn ở trạng thái này");
+                await Send.ErrorsAsync(409, ct); return;
             }
+
+            if (isLeader)
+            {
+                // LD.PCM: same department scope check, cannot reject own request
+                if (entity.UserId == currentUser.UserId ||
+                    entity.User.PhongBanId == null ||
+                    entity.User.PhongBanId != currentUser.PhongBanId)
+                {
+                    await Send.ForbiddenAsync(ct); return;
+                }
+            }
+            // GD.PGD: no scope check
         }
         else
         {
-            AddError("Không thể từ chối đơn ở trạng thái này");
-            await Send.ErrorsAsync(409, ct); return;
+            // 2-level: LD.PCM rejects pending (with scope check), GD.PGD rejects approved_leader
+            if (isLeader && entity.Status == "pending")
+            {
+                if (entity.UserId == currentUser.UserId ||
+                    entity.User.PhongBanId == null ||
+                    entity.User.PhongBanId != currentUser.PhongBanId)
+                {
+                    await Send.ForbiddenAsync(ct); return;
+                }
+            }
+            else if (isDirector && entity.Status == "approved_leader")
+            {
+                // GD.PGD rejects approved_leader — no scope check
+            }
+            else
+            {
+                AddError("Không thể từ chối đơn ở trạng thái này");
+                await Send.ErrorsAsync(409, ct); return;
+            }
         }
 
         entity.Status = "rejected";

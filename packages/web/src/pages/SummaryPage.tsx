@@ -39,7 +39,7 @@ const SummaryPage = () => {
 
   const approvedRequests = useMemo(() => {
     return leaveRequests.filter((r) => {
-      const isApproved = r.status === "approved_leader" || r.status === "approved_director";
+      const isApproved = r.status === "approved_leader" || r.status === "approved";
       if (!isApproved) return false;
       const y = new Date(r.startDate).getFullYear();
       if (String(y) !== selectedYear) return false;

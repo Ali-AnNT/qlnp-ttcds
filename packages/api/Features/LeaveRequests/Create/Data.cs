@@ -21,7 +21,7 @@ internal sealed class Data
         await _db.LeaveRequests
             .AnyAsync(lr =>
                 lr.UserId == userId &&
-                (lr.Status == "approved_leader" || lr.Status == "approved_director") &&
+                (lr.Status == "approved_leader" || lr.Status == "approved") &&
                 lr.StartDate <= end &&
                 lr.EndDate >= start, ct);
 
