@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, isWithinInterval } from "date-fns";
-import { getApprovalStatusLabel } from "@/lib/leave-data";
+import { getApprovalStatusLabel, AppRoles } from "@/lib/leave-data";
 import { configApi, type ConfigDto } from "@/api/config.api";
 import { vi } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
@@ -44,7 +44,7 @@ const CalendarPage = () => {
     return map;
   }, [approvalConfigs]);
 
-  const isStaff = user?.role === "CB.PCM";
+  const isStaff = user?.role === AppRoles.Staff;
   const activeRequests = leaveRequests.filter((r) => {
     if (r.status === "cancelled" || r.status === "rejected") return false;
     if (isStaff) return r.status === "approved";

@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { CheckCircle, XCircle, Eye } from "lucide-react";
 import { leaveRequestsApi, type LeaveRequestDto } from "@/api/leave-requests.api";
 import { configApi, type ConfigDto } from "@/api/config.api";
-import { getApprovalStatusLabel } from "@/lib/leave-data";
+import { getApprovalStatusLabel, AppRoles } from "@/lib/leave-data";
 
 const ApprovalPage = () => {
   const { user } = useAuth();
@@ -54,9 +54,6 @@ const ApprovalPage = () => {
     return map;
   }, [approvalConfigs]);
 
-  // Normalize role to full form (QLNP. prefix) for comparison
-  const normalizeRole = (role: string) => role.startsWith("QLNP.") ? role : `QLNP.${role}`;
-
   // Config-driven filtering: show requests where the current user's role
   // is a valid approver at the next approval level
   const visibleRequests = leaveRequests
@@ -71,20 +68,13 @@ const ApprovalPage = () => {
       const rolesAtNextLevel = flow.get(nextLevel);
       if (!rolesAtNextLevel) return false; // Already past max level
 
-      // Normalize config roles to full form for comparison
-      const normalizedRoles = rolesAtNextLevel.map(normalizeRole);
-
-      // Check if user has any role at the next level
-      const userRoles = user.role === "quantri"
-        ? ["QLNP.GD.PGD"] // Admin sees GD.PGD-level requests
-        : [`QLNP.${user.role}`];
-
-      const hasRole = normalizedRoles.some((role) => userRoles.includes(role));
+      // All roles now use QLNP.* format consistently
+      const hasRole = rolesAtNextLevel.some((role) => role === user.role);
       if (!hasRole) return false;
 
       // LD.PCM scope check: cannot approve own requests
       // (department filtering is handled by backend)
-      if (userRoles.includes("QLNP.LD.PCM")) {
+      if (user.role === AppRoles.Leader) {
         if (r.userId === user.userId) return false;
       }
 

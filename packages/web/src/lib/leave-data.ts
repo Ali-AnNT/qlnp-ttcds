@@ -1,11 +1,18 @@
-// Types
-export type UserRole = "CB.PCM" | "LD.PCM" | "GD.PGD" | "QTHT";
+// Role constants — single source of truth
+export const AppRoles = {
+  Staff: "QLNP.CB.PCM",
+  Leader: "QLNP.LD.PCM",
+  Director: "QLNP.GD.PGD",
+  Admin: "QLNP.QTHT",
+} as const;
+
+export type UserRole = (typeof AppRoles)[keyof typeof AppRoles];
 
 export const roleLabels: Record<UserRole, string> = {
-  "CB.PCM": "Cán bộ phòng chuyên môn",
-  "LD.PCM": "Lãnh đạo phòng chuyên môn",
-  "GD.PGD": "Giám đốc / Phó giám đốc",
-  "QTHT": "Quản trị hệ thống",
+  [AppRoles.Staff]: "Cán bộ phòng chuyên môn",
+  [AppRoles.Leader]: "Lãnh đạo phòng chuyên môn",
+  [AppRoles.Director]: "Giám đốc / Phó giám đốc",
+  [AppRoles.Admin]: "Quản trị hệ thống",
 };
 
 export type LeaveStatus = "pending" | "approved" | "rejected" | "cancelled";

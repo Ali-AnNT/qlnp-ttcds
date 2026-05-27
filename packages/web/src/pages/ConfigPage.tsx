@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useStore } from "@/store/useStore";
 import { useAuth } from "@/contexts/AuthContext";
-import { roleLabels, type UserRole } from "@/lib/leave-data";
+import { roleLabels, type UserRole, AppRoles } from "@/lib/leave-data";
 import { leaveTypesApi, type LeaveTypeDto } from "@/api/leave-types.api";
 import { configApi, type ConfigDto } from "@/api/config.api";
 import { toast } from "sonner";
@@ -36,7 +36,7 @@ const ConfigPage = () => {
   const { user } = useAuth();
   const leaveTypes = useStore((s) => s.leaveTypes);
   const loadData = useStore((s) => s.loadData);
-  const isAdmin = user?.role === "QTHT" || user?.role === "quantri";
+  const isAdmin = user?.role === AppRoles.Admin;
 
   const [editingType, setEditingType] = useState<LeaveTypeEdit | null>(null);
   const [typeDialogOpen, setTypeDialogOpen] = useState(false);
@@ -48,10 +48,10 @@ const ConfigPage = () => {
   const [savingConfig, setSavingConfig] = useState(false);
 
   const [defaultDaysByRole, setDefaultDaysByRole] = useState<Record<string, string>>({
-    "CB.PCM": "12",
-    "LD.PCM": "14",
-    "GD.PGD": "16",
-    "QTHT": "12",
+    [AppRoles.Staff]: "12",
+    [AppRoles.Leader]: "14",
+    [AppRoles.Director]: "16",
+    [AppRoles.Admin]: "12",
   });
 
   const [allLeaveTypes, setAllLeaveTypes] = useState<LeaveTypeDto[]>([]);
@@ -112,7 +112,7 @@ const ConfigPage = () => {
   const openApprovalDialog = (row?: ConfigDto) => {
     setEditingApproval(row
       ? { id: row.id, leaveTypeId: row.leaveTypeId, approvalLevel: row.approvalLevel, approverRole: row.approverRole as UserRole }
-      : { leaveTypeId: allLeaveTypes[0]?.id || 0, approvalLevel: 1, approverRole: "LD.PCM" as UserRole }
+      : { leaveTypeId: allLeaveTypes[0]?.id || 0, approvalLevel: 1, approverRole: AppRoles.Leader as UserRole }
     );
     setApprovalDialogOpen(true);
   };
@@ -146,7 +146,7 @@ const ConfigPage = () => {
   // General Config Save
   const saveGeneralConfig = async () => {
     setSavingConfig(true);
-    const roles: UserRole[] = ["CB.PCM", "LD.PCM", "GD.PGD", "QTHT"];
+    const roles: UserRole[] = [AppRoles.Staff, AppRoles.Leader, AppRoles.Director, AppRoles.Admin];
     // TODO: Save per-role default days via dedicated config once backend endpoint exists
     // For now, this config data updates the leave_balances.default_days via leave_config endpoint
     toast.success("Đã lưu cấu hình chung");
@@ -176,7 +176,7 @@ const ConfigPage = () => {
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Số ngày phép năm mặc định theo loại nhân viên</Label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {(["CB.PCM", "LD.PCM", "GD.PGD", "QTHT"] as UserRole[]).map((role) => (
+                  {([AppRoles.Staff, AppRoles.Leader, AppRoles.Director, AppRoles.Admin] as UserRole[]).map((role) => (
                     <div key={role} className="flex items-center gap-2">
                       <Label className="text-xs w-40 truncate">{roleLabels[role]}</Label>
                       <Input
@@ -380,7 +380,7 @@ const ConfigPage = () => {
                 <Select value={editingApproval.approverRole} onValueChange={(v) => setEditingApproval({ ...editingApproval, approverRole: v as UserRole })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {(["LD.PCM", "GD.PGD", "QTHT"] as UserRole[]).map((role) => (
+                    {([AppRoles.Leader, AppRoles.Director, AppRoles.Admin] as UserRole[]).map((role) => (
                       <SelectItem key={role} value={role}>{roleLabels[role]}</SelectItem>
                     ))}
                   </SelectContent>
