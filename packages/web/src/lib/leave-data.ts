@@ -8,12 +8,13 @@ export const roleLabels: Record<UserRole, string> = {
   "QTHT": "Quản trị hệ thống",
 };
 
-export type LeaveStatus = "pending" | "approved_leader" | "approved_director" | "rejected" | "cancelled";
+export type LeaveStatus = "pending" | "approved_leader" | "approved" | "rejected" | "cancelled";
 
 export const leaveStatusLabels: Record<LeaveStatus, string> = {
   pending: "Chờ duyệt",
   approved_leader: "LĐ đã duyệt",
   approved_director: "GĐ đã duyệt",
+  approved: "Đã duyệt",
   rejected: "Từ chối",
   cancelled: "Đã hủy",
 };

@@ -44,7 +44,7 @@ internal sealed class Endpoint : Endpoint<Request, Response>
         // Hardcoded role map for dev test accounts — no UserRoles/service dependency
         var devRoles = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
-            ["admin"] = "QLNP.QTHT",
+            ["quantri"] = "QLNP.QTHT",
             ["trinh.vo"] = "QLNP.GD.PGD",
             ["nvhau.ttcds"] = "QLNP.LD.PCM",
             ["htquy.ttcds"] = "QLNP.CB.PCM",

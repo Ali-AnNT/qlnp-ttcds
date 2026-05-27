@@ -49,7 +49,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:8080", "http://localhost:8081", "http://localhost:8082")
+        policy.WithOrigins("http://localhost:5100")
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
@@ -90,6 +90,7 @@ if (!app.Environment.IsEnvironment("Test"))
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         db.Database.Migrate();
+        await SeedHelper.MigrateApprovedDirectorStatusAsync(db);
         await SeedHelper.SeedLeaveBalancesAsync(db);
     }
 }

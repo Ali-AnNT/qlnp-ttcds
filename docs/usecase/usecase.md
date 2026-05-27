@@ -58,16 +58,16 @@
 | **ID** | UC27 |
 | **Tên** | Phê duyệt / từ chối đơn nghỉ phép |
 | **Tác nhân** | LD.PCM, GD.PGD |
-| **Mục tiêu** | Duyệt hoặc từ chối đơn nghỉ phép — chỉ cần 1 cấp duyệt theo cấu hình loại phép |
-| **Trạng thái** | 🔧 needs-update |
+| **Mục tiêu** | Duyệt hoặc từ chối đơn nghỉ phép — theo cấu hình 1 hoặc 2 cấp duyệt cho mỗi loại phép |
+| **Trạng thái** | ✅ implemented |
 
 ### KS chính (Main Success Scenario)
 
 1. LD.PCM hoặc GD.PGD mở trang `/approval`
 2. Hệ thống hiển thị danh sách đơn ở trạng thái pending
 3. Hệ thống xác định cấp phê duyệt từ LeaveConfig.ApprovalLevel của loại nghỉ phép:
-   - **Cấp 1** (ApprovalLevel=1): LD.PCM cùng phòng duyệt → status = approved
-   - **Cấp 2** (ApprovalLevel=2): GD.PGD duyệt → status = approved
+   - **1 cấp** (chỉ ApprovalLevel=1): LD.PCM cùng phòng hoặc GD.PGD duyệt → status = approved
+   - **2 cấp** (ApprovalLevel=1 + ApprovalLevel=2): LD.PCM cùng phòng duyệt → status = approved_leader, sau đó GD.PGD duyệt → status = approved
 4. Khi duyệt → tự động trừ ngày phép (UsedDays += TotalDays)
 5. Hệ thống ghi audit log, thông báo kết quả
 
@@ -85,7 +85,7 @@
 - **BR-07**: Cấp 1 — LD.PCM duyệt đơn của nhân viên cùng phòng (PhongBanId match), không duyệt đơn của chính mình
 - **BR-08**: Cấp 2 — GD.PGD duyệt đơn bất kỳ, không kiểm tra phòng
 - **BR-09**: Khi duyệt (bất kỳ cấp) → tự động trừ ngày phép (UpsertBalanceAsync)
-- **BR-10**: State machine: pending → approved | rejected; approved → cancelled (hoàn trả UsedDays); pending → cancelled
+- **BR-10**: State machine: pending → approved_leader | approved | rejected; approved_leader → approved | rejected | cancelled; approved → cancelled (hoàn trả UsedDays); pending → cancelled
 
 ### Trace
 
@@ -204,7 +204,7 @@
 
 - **4a. Xóa loại phép đang được sử dụng**: Hệ thống báo lỗi (FK constraint từ LeaveRequests/LeaveBalances)
 - **4b. Mã loại phép (Code) là duy nhất**: Validate unique constraint
-- **5a. Cấu hình cấp phê duyệt**: ApprovalLevel=1 → LD.PCM duyệt; ApprovalLevel=2 → GD.PGD duyệt. Chỉ cần 1 người duyệt, không qua 2 cấp
+- **5a. Cấu hình cấp phê duyệt**: 1 cấp (chỉ ApprovalLevel=1) → LD.PCM/GD.PGD duyệt một lần → approved. 2 cấp (ApprovalLevel=1 + 2) → LD.PCM duyệt → approved_leader, GD.PGD duyệt → approved
 
 ### Business Rules
 
@@ -314,7 +314,7 @@
 | UC | Tên | Trạng thái | Ghi chú |
 |----|-----|-----------|---------|
 | UC26 | Gửi đơn xin nghỉ phép | ✅ implemented | Create/Update/Cancel/My endpoints |
-| UC27 | Phê duyệt / từ chối | 🔧 needs-update | Đổi sang 1 cấp duyệt, bỏ approved_leader/approved_director |
+| UC27 | Phê duyệt / từ chối | ✅ implemented | Config-driven 1/2 cấp duyệt, status approved_leader/approved |
 | UC28 | Theo dõi đơn nghỉ phép | ✅ implemented | My/List/Calendar + LeaveBalances |
 | UC29 | Tổng hợp lịch nghỉ phép | ⚠️ partial | Page exists, no dedicated API |
 | UC30 | Cấu hình quy định | ✅ implemented | Config CRUD + LeaveTypes CRUD |

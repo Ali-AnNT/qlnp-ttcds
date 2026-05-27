@@ -14,6 +14,7 @@ const statusLabels: Record<string, string> = {
   pending: "Chờ duyệt",
   approved_leader: "TP đã duyệt",
   approved_director: "BGĐ đã duyệt",
+  approved: "Đã duyệt",
   rejected: "Từ chối",
   cancelled: "Đã hủy",
 };
@@ -22,6 +23,7 @@ const statusColor: Record<string, string> = {
   pending: "bg-warning/10 text-warning border-warning/30",
   approved_leader: "bg-blue-100 text-blue-700 border-blue-300",
   approved_director: "bg-success/10 text-success border-success/30",
+  approved: "bg-success/10 text-success border-success/30",
   rejected: "bg-destructive/10 text-destructive border-destructive/30",
   cancelled: "bg-muted text-muted-foreground",
 };
@@ -45,9 +47,9 @@ const DashboardPage = () => {
 
   const myRequests = leaveRequests.filter((r) => r.userId === user?.userId);
   const pendingApproval = leaveRequests.filter((r) => r.status === "pending");
-  const approvedCount = myRequests.filter((r) => r.status === "approved_leader" || r.status === "approved_director").length;
+  const approvedCount = myRequests.filter((r) => r.status === "approved_leader" || r.status === "approved").length;
   const totalDaysUsed = myRequests
-    .filter((r) => r.status === "approved_leader" || r.status === "approved_director")
+    .filter((r) => r.status === "approved_leader" || r.status === "approved")
     .reduce((s, r) => s + r.totalDays, 0);
   const remainingDays = myBalances.reduce((s, b) => s + b.remainingDays, 0);
 

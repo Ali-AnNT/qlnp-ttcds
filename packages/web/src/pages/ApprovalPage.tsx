@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStore } from "@/store/useStore";
 import { formatDate } from "@/lib/date-utils";
@@ -11,10 +11,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { toast } from "sonner";
 import { CheckCircle, XCircle, Eye } from "lucide-react";
 import { leaveRequestsApi, type LeaveRequestDto } from "@/api/leave-requests.api";
+import { configApi, type ConfigDto } from "@/api/config.api";
 
 const statusLabels: Record<string, string> = {
-  pending: "Chờ duyệt", approved_leader: "TP đã duyệt", approved_director: "BGĐ đã duyệt",
-  rejected: "Từ chối", cancelled: "Đã hủy",
+  pending: "Chờ duyệt",
+  approved_leader: "LĐ đã duyệt",
+  approved: "Đã duyệt",
+  rejected: "Từ chối",
+  cancelled: "Đã hủy",
 };
 
 const ApprovalPage = () => {
@@ -27,14 +31,43 @@ const ApprovalPage = () => {
   const [detailRequest, setDetailRequest] = useState<LeaveRequestDto | null>(null);
   const [rejectId, setRejectId] = useState<number | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [approvalConfigs, setApprovalConfigs] = useState<ConfigDto[]>([]);
 
-  const pendingRequests = leaveRequests
-    .filter((r) => r.status === "pending")
+  useEffect(() => {
+    configApi.get().then(({ data }) => {
+      if (data) setApprovalConfigs(data);
+    });
+  }, []);
+
+  // Determine which leave types use single-level (1) approval
+  const singleLevelLeaveTypeIds = new Set(
+    approvalConfigs
+      .filter((c) => c.approvalLevel === 1)
+      .filter((c) => !approvalConfigs.some((c2) => c2.leaveTypeId === c.leaveTypeId && c2.approvalLevel === 2))
+      .map((c) => c.leaveTypeId)
+  );
+
+  const visibleRequests = leaveRequests
     .filter((r) => {
       if (!user) return false;
-      if (user.role === "quantri") return true;
-      if (user.role === "GD.PGD") return true;
-      if (user.role === "LD.PCM") return r.donViId === user.donViId && r.userId !== user.userId;
+
+      // GD.PGD sees: pending (1-level types) + approved_leader (2-level types)
+      if (user.role === "quantri" || user.role === "GD.PGD") {
+        if (r.status === "pending") {
+          // Only show pending requests for 1-level types (where GD.PGD is level-1 approver)
+          return singleLevelLeaveTypeIds.has(r.leaveTypeId);
+        }
+        if (r.status === "approved_leader") return true;
+        return false;
+      }
+
+      // LD.PCM sees: pending requests from same department (not own)
+      if (user.role === "LD.PCM") {
+        if (r.status !== "pending") return false;
+        if (r.userId === user.userId) return false;
+        return r.donViId === user.donViId;
+      }
+
       return false;
     })
     .filter((r) => !filterName || (r.userName || "").toLowerCase().includes(filterName.toLowerCase()));
@@ -70,15 +103,16 @@ const ApprovalPage = () => {
                 <TableHead>Đến ngày</TableHead>
                 <TableHead className="w-16">Số ngày</TableHead>
                 <TableHead>Lý do</TableHead>
+                <TableHead>Trạng thái</TableHead>
                 <TableHead>Ngày gửi</TableHead>
                 <TableHead className="w-40">Thao tác</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {pendingRequests.length === 0 ? (
-                <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">Không có đơn chờ duyệt</TableCell></TableRow>
+              {visibleRequests.length === 0 ? (
+                <TableRow><TableCell colSpan={11} className="text-center text-muted-foreground py-8">Không có đơn chờ duyệt</TableCell></TableRow>
               ) : (
-                pendingRequests.map((r, i) => {
+                visibleRequests.map((r, i) => {
                   const lt = leaveTypes.find((t) => t.id === r.leaveTypeId);
                   const dept = departments.find((d) => d.donViId === r.donViId);
                   return (
@@ -91,6 +125,7 @@ const ApprovalPage = () => {
                       <TableCell>{formatDate(r.endDate)}</TableCell>
                       <TableCell className="text-center">{r.totalDays}</TableCell>
                       <TableCell className="max-w-[150px] truncate">{r.reason}</TableCell>
+                      <TableCell>{statusLabels[r.status] || r.status}</TableCell>
                       <TableCell>{formatDate(r.createdAt)}</TableCell>
                       <TableCell>
                         <div className="flex gap-1">

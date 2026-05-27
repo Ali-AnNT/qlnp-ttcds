@@ -24,4 +24,25 @@ public static class SeedHelper
 
         await Features.LeaveBalances.Seed.Data.EnsureBalancesForUsersAsync(db, userIds, year, CancellationToken.None);
     }
+
+    /// <summary>
+    /// Migrates legacy 'approved_director' status to 'approved' across all leave requests.
+    /// Idempotent — safe to run on every app start.
+    /// </summary>
+    public static async Task MigrateApprovedDirectorStatusAsync(AppDbContext db)
+    {
+        var affected = await db.LeaveRequests
+            .Where(lr => lr.Status == "approved_director")
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(lr => lr.Status, "approved"));
+
+        if (affected > 0)
+        {
+            // Also fix audit trail references
+            await db.Database.ExecuteSqlRawAsync(
+                "UPDATE LeaveRequestAudits SET NewValue = 'approved' WHERE NewValue = 'approved_director'");
+            await db.Database.ExecuteSqlRawAsync(
+                "UPDATE LeaveRequestAudits SET OldValue = 'approved' WHERE OldValue = 'approved_director'");
+        }
+    }
 }

@@ -34,11 +34,35 @@ internal sealed class Endpoint : EndpointWithoutRequest<LeaveRequestDto>
         var isLeader = currentUser.Roles.Contains("QLNP.LD.PCM");
         var isDirector = currentUser.Roles.Contains("QLNP.GD.PGD");
 
-        // Auto-select role based on entity status (handles dual-role users)
-        if (isDirector && entity.Status == "approved_leader")
+        // Determine approval flow from LeaveConfig
+        var approvalLevels = await _data.GetApprovalLevelsAsync(entity.LeaveTypeId, ct);
+        var maxLevel = approvalLevels.Count > 0 ? approvalLevels.Max() : 2; // default 2-level if no config
+        var isSingleLevel = maxLevel <= 1;
+
+        if (isSingleLevel)
         {
-            // GD.PGD approves approved_leader → approved_director
-            entity.Status = "approved_director";
+            // 1-level: LD.PCM or GD.PGD approves pending → approved
+            if (entity.Status != "pending")
+            {
+                AddError("Không thể duyệt đơn ở trạng thái này");
+                await Send.ErrorsAsync(409, ct); return;
+            }
+
+            if (isLeader)
+            {
+                // LD.PCM: same department scope check, cannot approve own request
+                if (entity.UserId == currentUser.UserId)
+                {
+                    await Send.ForbiddenAsync(ct); return;
+                }
+                if (entity.User.PhongBanId == null || entity.User.PhongBanId != currentUser.PhongBanId)
+                {
+                    await Send.ForbiddenAsync(ct); return;
+                }
+            }
+            // GD.PGD: no scope check — can approve any pending request
+
+            entity.Status = "approved";
             entity.ApprovedBy = currentUser.UserId;
             entity.ApprovedAt = DateTime.UtcNow;
             entity.UpdatedAt = DateTime.UtcNow;
@@ -49,27 +73,45 @@ internal sealed class Endpoint : EndpointWithoutRequest<LeaveRequestDto>
                 await Send.ErrorsAsync(422, ct); return;
             }
         }
-        else if (isLeader && entity.Status == "pending")
-        {
-            // LD.PCM scope: cùng phòng AND không phải đơn của mình
-            if (entity.UserId == currentUser.UserId)
-            {
-                await Send.ForbiddenAsync(ct); return;
-            }
-            if (entity.User.PhongBanId == null || entity.User.PhongBanId != currentUser.PhongBanId)
-            {
-                await Send.ForbiddenAsync(ct); return;
-            }
-
-            entity.Status = "approved_leader";
-            entity.ApprovedBy = currentUser.UserId;
-            entity.ApprovedAt = DateTime.UtcNow;
-            entity.UpdatedAt = DateTime.UtcNow;
-        }
         else
         {
-            AddError("Không thể duyệt đơn ở trạng thái này");
-            await Send.ErrorsAsync(409, ct); return;
+            // 2-level: LD.PCM approves pending → approved_leader, then GD.PGD approves approved_leader → approved
+            if (isLeader && entity.Status == "pending")
+            {
+                // LD.PCM: same department scope check, cannot approve own request
+                if (entity.UserId == currentUser.UserId)
+                {
+                    await Send.ForbiddenAsync(ct); return;
+                }
+                if (entity.User.PhongBanId == null || entity.User.PhongBanId != currentUser.PhongBanId)
+                {
+                    await Send.ForbiddenAsync(ct); return;
+                }
+
+                entity.Status = "approved_leader";
+                entity.ApprovedBy = currentUser.UserId;
+                entity.ApprovedAt = DateTime.UtcNow;
+                entity.UpdatedAt = DateTime.UtcNow;
+            }
+            else if (isDirector && entity.Status == "approved_leader")
+            {
+                // GD.PGD approves approved_leader → approved
+                entity.Status = "approved";
+                entity.ApprovedBy = currentUser.UserId;
+                entity.ApprovedAt = DateTime.UtcNow;
+                entity.UpdatedAt = DateTime.UtcNow;
+
+                if (!await _data.UpsertBalanceAsync(entity, ct))
+                {
+                    AddError("Nhân viên đã vượt quá định mức ngày phép");
+                    await Send.ErrorsAsync(422, ct); return;
+                }
+            }
+            else
+            {
+                AddError("Không thể duyệt đơn ở trạng thái này");
+                await Send.ErrorsAsync(409, ct); return;
+            }
         }
 
         try

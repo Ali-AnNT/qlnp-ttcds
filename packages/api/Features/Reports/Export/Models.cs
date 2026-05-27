@@ -14,7 +14,7 @@ internal sealed record Request
 internal sealed class Validator : Validator<Request>
 {
     private static readonly string[] ValidStatuses =
-        ["pending", "approved_leader", "approved_director", "rejected", "cancelled"];
+        ["pending", "approved_leader", "approved", "rejected", "cancelled"];
 
     private static readonly string[] ValidPeriods =
         ["none", "month", "quarter", "year"];
@@ -43,6 +43,7 @@ internal static class StatusLabels
         ["pending"] = "Chờ duyệt",
         ["approved_leader"] = "Đã duyệt LĐ",
         ["approved_director"] = "Đã duyệt GĐ",
+        ["approved"] = "Đã duyệt",
         ["rejected"] = "Từ chối",
         ["cancelled"] = "Đã hủy"
     };
