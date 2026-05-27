@@ -29,6 +29,12 @@
 - Cross-cutting concerns (audit log, `/leave/history`, backend APIs) affect multiple UCs — update all relevant sections.
 - Use the checklist to preview progress per UC before planning next work.
 
+## Database Operations (MANDATORY)
+
+- **Use `mcp__mysql__mysql_query`** when reading or verifying data in the database — do not manually query via command line.
+- This MCP tool provides read-only SQL query access for data inspection and verification.
+- Example: `mcp__mysql__mysql_query({sql: "SELECT * FROM table_name LIMIT 10"})`
+
 ## Testing (MANDATORY)
 
 - **NEVER write tests** — testing is delegated to the `tester` agent.
