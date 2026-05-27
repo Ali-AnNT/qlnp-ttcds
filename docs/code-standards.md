@@ -39,7 +39,7 @@ import type { DepartmentDto } from "@/api/departments.api";
 Use string unions for fixed value sets:
 ```typescript
 export type UserRole = "CB.PCM" | "LD.PCM" | "GD.PGD" | "QTHT";
-export type LeaveStatus = "pending" | "approved_leader" | "approved_director" | "rejected" | "cancelled";
+export type LeaveStatus = "pending" | "approved" | "rejected" | "cancelled";
 ```
 
 ### Label Maps
@@ -176,7 +176,7 @@ packages/api/
 │   ├── DmDonvi.cs                    # Scaffolded from DM_DONVI
 │   ├── LeaveType.cs                  # Code First
 │   ├── LeaveBalance.cs               # Code First
-│   ├── LeaveRequest.cs               # Code First
+│   ├── LeaveRequest.cs               # Code First (incl. ApprovedLevel for N-level approval)
 │   ├── LeaveRequestAudit.cs          # Code First
 │   └── LeaveConfig.cs                # Code First
 ├── Data/
@@ -190,10 +190,11 @@ packages/api/
 │   ├── LeaveBalances/List, My, Seed/ # Balance endpoints + seed helpers
 │   ├── LeaveRequests/
 │   │   ├── List/ Create/ Update/     # P1 implemented (role-based filtering, business days, overlap)
-│   │   ├── Approve/ Reject/ Cancel/  # Implemented state-machine endpoints
+│   │   ├── Approve/ Reject/ Cancel/  # Config-driven N-level approval (ApprovalHelper + OR logic per level)
 │   │   ├── History/ UpdateByApprover/# Scaffolded gaps
 │   │   ├── BusinessDayCalculator.cs  # T2-T6 inclusive count
-│   │   └── LeaveRequestDto.cs        # Shared DTO
+│   │   ├── ApprovalHelper.cs         # Shared N-level approval logic (GetApprovalFlow, CanApproveAtLevel, GetMaxLevel, GetNextLevelRoles)
+│   │   └── LeaveRequestDto.cs        # Shared DTO (incl. ApprovedLevel)
 │   ├── Reports/Export/               # ClosedXML .xlsx export
 │   └── LeaveTypes/List, Create, Update, Delete/  # Roles("QTHT")
 ├── Auth/
@@ -285,6 +286,26 @@ HTTP Request
 - Response format nhất quán: `{ data, error }` envelope
 - Error response dùng `AddError()` hoặc `ThrowError()` của FastEndpoints
 - Dev mode: ICurrentUserProvider fallback to userId=1, roles=["QTHT"] khi anonymous (no JWT)
+
+### N-Level Approval Pattern
+
+Approval logic is config-driven and shared via `ApprovalHelper.cs`:
+
+```csharp
+// ApprovalHelper provides shared logic for N-level approval
+var flow = ApprovalHelper.GetApprovalFlow(configs);  // groups LeaveConfigs by level
+var maxLevel = ApprovalHelper.GetMaxLevel(flow);       // returns highest level
+var (canApprove, error) = ApprovalHelper.CanApproveAtLevel(user, request, flow, targetLevel);
+```
+
+Key rules:
+- `ApprovedLevel = 0` means no approvals (status = pending)
+- `ApprovedLevel = maxLevel` means fully approved (status = approved)
+- Intermediate ApprovedLevel (1..maxLevel-1) means partially approved (status stays pending)
+- Balance deduction only on final approval (ApprovedLevel == maxLevel)
+- OR logic per level: any role configured at a level can advance the request
+- Scope: LD.PCM = same department check (not self); GD.PGD = no scope restriction
+- `LeaveConfig.ApprovalLevel` supports 1-5 levels per leave type
 
 ## Git Practices
 

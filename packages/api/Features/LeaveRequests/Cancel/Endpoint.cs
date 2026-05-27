@@ -37,28 +37,12 @@ internal sealed class Endpoint : EndpointWithoutRequest<LeaveRequestDto>
             await Send.ForbiddenAsync(ct); return;
         }
 
-        // Determine valid cancellable statuses based on approval config
-        var approvalLevels = await _data.GetApprovalLevelsAsync(entity.LeaveTypeId, ct);
-        var maxLevel = approvalLevels.Count > 0 ? approvalLevels.Max() : 2;
-        var isSingleLevel = maxLevel <= 1;
-
-        if (isSingleLevel)
+        // Can only cancel pending requests (including partially approved)
+        // Cannot cancel approved or rejected requests
+        if (entity.Status != "pending")
         {
-            // 1-level: only pending can be cancelled
-            if (entity.Status != "pending")
-            {
-                AddError("Chỉ có thể hủy đơn đang chờ duyệt");
-                await Send.ErrorsAsync(409, ct); return;
-            }
-        }
-        else
-        {
-            // 2-level: pending or approved_leader can be cancelled
-            if (entity.Status is not ("pending" or "approved_leader"))
-            {
-                AddError("Chỉ có thể hủy đơn đang chờ duyệt hoặc đã được trưởng phòng duyệt");
-                await Send.ErrorsAsync(409, ct); return;
-            }
+            AddError("Chỉ có thể hủy đơn đang chờ duyệt");
+            await Send.ErrorsAsync(409, ct); return;
         }
 
         entity.Status = "cancelled";

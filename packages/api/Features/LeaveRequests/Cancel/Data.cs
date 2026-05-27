@@ -16,14 +16,6 @@ internal sealed class Data
             .Include(lr => lr.LeaveType)
             .FirstOrDefaultAsync(lr => lr.Id == id, ct);
 
-    public async Task<List<int>> GetApprovalLevelsAsync(long leaveTypeId, CancellationToken ct) =>
-        await _db.LeaveConfigs
-            .Where(c => c.LeaveTypeId == leaveTypeId)
-            .Select(c => c.ApprovalLevel)
-            .Distinct()
-            .OrderBy(l => l)
-            .ToListAsync(ct);
-
     public async Task SaveAsync(CancellationToken ct) =>
         await _db.SaveChangesAsync(ct);
 }

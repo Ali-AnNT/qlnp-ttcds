@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStore } from "@/store/useStore";
 import { formatDate } from "@/lib/date-utils";
@@ -16,24 +16,8 @@ import { toast } from "sonner";
 import { XCircle, Pencil } from "lucide-react";
 import { differenceInBusinessDays, parseISO, format, eachDayOfInterval } from "date-fns";
 import { leaveRequestsApi, type LeaveRequestDto } from "@/api/leave-requests.api";
-
-const statusLabels: Record<string, string> = {
-  pending: "Chờ duyệt",
-  approved_leader: "TP đã duyệt",
-  approved_director: "BGĐ đã duyệt",
-  approved: "Đã duyệt",
-  rejected: "Từ chối",
-  cancelled: "Đã hủy",
-};
-
-const statusColor: Record<string, string> = {
-  pending: "bg-warning/10 text-warning border-warning/30",
-  approved_leader: "bg-blue-100 text-blue-700 border-blue-300",
-  approved_director: "bg-success/10 text-success border-success/30",
-  approved: "bg-success/10 text-success border-success/30",
-  rejected: "bg-destructive/10 text-destructive border-destructive/30",
-  cancelled: "bg-muted text-muted-foreground",
-};
+import { configApi, type ConfigDto } from "@/api/config.api";
+import { getApprovalStatusLabel, getApprovalStatusColor } from "@/lib/leave-data";
 
 const LeaveMyPage = () => {
   const { user } = useAuth();
@@ -41,6 +25,27 @@ const LeaveMyPage = () => {
   const leaveTypes = useStore((s) => s.leaveTypes);
   const loadData = useStore((s) => s.loadData);
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [approvalConfigs, setApprovalConfigs] = useState<ConfigDto[]>([]);
+
+  useEffect(() => {
+    configApi.get().then(({ data }) => { if (data) setApprovalConfigs(data); });
+  }, []);
+
+  const maxLevelByType = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const c of approvalConfigs) {
+      const current = map.get(c.leaveTypeId) ?? 0;
+      if (c.approvalLevel > current) map.set(c.leaveTypeId, c.approvalLevel);
+    }
+    return map;
+  }, [approvalConfigs]);
+
+  const statusLabels: Record<string, string> = {
+    pending: "Chờ duyệt",
+    approved: "Đã duyệt",
+    rejected: "Từ chối",
+    cancelled: "Đã hủy",
+  };
 
   const [editRequest, setEditRequest] = useState<LeaveRequestDto | null>(null);
   const [editLeaveTypeId, setEditLeaveTypeId] = useState("");
@@ -58,7 +63,7 @@ const LeaveMyPage = () => {
     if (!user) return new Set<string>();
     const dates = new Set<string>();
     leaveRequests
-      .filter((r) => r.userId === user.userId && (r.status === "approved_leader" || r.status === "approved") && r.id !== editRequest?.id)
+      .filter((r) => r.userId === user.userId && r.status === "approved" && r.id !== editRequest?.id)
       .forEach((r) => {
         try {
           const interval = { start: parseISO(r.startDate), end: parseISO(r.endDate) };
@@ -168,8 +173,8 @@ const LeaveMyPage = () => {
                     <TableCell className="text-center">{r.totalDays}</TableCell>
                     <TableCell className="max-w-[200px] truncate">{r.reason}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={cn("text-[11px]", statusColor[r.status])}>
-                        {statusLabels[r.status] || r.status}
+                      <Badge variant="outline" className={cn("text-[11px]", getApprovalStatusColor(r.status, r.approvedLevel, maxLevelByType.get(r.leaveTypeId) ?? 1))}>
+                        {getApprovalStatusLabel(r.status, r.approvedLevel, maxLevelByType.get(r.leaveTypeId) ?? 1)}
                       </Badge>
                     </TableCell>
                     <TableCell>{formatDate(r.createdAt)}</TableCell>

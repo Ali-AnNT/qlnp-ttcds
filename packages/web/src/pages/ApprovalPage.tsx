@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStore } from "@/store/useStore";
 import { formatDate } from "@/lib/date-utils";
@@ -12,14 +12,7 @@ import { toast } from "sonner";
 import { CheckCircle, XCircle, Eye } from "lucide-react";
 import { leaveRequestsApi, type LeaveRequestDto } from "@/api/leave-requests.api";
 import { configApi, type ConfigDto } from "@/api/config.api";
-
-const statusLabels: Record<string, string> = {
-  pending: "Chờ duyệt",
-  approved_leader: "LĐ đã duyệt",
-  approved: "Đã duyệt",
-  rejected: "Từ chối",
-  cancelled: "Đã hủy",
-};
+import { getApprovalStatusLabel } from "@/lib/leave-data";
 
 const ApprovalPage = () => {
   const { user } = useAuth();
@@ -39,36 +32,63 @@ const ApprovalPage = () => {
     });
   }, []);
 
-  // Determine which leave types use single-level (1) approval
-  const singleLevelLeaveTypeIds = new Set(
-    approvalConfigs
-      .filter((c) => c.approvalLevel === 1)
-      .filter((c) => !approvalConfigs.some((c2) => c2.leaveTypeId === c.leaveTypeId && c2.approvalLevel === 2))
-      .map((c) => c.leaveTypeId)
-  );
+  // Build a map: leaveTypeId → max approval level
+  const maxLevelByType = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const c of approvalConfigs) {
+      const current = map.get(c.leaveTypeId) ?? 0;
+      if (c.approvalLevel > current) map.set(c.leaveTypeId, c.approvalLevel);
+    }
+    return map;
+  }, [approvalConfigs]);
 
+  // Build a map: leaveTypeId → { approvalLevel → roles[] }
+  const flowByType = useMemo(() => {
+    const map = new Map<number, Map<number, string[]>>();
+    for (const c of approvalConfigs) {
+      if (!map.has(c.leaveTypeId)) map.set(c.leaveTypeId, new Map());
+      const levelMap = map.get(c.leaveTypeId)!;
+      if (!levelMap.has(c.approvalLevel)) levelMap.set(c.approvalLevel, []);
+      levelMap.get(c.approvalLevel)!.push(c.approverRole);
+    }
+    return map;
+  }, [approvalConfigs]);
+
+  // Normalize role to full form (QLNP. prefix) for comparison
+  const normalizeRole = (role: string) => role.startsWith("QLNP.") ? role : `QLNP.${role}`;
+
+  // Config-driven filtering: show requests where the current user's role
+  // is a valid approver at the next approval level
   const visibleRequests = leaveRequests
     .filter((r) => {
       if (!user) return false;
+      if (r.status !== "pending") return false;
 
-      // GD.PGD sees: pending (1-level types) + approved_leader (2-level types)
-      if (user.role === "quantri" || user.role === "GD.PGD") {
-        if (r.status === "pending") {
-          // Only show pending requests for 1-level types (where GD.PGD is level-1 approver)
-          return singleLevelLeaveTypeIds.has(r.leaveTypeId);
-        }
-        if (r.status === "approved_leader") return true;
-        return false;
-      }
+      const flow = flowByType.get(r.leaveTypeId);
+      if (!flow) return false; // No config → no approval possible
 
-      // LD.PCM sees: pending requests from same department (not own)
-      if (user.role === "LD.PCM") {
-        if (r.status !== "pending") return false;
+      const nextLevel = r.approvedLevel + 1;
+      const rolesAtNextLevel = flow.get(nextLevel);
+      if (!rolesAtNextLevel) return false; // Already past max level
+
+      // Normalize config roles to full form for comparison
+      const normalizedRoles = rolesAtNextLevel.map(normalizeRole);
+
+      // Check if user has any role at the next level
+      const userRoles = user.role === "quantri"
+        ? ["QLNP.GD.PGD"] // Admin sees GD.PGD-level requests
+        : [`QLNP.${user.role}`];
+
+      const hasRole = normalizedRoles.some((role) => userRoles.includes(role));
+      if (!hasRole) return false;
+
+      // LD.PCM scope check: cannot approve own requests
+      // (department filtering is handled by backend)
+      if (userRoles.includes("QLNP.LD.PCM")) {
         if (r.userId === user.userId) return false;
-        return r.donViId === user.donViId;
       }
 
-      return false;
+      return true;
     })
     .filter((r) => !filterName || (r.userName || "").toLowerCase().includes(filterName.toLowerCase()));
 
@@ -115,6 +135,8 @@ const ApprovalPage = () => {
                 visibleRequests.map((r, i) => {
                   const lt = leaveTypes.find((t) => t.id === r.leaveTypeId);
                   const dept = departments.find((d) => d.donViId === r.donViId);
+                  const maxLevel = maxLevelByType.get(r.leaveTypeId) ?? 1;
+                  const statusLabel = getApprovalStatusLabel(r.status, r.approvedLevel, maxLevel);
                   return (
                     <TableRow key={r.id} className={i % 2 === 1 ? "bg-muted/20" : ""}>
                       <TableCell className="text-center">{i + 1}</TableCell>
@@ -125,7 +147,7 @@ const ApprovalPage = () => {
                       <TableCell>{formatDate(r.endDate)}</TableCell>
                       <TableCell className="text-center">{r.totalDays}</TableCell>
                       <TableCell className="max-w-[150px] truncate">{r.reason}</TableCell>
-                      <TableCell>{statusLabels[r.status] || r.status}</TableCell>
+                      <TableCell>{statusLabel}</TableCell>
                       <TableCell>{formatDate(r.createdAt)}</TableCell>
                       <TableCell>
                         <div className="flex gap-1">
@@ -163,19 +185,23 @@ const ApprovalPage = () => {
       <Dialog open={!!detailRequest} onOpenChange={() => setDetailRequest(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Chi tiết đơn nghỉ phép</DialogTitle></DialogHeader>
-          {detailRequest && (
-            <div className="space-y-3 text-sm">
-              <div className="grid grid-cols-2 gap-2">
-                <div><span className="text-muted-foreground">Họ tên:</span> <strong>{detailRequest.userName}</strong></div>
-                <div><span className="text-muted-foreground">Loại phép:</span> {leaveTypes.find((t) => t.id === detailRequest.leaveTypeId)?.name}</div>
-                <div><span className="text-muted-foreground">Số ngày:</span> {detailRequest.totalDays}</div>
-                <div><span className="text-muted-foreground">Trạng thái:</span> {statusLabels[detailRequest.status] || detailRequest.status}</div>
-                <div><span className="text-muted-foreground">Từ ngày:</span> {formatDate(detailRequest.startDate)}</div>
-                <div><span className="text-muted-foreground">Đến ngày:</span> {formatDate(detailRequest.endDate)}</div>
+          {detailRequest && (() => {
+            const maxLevel = maxLevelByType.get(detailRequest.leaveTypeId) ?? 1;
+            const statusLabel = getApprovalStatusLabel(detailRequest.status, detailRequest.approvedLevel, maxLevel);
+            return (
+              <div className="space-y-3 text-sm">
+                <div className="grid grid-cols-2 gap-2">
+                  <div><span className="text-muted-foreground">Họ tên:</span> <strong>{detailRequest.userName}</strong></div>
+                  <div><span className="text-muted-foreground">Loại phép:</span> {leaveTypes.find((t) => t.id === detailRequest.leaveTypeId)?.name}</div>
+                  <div><span className="text-muted-foreground">Số ngày:</span> {detailRequest.totalDays}</div>
+                  <div><span className="text-muted-foreground">Trạng thái:</span> {statusLabel}</div>
+                  <div><span className="text-muted-foreground">Từ ngày:</span> {formatDate(detailRequest.startDate)}</div>
+                  <div><span className="text-muted-foreground">Đến ngày:</span> {formatDate(detailRequest.endDate)}</div>
+                </div>
+                <div><span className="text-muted-foreground">Lý do:</span> {detailRequest.reason}</div>
               </div>
-              <div><span className="text-muted-foreground">Lý do:</span> {detailRequest.reason}</div>
-            </div>
-          )}
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </div>

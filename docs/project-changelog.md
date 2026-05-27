@@ -1,5 +1,50 @@
 # Project Changelog - QLNP-TTCDS
 
+## v0.4.0 -- 2026-05-27 -- Configurable N-Level Approval
+
+### Breaking Changes
+- Status values `approved_leader` and `approved_director` removed. Status is now one of: `pending | approved | rejected | cancelled`
+- `LeaveRequest.ApprovedLevel` (int, default 0) added to track approval progress within pending state
+- Frontend `LeaveStatus` type updated accordingly; `getApprovalStatusLabel()` and `getApprovalStatusColor()` replace hardcoded status labels
+
+### Added
+- `LeaveRequest.ApprovedLevel` property (default 0) and EF migration `AddApprovedLevel`
+- `ApprovalHelper.cs` -- shared static helper for N-level approval logic:
+  - `GetApprovalFlow()` -- groups LeaveConfigs by ApprovalLevel
+  - `GetMaxLevel()` -- returns highest configured level
+  - `CanApproveAtLevel()` -- auth check with scope (LD.PCM = same department, GD.PGD = unrestricted)
+  - `GetNextLevelRoles()` -- returns roles for next approval level
+- `ConfigPage.tsx` -- approval level dropdown now supports 1-5 levels (was 1 or 2)
+- Frontend helpers: `getApprovalStatusLabel()` and `getApprovalStatusColor()` in `leave-data.ts`
+- EF Core `HasData` seed for 9 `LeaveConfig` rows in `AppDbContext.OnModelCreating`, establishing the initial approval-level baseline so `MigrateLegacyStatusesAsync` can correctly determine max approval levels per LeaveType. Runtime updates via `Config/Update` endpoint (`ReplaceAllAsync`) still overwrite these rows. Seed baseline:
+
+  | Id | LeaveTypeId (Code) | ApprovalLevel | ApproverRole |
+  |----|---------------------|---------------|--------------|
+  | 1  | 1 (NPN)             | 1             | LD.PCM       |
+  | 2  | 1 (NPN)             | 2             | GD.PGD       |
+  | 3  | 2 (NO)              | 1             | LD.PCM       |
+  | 4  | 2 (NO)              | 2             | GD.PGD       |
+  | 5  | 3 (NVR)             | 1             | LD.PCM       |
+  | 6  | 3 (NVR)             | 2             | GD.PGD       |
+  | 7  | 4 (NKL)             | 1             | LD.PCM       |
+  | 8  | 5 (NTS)             | 1             | LD.PCM       |
+  | 9  | 5 (NTS)             | 2             | GD.PGD       |
+
+### Changed
+- Approve endpoint: full rewrite for config-driven N-level approval. Increments ApprovedLevel; sets status=approved and deducts balance only on final level
+- Reject endpoint: uses ApprovalHelper for auth check at current level
+- Cancel endpoint: simplified to allow cancellation of any pending request (ApprovedLevel < maxLevel)
+- Create/Update Data: overlap check uses `approved` status only (removed `approved_leader`)
+- List/My Data: DTO projection includes ApprovedLevel
+- Reports Export Models: removed `approved_leader` and `approved_director` from status labels
+- `SeedHelper.MigrateLegacyStatusesAsync` (renamed from `MigrateApprovedDirectorStatusAsync`): migrates `approved_director` -> `approved`, `approved_leader` -> `pending + ApprovedLevel=1`, and sets ApprovedLevel for existing approved requests
+- `AppDbContext`: `HasDefaultValue(0)` for ApprovedLevel column
+- `LeaveRequestDto` and `LeaveRequestMapping`: include ApprovedLevel field
+
+### Removed
+- `approved_leader` and `approved_director` status values (replaced by ApprovedLevel-based progress tracking)
+- Hardcoded 2-level approval logic in Approve/Reject/Cancel endpoints
+
 ## v0.3.2 -- 2026-05-25 -- Balance Seeding + Audit Entity Docs Sync
 
 ### Added

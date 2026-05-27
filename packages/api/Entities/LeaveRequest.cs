@@ -26,6 +26,8 @@ public class LeaveRequest
     [MaxLength(20)]
     public string Status { get; set; } = "pending";
 
+    public int ApprovedLevel { get; set; } = 0;
+
     public long? ApprovedBy { get; set; }
 
     [Column(TypeName = "datetime2")]

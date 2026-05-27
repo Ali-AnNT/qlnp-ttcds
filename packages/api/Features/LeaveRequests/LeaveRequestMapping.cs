@@ -10,7 +10,7 @@ internal static class LeaveRequestMapping
         e.User?.DonVi?.TenDonVi ?? "",
         e.LeaveTypeId, e.LeaveType?.Name ?? "",
         e.StartDate, e.EndDate, e.TotalDays,
-        e.Reason, e.Status, e.RequestedApproverId,
+        e.Reason, e.Status, e.ApprovedLevel, e.RequestedApproverId,
         e.ApprovedBy, e.ApprovedAt, e.RejectedReason, e.CreatedAt, e.UpdatedAt
     );
 }

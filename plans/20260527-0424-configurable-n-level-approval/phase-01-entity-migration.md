@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Entity & Migration"
-status: pending
+status: complete
 priority: P1
 effort: "1h"
 dependencies: []
@@ -82,13 +82,14 @@ LeaveRequest.ApprovedLevel (int, default 0, NOT NULL)
 
 ## Success Criteria
 
-- [ ] `LeaveRequest` entity has `ApprovedLevel` column with default 0
-- [ ] `LeaveRequestDto` includes `approvedLevel` field
-- [ ] `LeaveRequestMapping` maps `ApprovedLevel` correctly
-- [ ] Migration adds column and migrates `approved_leader` rows correctly
-- [ ] Existing `approved` rows get `ApprovedLevel` set to max config level for their LeaveType
-- [ ] No `approved_leader` or `approved_director` status values remain in database after migration
-- [ ] `dotnet build` succeeds with no errors
+- [x] `LeaveRequest` entity has `ApprovedLevel` column with default 0
+- [x] `LeaveRequestDto` includes `approvedLevel` field
+- [x] `LeaveRequestMapping` maps `ApprovedLevel` correctly
+- [x] Migration adds column and migrates `approved_leader` rows correctly
+- [x] Existing `approved` rows get `ApprovedLevel` set to max config level for their LeaveType
+- [x] No `approved_leader` or `approved_director` status values remain in database after migration
+- [x] `dotnet build` succeeds with no errors
+- [x] LeaveConfig HasData seed provides 9 baseline rows (NPN/2-level, NO/2-level, NVR/2-level, NKL/1-level, NTS/2-level)
 
 ## Validation Decisions
 

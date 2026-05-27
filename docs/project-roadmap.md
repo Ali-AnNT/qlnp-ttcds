@@ -61,6 +61,7 @@ All Supabase-related issues resolved by architecture migration:
 | LeaveTypes CRUD endpoints (Roles "QTHT") | Done | 2026-05-14 |
 | LeaveRequests P1: List/Create/Update | Done | 2026-05-15 |
 | LeaveRequests P2: Approve/Reject/Cancel | Done | 2026-05-15 |
+| Configurable N-Level Approval (ApprovedLevel, ApprovalHelper, legacy migration) | Done | 2026-05-27 |
 | LeaveBalances, Department reference endpoints | Done | 2026-05-17 |
 | Reports export endpoint | Done | 2026-05-21 |
 | LeaveRequestAudit entity + migration | Done | 2026-05-25 |
@@ -108,8 +109,8 @@ May 2026 (COMPLETED): Phase 1 - Architecture Migration
     - JWT Bearer auth + ICurrentUserProvider
     - Features directory scaffolded, core endpoints implemented
 
-May 14-25 2026 (IN PROGRESS): Phase 1.1 - Endpoint Implementation & Release Readiness
-    - Done: Auth/Me, DevLogin, LeaveTypes CRUD, Departments, LeaveBalances List/My/Seed, Config Get/Update, LeaveRequests List/My/Create/Update/Approve/Reject/Cancel, Reports Export
+May 14-27 2026 (IN PROGRESS): Phase 1.1 - Endpoint Implementation & Release Readiness
+    - Done: Auth/Me, DevLogin, LeaveTypes CRUD, Departments, LeaveBalances List/My/Seed, Config Get/Update, LeaveRequests List/My/Create/Update/Approve/Reject/Cancel, Reports Export, Configurable N-Level Approval, Configurable N-Level Approval (ApprovedLevel, ApprovalHelper, legacy migration)
     - Remaining: UpdateByApprover, History, audit write wiring, embed host sample, integration testing
     - Integration testing
     - Documentation/deployment sync

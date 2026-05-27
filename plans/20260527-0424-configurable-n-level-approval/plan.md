@@ -1,7 +1,7 @@
 ---
 title: "Configurable N-Level Approval Flow"
 description: "Refactor approval system from hardcoded 1/2-level to config-driven N-level with multi-role per level. Add ApprovedLevel to LeaveRequest, remove approved_leader status, implement OR-logic multi-role approval."
-status: pending
+status: complete
 priority: P1
 branch: "feat/configurable-approval-levels"
 tags: [approval, config-driven, n-level, multi-role, refactor]
@@ -46,7 +46,7 @@ Refactor the approval system from hardcoded 1/2-level branching to a fully confi
 
 ## Dependencies
 
-- Seed data plan `260527-0317-update-leave-type-seed-data` provides LeaveConfig seed rows. Should be merged first.
+- ~~Seed data plan `260527-0317-update-leave-type-seed-data` provides LeaveConfig seed rows. Should be merged first.~~ **DONE**: LeaveConfig HasData seed added directly to AppDbContext — 9 rows migrated as part of Phase 1.
 - This plan is in scope: backend approval refactor only (not UI redesign of ApprovalPage/LeaveMyPage status display).
 
 ## LeaveConfig Seed Data (Current Database State)

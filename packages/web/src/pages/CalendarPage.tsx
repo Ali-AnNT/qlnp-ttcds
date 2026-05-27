@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStore } from "@/store/useStore";
 import { formatDate } from "@/lib/date-utils";
@@ -8,26 +8,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, isWithinInterval } from "date-fns";
+import { getApprovalStatusLabel } from "@/lib/leave-data";
+import { configApi, type ConfigDto } from "@/api/config.api";
 import { vi } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, CalendarDays, List } from "lucide-react";
 
 const statusLabels: Record<string, string> = {
   pending: "Chờ duyệt",
-  approved_leader: "TP đã duyệt",
-  approved_director: "BGĐ đã duyệt",
   approved: "Đã duyệt",
   rejected: "Từ chối",
   cancelled: "Đã hủy",
-};
-
-const statusColor: Record<string, string> = {
-  pending: "bg-warning/10 text-warning border-warning/30",
-  approved_leader: "bg-blue-100 text-blue-700 border-blue-300",
-  approved_director: "bg-success/10 text-success border-success/30",
-  approved: "bg-success/10 text-success border-success/30",
-  rejected: "bg-destructive/10 text-destructive border-destructive/30",
-  cancelled: "bg-muted text-muted-foreground",
 };
 
 const CalendarPage = () => {
@@ -38,11 +29,25 @@ const CalendarPage = () => {
   const [viewMode, setViewMode] = useState<"calendar" | "list">("list");
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [filterDept, setFilterDept] = useState("all");
+  const [approvalConfigs, setApprovalConfigs] = useState<ConfigDto[]>([]);
+
+  useEffect(() => {
+    configApi.get().then(({ data }) => { if (data) setApprovalConfigs(data); });
+  }, []);
+
+  const maxLevelByType = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const c of approvalConfigs) {
+      const current = map.get(c.leaveTypeId) ?? 0;
+      if (c.approvalLevel > current) map.set(c.leaveTypeId, c.approvalLevel);
+    }
+    return map;
+  }, [approvalConfigs]);
 
   const isStaff = user?.role === "CB.PCM";
   const activeRequests = leaveRequests.filter((r) => {
     if (r.status === "cancelled" || r.status === "rejected") return false;
-    if (isStaff) return r.status === "approved_leader" || r.status === "approved";
+    if (isStaff) return r.status === "approved";
     return true;
   });
 
@@ -104,7 +109,7 @@ const CalendarPage = () => {
                   <div key={day.toISOString()} className={cn("min-h-[60px] border rounded p-1 text-xs", leaves.length > 0 && "bg-accent/5")}>
                     <div className="font-medium text-right">{format(day, "d")}</div>
                     {leaves.slice(0, 2).map((l) => (
-                      <div key={l.id} className={cn("truncate text-[10px] rounded px-1 mt-0.5", l.status.includes("approved") ? "bg-success/20 text-success" : "bg-warning/20 text-warning")}>
+                      <div key={l.id} className={cn("truncate text-[10px] rounded px-1 mt-0.5", l.status === "approved" ? "bg-success/20 text-success" : "bg-warning/20 text-warning")}>
                         {l.userName?.split(" ").pop()}
                       </div>
                     ))}
@@ -143,8 +148,13 @@ const CalendarPage = () => {
                       <TableCell>{formatDate(r.endDate)}</TableCell>
                       <TableCell className="text-center">{r.totalDays}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={cn("text-[11px]", statusColor[r.status])}>
-                          {statusLabels[r.status] || r.status}
+                        <Badge variant="outline" className={cn("text-[11px]",
+                          r.status === "approved" ? "bg-success/10 text-success border-success/30" :
+                          r.status === "pending" ? "bg-warning/10 text-warning border-warning/30" :
+                          r.status === "rejected" ? "bg-destructive/10 text-destructive border-destructive/30" :
+                          "bg-muted text-muted-foreground"
+                        )}>
+                          {getApprovalStatusLabel(r.status, r.approvedLevel, maxLevelByType.get(r.leaveTypeId) ?? 1)}
                         </Badge>
                       </TableCell>
                     </TableRow>

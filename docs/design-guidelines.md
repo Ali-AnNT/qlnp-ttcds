@@ -45,11 +45,13 @@ Used in Badge components and leave status indicators:
 
 | Status | Background | Text | Border |
 |--------|-----------|------|--------|
-| pending | bg-warning/10 | text-warning | border-warning/30 |
-| approved_leader | bg-blue-100 | text-blue-700 | border-blue-300 |
-| approved_director | bg-success/10 | text-success | border-success/30 |
+| pending (ApprovedLevel=0) | bg-warning/10 | text-warning | border-warning/30 |
+| pending (partially approved, e.g. ApprovedLevel=1/2) | bg-blue-100 | text-blue-700 | border-blue-300 |
+| approved (ApprovedLevel=maxLevel) | bg-success/10 | text-success | border-success/30 |
 | rejected | bg-destructive/10 | text-destructive | border-destructive/30 |
 | cancelled | bg-muted | text-muted-foreground | default |
+
+Colors are computed by `getApprovalStatusLabel()` and `getApprovalStatusColor()` in `leave-data.ts`.
 
 ## Typography
 

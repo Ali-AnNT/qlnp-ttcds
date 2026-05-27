@@ -60,7 +60,7 @@ User Action -> Component -> useStore action -> api module -> fetch("/api/...")
 | `src/api/auth.api.ts` | AuthUser type + authApi.me() |
 | `src/api/departments.api.ts` | DepartmentDto + departmentsApi.list() |
 | `src/api/leave-types.api.ts` | LeaveTypeDto + leaveTypesApi.list/create/update/delete() |
-| `src/api/leave-requests.api.ts` | LeaveRequestDto, CreateLeaveRequestDto + leaveRequestsApi.list/create/update/approve/reject/cancel() |
+| `src/api/leave-requests.api.ts` | LeaveRequestDto (incl. approvedLevel), CreateLeaveRequestDto + leaveRequestsApi.list/create/update/approve/reject/cancel() |
 | `src/api/leave-balances.api.ts` | LeaveBalanceDto + leaveBalancesApi.list/my() |
 | `src/api/config.api.ts` | ConfigDto + configApi.get/update() |
 
@@ -68,7 +68,7 @@ User Action -> Component -> useStore action -> api module -> fetch("/api/...")
 
 | File | Purpose |
 |------|---------|
-| `src/lib/leave-data.ts` | Core types: UserRole (union), LeaveStatus (union), Department, Employee, LeaveType, LeaveRequest, LeaveBalance, ApprovalConfig. Label maps: roleLabels, leaveStatusLabels |
+| `src/lib/leave-data.ts` | Core types: UserRole (union), LeaveStatus (union: pending/approved/rejected/cancelled), Department, Employee, LeaveType, LeaveRequest, LeaveBalance, ApprovalConfig. Label maps: roleLabels, leaveStatusLabels. Helpers: getApprovalStatusLabel(), getApprovalStatusColor() for N-level progress display |
 | `src/lib/utils.ts` | cn() utility: merges Tailwind classes via clsx + tailwind-merge |
 | `src/lib/date-utils.ts` | formatDate(): parses ISO/date strings, formats to dd-MM-yyyy via date-fns |
 
@@ -87,14 +87,14 @@ User Action -> Component -> useStore action -> api module -> fetch("/api/...")
 |------|-------|---------|
 | `LoginPage.tsx` | /login | SSO waiting screen plus dev-only user selector when `VITE_DEV_MODE=true`. Calls `/api/auth/dev/login` and stores JWT |
 | `DashboardPage.tsx` | / | Welcome banner + metric cards + per-type leave balance cards + quick actions + recent activity |
-| `LeaveNewPage.tsx` | /leave/new | Form: leave type select, date range picker (business days calculation), reason textarea, approver display. Overlap detection against existing approved requests. Submit creates via store.addLeaveRequest |
+| `LeaveNewPage.tsx` | /leave/new | Form: leave type select, date range picker (business days calculation), reason textarea, approver display. Overlap detection against approved requests only (status="approved"). Submit creates via store.addLeaveRequest |
 | `LeaveMyPage.tsx` | /leave/my | Table of user's requests with status filter dropdown. Edit dialog (pre-submit), cancel action |
-| `ApprovalPage.tsx` | /approval | Pending requests table. Approve/reject actions with detail view dialog. Status transitions: LD.PCM -> approved_leader, GD.PGD -> approved_director |
+| `ApprovalPage.tsx` | /approval | Pending requests table. Config-driven N-level approval filtering. Approve/reject actions with detail view dialog. Shows approval level progress (e.g., "TP da duyet (cap 1/2)") |
 | `CalendarPage.tsx` | /calendar | Month grid with leave indicators + list view toggle. Department filter. date-fns month navigation |
 | `SummaryPage.tsx` | /summary | Year/type filter. Per-department table (clickable -> employee detail sub-table). Pie chart by leave type |
 | `ReportsPage.tsx` | /reports | 3 KPI cards, bar chart by department, pie chart by type. UI still exports local CSV; backend `/api/reports/export` supports formatted `.xlsx` |
 | `ViolationsPage.tsx` | /violations | Employees exceeding 12-day limit. Per-employee + per-department tables. Pie + bar charts. Period filter (year/quarter/month) |
-| `ConfigPage.tsx` | /config | 3 tabs: General config (cycle year, default days per role), Leave Types CRUD, Approval Config CRUD (leave_type + level + approver_role) |
+| `ConfigPage.tsx` | /config | 3 tabs: General config (cycle year, default days per role), Leave Types CRUD, Approval Config CRUD (leave_type + level 1-5 + approver_role) |
 | `NotFound.tsx` | * | 404 page |
 
 ### Hooks
@@ -148,7 +148,7 @@ Authorization via `CurrentUser.Role` from AuthContext:
 ### QLNP Tables (Code First, managed by EF Core migrations)
 - `LeaveTypes` - Id, Name, Code (unique), DefaultDays, Description, IsActive
 - `LeaveBalances` - Id, UserId, LeaveTypeId, Year, TotalDays, UsedDays. UNIQUE(UserId, LeaveTypeId, Year)
-- `LeaveRequests` - Id, UserId, LeaveTypeId, StartDate, EndDate, TotalDays, Reason, Status, RequestedApproverId (nullable), ApprovedBy, ApprovedAt, RejectedReason, CreatedAt, UpdatedAt. Nav props: User, LeaveType, Approver, RequestedApprover
+- `LeaveRequests` - Id, UserId, LeaveTypeId, StartDate, EndDate, TotalDays, Reason, Status, ApprovedLevel (default 0), RequestedApproverId (nullable), ApprovedBy, ApprovedAt, RejectedReason, CreatedAt, UpdatedAt. Nav props: User, LeaveType, Approver, RequestedApprover
 - `LeaveConfigs` - Id, LeaveTypeId, ApprovalLevel (CK >= 1), ApproverRole
 - `LeaveRequestAudits` - Id, LeaveRequestId, ChangedBy, ChangedAt, FieldName, OldValue, NewValue
 
@@ -173,9 +173,9 @@ Authorization via `CurrentUser.Role` from AuthContext:
 | GET | /api/leave-requests/my | Authenticated | List current user's requests |
 | POST | /api/leave-requests | CB.PCM, LD.PCM | Create request (business days, overlap check) |
 | PUT | /api/leave-requests/{id} | CB.PCM, LD.PCM | Update pending request |
-| POST | /api/leave-requests/{id}/approve | LD.PCM, GD.PGD | Approve request and update balance on final approval |
-| POST | /api/leave-requests/{id}/reject | LD.PCM, GD.PGD | Reject request with reason |
-| POST | /api/leave-requests/{id}/cancel | CB.PCM, LD.PCM | Cancel pending/leader-approved request |
+| POST | /api/leave-requests/{id}/approve | LD.PCM, GD.PGD | Config-driven N-level approval (OR logic per level). Balance deducted only on final approval (ApprovedLevel == maxLevel). Scope: LD.PCM = same department, GD.PGD = no restriction |
+| POST | /api/leave-requests/{id}/reject | LD.PCM, GD.PGD | Reject request (uses ApprovalHelper for auth check at current level) |
+| POST | /api/leave-requests/{id}/cancel | CB.PCM, LD.PCM | Cancel any pending request (ApprovedLevel < maxLevel) |
 | GET | /api/leave-balances | Authenticated | List balances, with startup/lazy seed support |
 | GET | /api/leave-balances/my | Authenticated | List current user's balances, lazily seeded |
 | GET | /api/config | Authenticated | List config and approval config |
@@ -189,3 +189,35 @@ Authorization via `CurrentUser.Role` from AuthContext:
 | LeaveRequests/UpdateByApprover | Directory scaffold exists; endpoint not implemented |
 | LeaveRequests/History | Directory scaffold exists; endpoint not implemented |
 | Audit logging wiring | `LeaveRequestAudit` table exists; mutation endpoints do not yet write audit rows |
+
+## N-Level Approval Architecture
+
+### Core Concept
+Each `LeaveType` can have N approval levels (1-5), configured via `LeaveConfigs`. Multiple roles can be assigned to the same level (OR logic: any approver at that level can advance the request).
+
+### Key Properties
+- `LeaveRequest.ApprovedLevel` (int, default 0): tracks how many levels have been approved
+- `ApprovedLevel = 0` means no approvals yet (status = pending)
+- `ApprovedLevel = maxLevel` means fully approved (status = approved)
+- Intermediate `ApprovedLevel` values (1..maxLevel-1) mean partially approved (status still = pending)
+- Status values: `pending | approved | rejected | cancelled` (legacy `approved_leader` / `approved_director` removed)
+
+### ApprovalHelper (Shared Logic)
+`Features/LeaveRequests/ApprovalHelper.cs` provides:
+- `GetApprovalFlow(List<LeaveConfig>)` -- groups configs by level into sorted dictionary
+- `GetMaxLevel(Dictionary<int, List<string>>)` -- returns highest approval level
+- `CanApproveAtLevel(CurrentUser, LeaveRequest, flow, targetLevel)` -- auth check with scope (LD.PCM = same department, GD.PGD = no restriction)
+- `GetNextLevelRoles(Dictionary<int, List<string>>, currentApprovedLevel)` -- returns roles for next level or null
+
+### Approval Flow
+1. Employee creates request (status = pending, ApprovedLevel = 0)
+2. Approver at level N checks `CanApproveAtLevel` (role must be in config for that level; LD.PCM scoped to same department)
+3. If approved at intermediate level: ApprovedLevel++, status stays pending
+4. If approved at maxLevel: ApprovedLevel = maxLevel, status = approved, balance deducted
+5. Any pending request (ApprovedLevel < maxLevel) can be cancelled or rejected
+
+### Legacy Migration
+`SeedHelper.MigrateLegacyStatusesAsync` runs on startup:
+- `approved_director` -> `approved` (with ApprovedLevel set from config)
+- `approved_leader` -> `pending` + `ApprovedLevel = 1` (still awaiting next level)
+- Existing `approved` requests get ApprovedLevel set from their LeaveType config

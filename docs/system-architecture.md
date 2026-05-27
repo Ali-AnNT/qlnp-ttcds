@@ -24,14 +24,15 @@ ASP.NET 10 FastEndpoints API
   │   ├─ Config/Get, Update/       config endpoints implemented
   │   ├─ Departments/List, Get/    department reference endpoints
   │   ├─ LeaveBalances/List, My, Seed/  lazy/startup balance seeding
-  │   ├─ LeaveRequests/List, Create, Update, Approve, Reject, Cancel/  ← P1+P2 implemented
-  │   │   ├─ LeaveRequestMapping.cs (shared DRY DTO mapping)
+  │   ├─ LeaveRequests/List, Create, Update, Approve, Reject, Cancel/  ← config-driven N-level approval
+  │   │   ├─ ApprovalHelper.cs (shared logic: GetApprovalFlow, CanApproveAtLevel, GetMaxLevel, GetNextLevelRoles)
+	  │   │   ├─ LeaveRequestMapping.cs (shared DRY DTO mapping, includes ApprovedLevel)
   │   │   └─ BusinessDayCalculator.cs (T2-T6 inclusive)
   │   ├─ Reports/Export/           ClosedXML .xlsx export
   │   └─ LeaveTypes/List, Create, Update, Delete/  ← Roles("QTHT")
   ├─ Data/AppDbContext              (EF Core 9 + SQL Server)
   │   ├─ System tables: USER_MASTER, DM_DONVI (ExcludeFromMigrations)
-  │   └─ App tables: LeaveTypes, LeaveBalances, LeaveRequests, LeaveConfigs, LeaveRequestAudits
+	  │   └─ App tables: LeaveTypes, LeaveBalances, LeaveRequests (incl. ApprovedLevel), LeaveConfigs, LeaveRequestAudits
   └─ SQL Server (existing `VI_NGHIPHEP` database)
 ```
 
@@ -170,6 +171,7 @@ erDiagram
         decimal TotalDays "5,1"
         string Reason
         string Status "max 20"
+        int ApprovedLevel "default 0"
         bigint RequestedApproverId FK_nullable
         bigint ApprovedBy FK_nullable
         datetime2 ApprovedAt_nullable
@@ -205,7 +207,21 @@ erDiagram
 ```
 
 ### Seed Data
-- LeaveTypes: `annual` (12 days), `sick` (0 days), `personal` (3 days)
+- LeaveTypes: NPN (12 days), NO (30 days), NVR (3 days), NKL (0 days), NTS (180 days) -- seeded via `HasData` in `AppDbContext.OnModelCreating`
+- LeaveConfigs: 9 rows seeded via `HasData` establishing the initial approval-level baseline per LeaveType. This baseline is required so `MigrateLegacyStatusesAsync` can correctly calculate max approval levels per LeaveType at startup. The `Config/Update` endpoint (`ReplaceAllAsync`) can overwrite these rows at runtime.
+
+  | LeaveTypeId (Code) | ApprovalLevel | ApproverRole |
+  |---------------------|---------------|--------------|
+  | 1 (NPN)             | 1             | LD.PCM       |
+  | 1 (NPN)             | 2             | GD.PGD       |
+  | 2 (NO)              | 1             | LD.PCM       |
+  | 2 (NO)              | 2             | GD.PGD       |
+  | 3 (NVR)             | 1             | LD.PCM       |
+  | 3 (NVR)             | 2             | GD.PGD       |
+  | 4 (NKL)             | 1             | LD.PCM       |
+  | 5 (NTS)             | 1             | LD.PCM       |
+  | 5 (NTS)             | 2             | GD.PGD       |
+
 - LeaveBalances: seeded on startup for active `USER_MASTER` users and lazily during `/leave-balances` reads
 - Roles: resolved from JWT claims; dev-login maps known test users to roles. `UserRoles` table was dropped.
 
@@ -245,24 +261,35 @@ sequenceDiagram
 
 **Note**: Login form removed. Authentication delegated to SSO Portal which issues JWT. The API validates JWT via symmetric key (Jwt:SigningKey in appsettings.json). ICurrentUserProvider reads ClaimsPrincipal, no longer uses gateway headers or CurrentUserMiddleware.
 
-## Approval Workflow
+## Approval Workflow (Config-Driven N-Level)
 
 ```mermaid
 stateDiagram-v2
-    [*] --> pending: Employee submits request
-    pending --> approved_leader: LD.PCM approves (level 1)
-    pending --> rejected: LD.PCM / GD.PGD rejects
-    approved_leader --> approved_director: GD.PGD approves (level 2)
-    approved_leader --> rejected: GD.PGD rejects
-    pending --> cancelled: Employee cancels
-    approved_leader --> cancelled: Employee cancels
-    approved_director --> [*]: Final approved
+    [*] --> pending: Employee submits (ApprovedLevel=0)
+    pending --> pending_partial: Approver at level N approves (ApprovedLevel=N, N < maxLevel)
+    pending --> approved: Approver at maxLevel approves (ApprovedLevel=maxLevel, balance deducted)
+    pending --> rejected: Any approver rejects
+    pending_partial --> pending_partial: Next level approves (ApprovedLevel++)
+    pending_partial --> approved: Final level approves (balance deducted)
+    pending_partial --> rejected: Any approver rejects
+    pending --> cancelled: Employee cancels (ApprovedLevel < maxLevel)
+    pending_partial --> cancelled: Employee cancels (ApprovedLevel < maxLevel)
+    approved --> [*]: Final approved
     rejected --> [*]: Final rejected
     cancelled --> [*]: Final cancelled
 
-    note right of approved_leader: Only if approval_config has level=2
-    note right of pending: Status set to "pending"
+    note right of pending_partial: Status stays "pending", ApprovedLevel tracks progress
+    note right of approved: Balance deducted only on final approval
 ```
+
+**Design decisions:**
+- `ApprovedLevel = 0` = no approvals (pending)
+- `ApprovedLevel = maxLevel` = fully approved (status = approved)
+- Status values: `pending | approved | rejected | cancelled` (no more approved_leader/approved_director)
+- OR logic per level: any configured approver role can advance the request
+- Scope: LD.PCM can only approve requests from same department (not own); GD.PGD has no scope restriction
+- Balance deduction only on final approval (ApprovedLevel == maxLevel)
+- `ApprovalHelper.cs` provides shared logic: GetApprovalFlow, CanApproveAtLevel, GetMaxLevel, GetNextLevelRoles
 
 ## Deployment Architecture
 

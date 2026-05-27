@@ -33,7 +33,7 @@ const LeaveNewPage = () => {
     if (!user) return new Set<string>();
     const dates = new Set<string>();
     leaveRequests
-      .filter((r) => r.userId === user.userId && (r.status === "approved_leader" || r.status === "approved"))
+      .filter((r) => r.userId === user.userId && r.status === "approved")
       .forEach((r) => {
         try {
           const interval = { start: parseISO(r.startDate), end: parseISO(r.endDate) };

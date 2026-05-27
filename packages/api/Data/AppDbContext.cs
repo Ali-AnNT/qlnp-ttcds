@@ -124,6 +124,7 @@ public partial class AppDbContext : DbContext
                 .HasForeignKey(e => e.RequestedApproverId)
                 .OnDelete(DeleteBehavior.Restrict);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
+            entity.Property(e => e.ApprovedLevel).HasDefaultValue(0);
         });
 
         modelBuilder.Entity<LeaveConfig>(entity =>
@@ -156,6 +157,19 @@ public partial class AppDbContext : DbContext
             new LeaveType { Id = 3, Name = "Nghỉ việc riêng", Code = "NVR", DefaultDays = 3, Description = "Nghỉ việc riêng có lương", IsActive = true },
             new LeaveType { Id = 4, Name = "Nghỉ không lương", Code = "NKL", DefaultDays = 0, Description = "Nghỉ không hưởng lương", IsActive = true },
             new LeaveType { Id = 5, Name = "Nghỉ thai sản", Code = "NTS", DefaultDays = 180, Description = "Nghỉ thai sản", IsActive = true }
+        );
+
+        // Initial baseline only — runtime updates via Config/Update endpoint (ReplaceAllAsync) will replace these rows
+        modelBuilder.Entity<LeaveConfig>().HasData(
+            new LeaveConfig { Id = 1, LeaveTypeId = 1, ApprovalLevel = 1, ApproverRole = "LD.PCM" },
+            new LeaveConfig { Id = 2, LeaveTypeId = 1, ApprovalLevel = 2, ApproverRole = "GD.PGD" },
+            new LeaveConfig { Id = 3, LeaveTypeId = 2, ApprovalLevel = 1, ApproverRole = "LD.PCM" },
+            new LeaveConfig { Id = 4, LeaveTypeId = 2, ApprovalLevel = 2, ApproverRole = "GD.PGD" },
+            new LeaveConfig { Id = 5, LeaveTypeId = 3, ApprovalLevel = 1, ApproverRole = "LD.PCM" },
+            new LeaveConfig { Id = 6, LeaveTypeId = 3, ApprovalLevel = 2, ApproverRole = "GD.PGD" },
+            new LeaveConfig { Id = 7, LeaveTypeId = 4, ApprovalLevel = 1, ApproverRole = "LD.PCM" },
+            new LeaveConfig { Id = 8, LeaveTypeId = 5, ApprovalLevel = 1, ApproverRole = "LD.PCM" },
+            new LeaveConfig { Id = 9, LeaveTypeId = 5, ApprovalLevel = 2, ApproverRole = "GD.PGD" }
         );
 
         OnModelCreatingPartial(modelBuilder);

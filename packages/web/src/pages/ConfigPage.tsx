@@ -289,7 +289,7 @@ const ConfigPage = () => {
                       return (
                         <TableRow key={ac.id}>
                           <TableCell className="font-medium">{lt?.name || "—"}</TableCell>
-                          <TableCell className="text-center">{ac.approvalLevel === 1 ? "1 cấp" : `${ac.approvalLevel} cấp`}</TableCell>
+                          <TableCell className="text-center">Cấp {ac.approvalLevel}</TableCell>
                           <TableCell>{roleLabels[ac.approverRole as UserRole] || ac.approverRole}</TableCell>
                           {isAdmin && (
                             <TableCell className="text-center space-x-1">
@@ -369,8 +369,9 @@ const ConfigPage = () => {
                 <Select value={String(editingApproval.approvalLevel)} onValueChange={(v) => setEditingApproval({ ...editingApproval, approvalLevel: parseInt(v) })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">1 — Duyệt 1 cấp (LD.PCM hoặc GD.PGD)</SelectItem>
-                    <SelectItem value="2">2 — Duyệt 2 cấp (LD.PCM → GD.PGD)</SelectItem>
+                    {[1, 2, 3, 4, 5].map((level) => (
+                      <SelectItem key={level} value={String(level)}>Cấp {level}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

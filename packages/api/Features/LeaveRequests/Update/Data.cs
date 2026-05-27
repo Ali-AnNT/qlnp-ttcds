@@ -22,7 +22,7 @@ internal sealed class Data
             .AnyAsync(lr =>
                 lr.Id != excludeId &&
                 lr.UserId == userId &&
-                (lr.Status == "approved_leader" || lr.Status == "approved") &&
+                lr.Status == "approved" &&
                 lr.StartDate <= end &&
                 lr.EndDate >= start, ct);
 

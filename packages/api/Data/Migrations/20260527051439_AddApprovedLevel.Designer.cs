@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using QLNP.Api.Data;
 
@@ -11,9 +12,11 @@ using QLNP.Api.Data;
 namespace QLNP.Api.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260527051439_AddApprovedLevel")]
+    partial class AddApprovedLevel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -185,71 +188,6 @@ namespace QLNP.Api.Data.Migrations
                     b.ToTable("LeaveConfigs", t =>
                         {
                             t.HasCheckConstraint("CK_LeaveConfig_ApprovalLevel", "ApprovalLevel >= 1");
-                        });
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1L,
-                            ApprovalLevel = 1,
-                            ApproverRole = "LD.PCM",
-                            LeaveTypeId = 1L
-                        },
-                        new
-                        {
-                            Id = 2L,
-                            ApprovalLevel = 2,
-                            ApproverRole = "GD.PGD",
-                            LeaveTypeId = 1L
-                        },
-                        new
-                        {
-                            Id = 3L,
-                            ApprovalLevel = 1,
-                            ApproverRole = "LD.PCM",
-                            LeaveTypeId = 2L
-                        },
-                        new
-                        {
-                            Id = 4L,
-                            ApprovalLevel = 2,
-                            ApproverRole = "GD.PGD",
-                            LeaveTypeId = 2L
-                        },
-                        new
-                        {
-                            Id = 5L,
-                            ApprovalLevel = 1,
-                            ApproverRole = "LD.PCM",
-                            LeaveTypeId = 3L
-                        },
-                        new
-                        {
-                            Id = 6L,
-                            ApprovalLevel = 2,
-                            ApproverRole = "GD.PGD",
-                            LeaveTypeId = 3L
-                        },
-                        new
-                        {
-                            Id = 7L,
-                            ApprovalLevel = 1,
-                            ApproverRole = "LD.PCM",
-                            LeaveTypeId = 4L
-                        },
-                        new
-                        {
-                            Id = 8L,
-                            ApprovalLevel = 1,
-                            ApproverRole = "LD.PCM",
-                            LeaveTypeId = 5L
-                        },
-                        new
-                        {
-                            Id = 9L,
-                            ApprovalLevel = 2,
-                            ApproverRole = "GD.PGD",
-                            LeaveTypeId = 5L
                         });
                 });
 
