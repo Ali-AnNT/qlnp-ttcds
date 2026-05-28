@@ -9,6 +9,9 @@ internal sealed class Data {
 
     public Data(AppDbContext db) => _db = db;
 
+    public async Task<bool> LeaveTypeExistsAsync(long leaveTypeId, CancellationToken ct) =>
+        await _db.LeaveTypes.AnyAsync(t => t.Id == leaveTypeId && t.IsActive, ct);
+
     public async Task<LeaveRequest?> GetByIdAsync(long id, CancellationToken ct) =>
         await _db.LeaveRequests
             .Include(lr => lr.User)

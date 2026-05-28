@@ -17,10 +17,16 @@ internal sealed class Endpoint : Endpoint<Request, LeaveTypeDto, Mapper> {
     public override async Task HandleAsync(Request r, CancellationToken ct) {
         var id = Route<long>("id");
         if (r.Id != id) {
-            AddError("ID trong URL không khớp với ID trong body");
+            AddError(r => r.Id, "ID trong URL không khớp với ID trong body");
             await Send.ErrorsAsync(400, ct);
             return;
         }
+
+        // Business validation (DB-dependent)
+        if (await _data.CodeExistsAsync(r.Code, id, ct))
+            AddError(r => r.Code, "Mã loại nghỉ đã tồn tại");
+
+        ThrowIfAnyErrors();
 
         var leaveType = await _data.GetByIdAsync(id, ct);
         if (leaveType is null || !leaveType.IsActive) {

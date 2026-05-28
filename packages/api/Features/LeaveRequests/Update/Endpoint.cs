@@ -22,41 +22,35 @@ internal sealed class Endpoint : Endpoint<Request, LeaveRequestDto, Mapper> {
     public override async Task HandleAsync(Request r, CancellationToken ct) {
         var id = Route<long>("id");
 
+        // Business validation (DB-dependent)
+        if (!await _data.LeaveTypeExistsAsync(r.LeaveTypeId, ct))
+            AddError(r => r.LeaveTypeId, "Loại nghỉ không tồn tại hoặc không còn hiệu lực");
+
+        ThrowIfAnyErrors();
+
         var entity = await _data.GetByIdAsync(id, ct);
-        if (entity is null) {
-            await Send.NotFoundAsync(ct);
-            return;
-        }
+        if (entity is null) { await Send.NotFoundAsync(ct); return; }
 
         var currentUser = _currentUser.GetCurrentUser();
 
-        // Owner check
-        if (entity.UserId != currentUser.UserId) {
-            await Send.ForbiddenAsync(ct);
-            return;
-        }
+        // Authorization
+        if (entity.UserId != currentUser.UserId) { await Send.ForbiddenAsync(ct); return; }
 
-        // Status check
+        // Business rule validation
         if (entity.Status != "pending") {
             AddError("Chỉ có thể sửa đơn đang chờ duyệt");
             await Send.ErrorsAsync(409, ct);
             return;
         }
 
-        // Business days
         var totalDays = BusinessDayCalculator.Count(r.StartDate, r.EndDate);
-        if (totalDays < 1) {
-            AddError("Khoảng thời gian không có ngày làm việc");
-            await Send.ErrorsAsync(422, ct);
-            return;
-        }
+        if (totalDays < 1)
+            AddError(r => r.StartDate, "Khoảng thời gian không có ngày làm việc");
 
-        // Overlap (exclude self)
-        if (await _data.HasOverlapAsync(currentUser.UserId, r.StartDate, r.EndDate, id, ct)) {
-            AddError("Trùng lịch với đơn đã được duyệt");
-            await Send.ErrorsAsync(409, ct);
-            return;
-        }
+        if (await _data.HasOverlapAsync(currentUser.UserId, r.StartDate, r.EndDate, id, ct))
+            AddError(r => r.StartDate, "Trùng lịch với đơn đã được duyệt");
+
+        ThrowIfAnyErrors();
 
         // Apply changes
         entity.LeaveTypeId = r.LeaveTypeId;

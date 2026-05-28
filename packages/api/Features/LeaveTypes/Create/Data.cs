@@ -9,6 +9,9 @@ internal sealed class Data {
 
     public Data(AppDbContext db) => _db = db;
 
+    public async Task<bool> CodeExistsAsync(string code, CancellationToken ct) =>
+        await _db.LeaveTypes.AnyAsync(t => t.Code == code, ct);
+
     public async Task<LeaveType> CreateAsync(LeaveType entity, CancellationToken ct) {
         _db.LeaveTypes.Add(entity);
         await _db.SaveChangesAsync(ct);

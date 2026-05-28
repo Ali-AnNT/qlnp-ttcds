@@ -1,7 +1,5 @@
 using FastEndpoints;
 using FluentValidation;
-using Microsoft.EntityFrameworkCore;
-using QLNP.Api.Data;
 
 namespace QLNP.Api.Features.LeaveRequests.Update;
 
@@ -14,12 +12,7 @@ internal sealed record Request(
 );
 
 internal sealed class Validator : Validator<Request> {
-    public Validator(AppDbContext db) {
-        RuleFor(x => x.LeaveTypeId)
-            .MustAsync(async (id, ct) =>
-                await db.LeaveTypes.AnyAsync(t => t.Id == id && t.IsActive, ct))
-            .WithMessage("Loại nghỉ không tồn tại hoặc không còn hiệu lực");
-
+    public Validator() {
         RuleFor(x => x.StartDate)
             .GreaterThanOrEqualTo(DateTime.Today)
             .WithMessage("Ngày bắt đầu không được là ngày quá khứ");

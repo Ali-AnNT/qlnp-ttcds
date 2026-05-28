@@ -20,21 +20,19 @@ internal sealed class Endpoint : Endpoint<Request, LeaveRequestDto, Mapper> {
     }
 
     public override async Task HandleAsync(Request r, CancellationToken ct) {
-        // Business days check
-        var totalDays = BusinessDayCalculator.Count(r.StartDate, r.EndDate);
-        if (totalDays < 1) {
-            AddError("Khoảng thời gian không có ngày làm việc");
-            await Send.ErrorsAsync(422, ct);
-            return;
-        }
+        // Business validation (DB-dependent)
+        if (!await _data.LeaveTypeExistsAsync(r.LeaveTypeId, ct))
+            AddError(r => r.LeaveTypeId, "Loại nghỉ không tồn tại hoặc không còn hiệu lực");
 
-        // Overlap check
+        var totalDays = BusinessDayCalculator.Count(r.StartDate, r.EndDate);
+        if (totalDays < 1)
+            AddError(r => r.StartDate, "Khoảng thời gian không có ngày làm việc");
+
         var currentUser = _currentUser.GetCurrentUser();
-        if (await _data.HasOverlapAsync(currentUser.UserId, r.StartDate, r.EndDate, ct)) {
-            AddError("Trùng lịch với đơn đã được duyệt");
-            await Send.ErrorsAsync(409, ct);
-            return;
-        }
+        if (await _data.HasOverlapAsync(currentUser.UserId, r.StartDate, r.EndDate, ct))
+            AddError(r => r.StartDate, "Trùng lịch với đơn đã được duyệt");
+
+        ThrowIfAnyErrors();
 
         // Create
         var entity = Map.ToEntity(r);

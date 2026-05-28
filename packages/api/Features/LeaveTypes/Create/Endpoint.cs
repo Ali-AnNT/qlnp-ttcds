@@ -16,6 +16,12 @@ internal sealed class Endpoint : Endpoint<Request, LeaveTypeDto, Mapper> {
     }
 
     public override async Task HandleAsync(Request r, CancellationToken ct) {
+        // Business validation (DB-dependent)
+        if (await _data.CodeExistsAsync(r.Code, ct))
+            AddError(r => r.Code, "Mã loại nghỉ đã tồn tại");
+
+        ThrowIfAnyErrors();
+
         var entity = Map.ToEntity(r);
 
         try {
