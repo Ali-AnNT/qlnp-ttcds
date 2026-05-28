@@ -13,6 +13,7 @@ export interface LeaveRequestDto {
   totalDays: number;
   reason: string | null;
   status: string;
+  approvedLevel: number;
   requestedApproverId?: number | null;
   approvedBy: number | null;
   approvedAt: string | null;

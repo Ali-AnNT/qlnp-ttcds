@@ -1,3 +1,4 @@
+using System.Text;
 using FastEndpoints;
 using FastEndpoints.Swagger;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -5,16 +6,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using QLNP.Api.Auth;
 using QLNP.Api.Data;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddFastEndpoints()
-    .SwaggerDocument(o =>
-    {
+    .SwaggerDocument(o => {
         o.AutoTagPathSegmentIndex = 2;
-        o.DocumentSettings = s =>
-        {
+        o.DocumentSettings = s => {
             s.Title = "QLNP API";
             s.Version = "v1";
         };
@@ -26,10 +24,8 @@ builder.Services.AddDbContext<AppDbContext>(opts =>
 // JWT Authentication
 var jwtConfig = builder.Configuration.GetSection("Jwt");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(o =>
-    {
-        o.TokenValidationParameters = new TokenValidationParameters
-        {
+    .AddJwtBearer(o => {
+        o.TokenValidationParameters = new TokenValidationParameters {
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = true,
@@ -45,11 +41,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 // CORS
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontend", policy =>
-    {
-        policy.WithOrigins("http://localhost:5100")
+builder.Services.AddCors(options => {
+    options.AddPolicy("AllowFrontend", policy => {
+        policy.WithOrigins("http://localhost:5100", "http://192.168.1.75:5100")
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
@@ -84,13 +78,11 @@ builder.Services.AddScoped<QLNP.Api.Features.Reports.Export.Data>();
 var app = builder.Build();
 
 // Auto-apply pending EF Core migrations and seed leave balances (skip in test environment)
-if (!app.Environment.IsEnvironment("Test"))
-{
-    using (var scope = app.Services.CreateScope())
-    {
+if (!app.Environment.IsEnvironment("Test")) {
+    using (var scope = app.Services.CreateScope()) {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         db.Database.Migrate();
-        await SeedHelper.MigrateApprovedDirectorStatusAsync(db);
+        await SeedHelper.MigrateLegacyStatusesAsync(db);
         await SeedHelper.SeedLeaveBalancesAsync(db);
     }
 }
@@ -100,8 +92,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 var frameAncestors = app.Configuration["Security:FrameAncestors"] ?? "'self'";
-app.Use(async (ctx, next) =>
-{
+app.Use(async (ctx, next) => {
     ctx.Response.Headers.Append("Content-Security-Policy", $"frame-ancestors {frameAncestors}");
     await next(ctx);
 });

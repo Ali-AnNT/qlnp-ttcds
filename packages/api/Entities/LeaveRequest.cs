@@ -3,8 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace QLNP.Api.Entities;
 
-public class LeaveRequest
-{
+public class LeaveRequest {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public long Id { get; set; }
@@ -25,6 +24,8 @@ public class LeaveRequest
 
     [MaxLength(20)]
     public string Status { get; set; } = "pending";
+
+    public int ApprovedLevel { get; set; } = 0;
 
     public long? ApprovedBy { get; set; }
 

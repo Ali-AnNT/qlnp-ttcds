@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStore } from "@/store/useStore";
 import { formatDate } from "@/lib/date-utils";
@@ -9,23 +9,18 @@ import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LeaveBalanceCard } from "@/components/LeaveBalanceCard";
+import {
+  getApprovalStatusLabel,
+  getApprovalStatusColor,
+  AppRoles,
+} from "@/lib/leave-data";
+import { configApi, type ConfigDto } from "@/api/config.api";
 
 const statusLabels: Record<string, string> = {
   pending: "Chờ duyệt",
-  approved_leader: "TP đã duyệt",
-  approved_director: "BGĐ đã duyệt",
   approved: "Đã duyệt",
   rejected: "Từ chối",
   cancelled: "Đã hủy",
-};
-
-const statusColor: Record<string, string> = {
-  pending: "bg-warning/10 text-warning border-warning/30",
-  approved_leader: "bg-blue-100 text-blue-700 border-blue-300",
-  approved_director: "bg-success/10 text-success border-success/30",
-  approved: "bg-success/10 text-success border-success/30",
-  rejected: "bg-destructive/10 text-destructive border-destructive/30",
-  cancelled: "bg-muted text-muted-foreground",
 };
 
 const DashboardPage = () => {
@@ -35,6 +30,13 @@ const DashboardPage = () => {
   const leaveBalances = useStore((s) => s.leaveBalances);
   const loadData = useStore((s) => s.loadData);
   const [loading, setLoading] = useState(true);
+  const [approvalConfigs, setApprovalConfigs] = useState<ConfigDto[]>([]);
+
+  useEffect(() => {
+    configApi.get().then(({ data }) => {
+      if (data) setApprovalConfigs(data);
+    });
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -42,31 +44,70 @@ const DashboardPage = () => {
   }, []);
 
   const currentYear = new Date().getFullYear();
-  const myBalances = leaveBalances
-    .filter((b) => b.userId === user?.userId && b.year === currentYear);
+  const myBalances = leaveBalances.filter(
+    (b) => b.userId === user?.userId && b.year === currentYear,
+  );
 
   const myRequests = leaveRequests.filter((r) => r.userId === user?.userId);
   const pendingApproval = leaveRequests.filter((r) => r.status === "pending");
-  const approvedCount = myRequests.filter((r) => r.status === "approved_leader" || r.status === "approved").length;
+  const approvedCount = myRequests.filter(
+    (r) => r.status === "approved",
+  ).length;
   const totalDaysUsed = myRequests
-    .filter((r) => r.status === "approved_leader" || r.status === "approved")
+    .filter((r) => r.status === "approved")
     .reduce((s, r) => s + r.totalDays, 0);
+
+  const maxLevelByType = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const c of approvalConfigs) {
+      const current = map.get(c.leaveTypeId) ?? 0;
+      if (c.approvalLevel > current) map.set(c.leaveTypeId, c.approvalLevel);
+    }
+    return map;
+  }, [approvalConfigs]);
   const remainingDays = myBalances.reduce((s, b) => s + b.remainingDays, 0);
 
   const metrics = [
-    { label: "Ngày phép còn lại", value: remainingDays, icon: CalendarDays, color: "text-accent" },
-    { label: "Đơn đang chờ duyệt", value: user?.role === "CB.PCM" ? myRequests.filter((r) => r.status === "pending").length : pendingApproval.length, icon: Clock, color: "text-warning" },
-    { label: "Đơn đã duyệt", value: approvedCount, icon: CheckCircle, color: "text-success" },
-    { label: "Tổng ngày đã nghỉ", value: totalDaysUsed, icon: FileText, color: "text-info" },
+    {
+      label: "Ngày phép còn lại",
+      value: remainingDays,
+      icon: CalendarDays,
+      color: "text-accent",
+    },
+    {
+      label: "Đơn đang chờ duyệt",
+      value:
+        user?.role === AppRoles.Staff
+          ? myRequests.filter((r) => r.status === "pending").length
+          : pendingApproval.length,
+      icon: Clock,
+      color: "text-warning",
+    },
+    {
+      label: "Đơn đã duyệt",
+      value: approvedCount,
+      icon: CheckCircle,
+      color: "text-success",
+    },
+    {
+      label: "Tổng ngày đã nghỉ",
+      value: totalDaysUsed,
+      icon: FileText,
+      color: "text-info",
+    },
   ];
 
-  const recentRequests = (user?.role === "CB.PCM" ? myRequests : leaveRequests).slice(0, 8);
+  const recentRequests = (
+    user?.role === AppRoles.Staff ? myRequests : leaveRequests
+  ).slice(0, 8);
 
   return (
     <div className="space-y-6">
       <div className="bg-card rounded-lg border p-5">
         <h1 className="text-xl font-bold">Xin chào, {user?.fullName}!</h1>
-        <p className="text-sm text-muted-foreground mt-1">{user?.userName} • {user?.role}</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          {user?.userName} • {user?.role}
+        </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -85,7 +126,7 @@ const DashboardPage = () => {
         ))}
       </div>
 
-      {!loading && myBalances.length > 0 && (
+      {/* {!loading && myBalances.length > 0 && (
         <div>
           <h2 className="text-base font-semibold mb-3">Chi tiết ngày phép ({currentYear})</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -102,16 +143,28 @@ const DashboardPage = () => {
             ))}
           </div>
         </div>
-      )}
+      )} */}
 
       <div className="flex flex-wrap gap-2">
-        {(user?.role === "CB.PCM" || user?.role === "LD.PCM") && (
-          <Link to="/leave/new"><Button className="bg-accent hover:bg-accent/90 text-accent-foreground">Tạo đơn nghỉ phép</Button></Link>
+        {(user?.role === AppRoles.Staff || user?.role === AppRoles.Leader) && (
+          <Link to="/leave/new">
+            <Button className="bg-accent hover:bg-accent/90 text-accent-foreground">
+              Tạo đơn nghỉ phép
+            </Button>
+          </Link>
         )}
-        {(user?.role === "LD.PCM" || user?.role === "GD.PGD") && (
-          <Link to="/approval"><Button variant="outline">Phê duyệt đơn ({pendingApproval.length})</Button></Link>
+        {(user?.role === AppRoles.Leader ||
+          user?.role === AppRoles.Director ||
+          user?.role === AppRoles.Admin) && (
+          <Link to="/approval">
+            <Button variant="outline">
+              Phê duyệt đơn ({pendingApproval.length})
+            </Button>
+          </Link>
         )}
-        <Link to="/calendar"><Button variant="outline">Xem lịch nghỉ phép</Button></Link>
+        <Link to="/calendar">
+          <Button variant="outline">Xem lịch nghỉ phép</Button>
+        </Link>
       </div>
 
       <Card>
@@ -123,18 +176,43 @@ const DashboardPage = () => {
             {recentRequests.map((r) => {
               const lt = leaveTypes.find((t) => t.id === r.leaveTypeId);
               return (
-                <div key={r.id} className="flex items-center justify-between py-2 border-b last:border-0 text-sm">
+                <div
+                  key={r.id}
+                  className="flex items-center justify-between py-2 border-b last:border-0 text-sm"
+                >
                   <div className="flex-1 min-w-0">
                     <span className="font-medium">{r.userName}</span>
-                    <span className="text-muted-foreground"> — {lt?.name}: {formatDate(r.startDate)} → {formatDate(r.endDate)} ({r.totalDays} ngày)</span>
+                    <span className="text-muted-foreground">
+                      {" "}
+                      — {lt?.name}: {formatDate(r.startDate)} →{" "}
+                      {formatDate(r.endDate)} ({r.totalDays} ngày)
+                    </span>
                   </div>
-                  <Badge className={cn("text-[11px] ml-2 shrink-0", statusColor[r.status])} variant="outline">
-                    {statusLabels[r.status] || r.status}
+                  <Badge
+                    className={cn(
+                      "text-[11px] ml-2 shrink-0",
+                      getApprovalStatusColor(
+                        r.status,
+                        r.approvedLevel,
+                        maxLevelByType.get(r.leaveTypeId) ?? 1,
+                      ),
+                    )}
+                    variant="outline"
+                  >
+                    {getApprovalStatusLabel(
+                      r.status,
+                      r.approvedLevel,
+                      maxLevelByType.get(r.leaveTypeId) ?? 1,
+                    )}
                   </Badge>
                 </div>
               );
             })}
-            {recentRequests.length === 0 && <p className="text-center text-muted-foreground py-4">Chưa có hoạt động</p>}
+            {recentRequests.length === 0 && (
+              <p className="text-center text-muted-foreground py-4">
+                Chưa có hoạt động
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>

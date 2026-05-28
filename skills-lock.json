@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "dotnet-vsa": {
+      "source": "hvantoan/claude-skillpack",
+      "sourceType": "github",
+      "skillPath": "skills/dotnet-vsa/SKILL.md",
+      "computedHash": "e6630299f1f640058e740edbdebd6208a6325659fdcf9e13a46899ae5d907a49"
+    }
+  }
+}

@@ -1,10 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace QLNP.Api.Entities;
 
-public partial class UserMaster
-{
+public partial class UserMaster {
     public long UserMasterId { get; set; }
 
     public string? UserName { get; set; }

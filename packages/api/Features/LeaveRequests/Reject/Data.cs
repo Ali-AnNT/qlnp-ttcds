@@ -4,8 +4,7 @@ using QLNP.Api.Entities;
 
 namespace QLNP.Api.Features.LeaveRequests.Reject;
 
-internal sealed class Data
-{
+internal sealed class Data {
     private readonly AppDbContext _db;
 
     public Data(AppDbContext db) => _db = db;
@@ -16,12 +15,10 @@ internal sealed class Data
             .Include(lr => lr.LeaveType)
             .FirstOrDefaultAsync(lr => lr.Id == id, ct);
 
-    public async Task<List<int>> GetApprovalLevelsAsync(long leaveTypeId, CancellationToken ct) =>
+    public async Task<List<LeaveConfig>> GetApprovalConfigsAsync(long leaveTypeId, CancellationToken ct) =>
         await _db.LeaveConfigs
             .Where(c => c.LeaveTypeId == leaveTypeId)
-            .Select(c => c.ApprovalLevel)
-            .Distinct()
-            .OrderBy(l => l)
+            .OrderBy(c => c.ApprovalLevel)
             .ToListAsync(ct);
 
     public async Task SaveAsync(CancellationToken ct) =>

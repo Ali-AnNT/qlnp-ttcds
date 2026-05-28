@@ -3,8 +3,7 @@ using QLNP.Api.Data;
 
 namespace QLNP.Api.Features.LeaveRequests.My;
 
-internal sealed class Data
-{
+internal sealed class Data {
     private readonly AppDbContext _db;
 
     public Data(AppDbContext db) => _db = db;
@@ -21,7 +20,7 @@ internal sealed class Data
                 lr.User.DonVi != null ? lr.User.DonVi.TenDonVi ?? "" : "",
                 lr.LeaveTypeId, lr.LeaveType.Name,
                 lr.StartDate, lr.EndDate, lr.TotalDays,
-                lr.Reason, lr.Status, lr.RequestedApproverId,
+                lr.Reason, lr.Status, lr.ApprovedLevel, lr.RequestedApproverId,
                 lr.ApprovedBy, lr.ApprovedAt, lr.RejectedReason, lr.CreatedAt, lr.UpdatedAt))
             .ToListAsync(ct);
 }

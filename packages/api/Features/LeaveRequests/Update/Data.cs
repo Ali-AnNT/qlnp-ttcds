@@ -4,8 +4,7 @@ using QLNP.Api.Entities;
 
 namespace QLNP.Api.Features.LeaveRequests.Update;
 
-internal sealed class Data
-{
+internal sealed class Data {
     private readonly AppDbContext _db;
 
     public Data(AppDbContext db) => _db = db;
@@ -22,7 +21,7 @@ internal sealed class Data
             .AnyAsync(lr =>
                 lr.Id != excludeId &&
                 lr.UserId == userId &&
-                (lr.Status == "approved_leader" || lr.Status == "approved") &&
+                lr.Status == "approved" &&
                 lr.StartDate <= end &&
                 lr.EndDate >= start, ct);
 

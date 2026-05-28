@@ -58,34 +58,34 @@
 | **ID** | UC27 |
 | **Tên** | Phê duyệt / từ chối đơn nghỉ phép |
 | **Tác nhân** | LD.PCM, GD.PGD |
-| **Mục tiêu** | Duyệt hoặc từ chối đơn nghỉ phép — theo cấu hình 1 hoặc 2 cấp duyệt cho mỗi loại phép |
+| **Mục tiêu** | Duyệt hoặc từ chối đơn nghỉ phép — theo cấu hình N cấp duyệt (1-5) cho mỗi loại phép |
 | **Trạng thái** | ✅ implemented |
 
 ### KS chính (Main Success Scenario)
 
 1. LD.PCM hoặc GD.PGD mở trang `/approval`
-2. Hệ thống hiển thị danh sách đơn ở trạng thái pending
+2. Hệ thống hiển thị danh sách đơn ở trạng thái pending (hoặc pending với ApprovedLevel > 0)
 3. Hệ thống xác định cấp phê duyệt từ LeaveConfig.ApprovalLevel của loại nghỉ phép:
-   - **1 cấp** (chỉ ApprovalLevel=1): LD.PCM cùng phòng hoặc GD.PGD duyệt → status = approved
-   - **2 cấp** (ApprovalLevel=1 + ApprovalLevel=2): LD.PCM cùng phòng duyệt → status = approved_leader, sau đó GD.PGD duyệt → status = approved
-4. Khi duyệt → tự động trừ ngày phép (UsedDays += TotalDays)
+   - **1 cấp** (ApprovalLevel=1): LD.PCM cùng phòng hoặc GD.PGD duyệt → status = approved, trừ ngày phép
+   - **2+ cấp** (ApprovalLevel=1..N): Mỗi cấp duyệt tăng ApprovedLevel lên 1. Khi ApprovedLevel == maxLevel → status = approved, trừ ngày phép
+   - OR logic: nhiều vai trò có thể được cấu hình ở cùng 1 cấp, bất kỳ vai trò nào cũng có thể duyệt
+4. Khi duyệt ở cấp cuối → tự động trừ ngày phép (UsedDays += TotalDays)
 5. Hệ thống ghi audit log, thông báo kết quả
 
 ### KS phụ (Alternative Flows)
 
-- **3a. LD.PCM từ chối đơn cấp 1**: Nhập lý do → status = rejected
-- **3b. GD.PGD từ chối đơn cấp 2**: Nhập lý do → status = rejected
-- **3c. LD.PCM duyệt đơn ngoài phòng**: Hệ thống trả về 403 Forbidden
-- **3d. LD.PCM duyệt đơn của chính mình**: Hệ thống trả về 403 Forbidden
-- **3e. Vượt định mức ngày phép**: Hệ thống báo lỗi 422 khi cập nhật balance
+- **3a. Từ chối ở bất kỳ cấp**: Nhập lý do → status = rejected
+- **3b. LD.PCM duyệt đơn ngoài phòng**: Hệ thống trả về 403 Forbidden
+- **3c. LD.PCM duyệt đơn của chính mình**: Hệ thống trả về 403 Forbidden
+- **3d. Vượt định mức ngày phép**: Hệ thống báo lỗi 422 khi cập nhật balance
 
 ### Business Rules
 
-- **BR-06**: Cấp phê duyệt được xác định bởi LeaveConfig.ApprovalLevel theo loại nghỉ phép
-- **BR-07**: Cấp 1 — LD.PCM duyệt đơn của nhân viên cùng phòng (PhongBanId match), không duyệt đơn của chính mình
-- **BR-08**: Cấp 2 — GD.PGD duyệt đơn bất kỳ, không kiểm tra phòng
-- **BR-09**: Khi duyệt (bất kỳ cấp) → tự động trừ ngày phép (UpsertBalanceAsync)
-- **BR-10**: State machine: pending → approved_leader | approved | rejected; approved_leader → approved | rejected | cancelled; approved → cancelled (hoàn trả UsedDays); pending → cancelled
+- **BR-06**: Cấp phê duyệt được xác định bởi LeaveConfig.ApprovalLevel theo loại nghỉ phép (1-5 cấp)
+- **BR-07**: LD.PCM (QLNP.LD.PCM) duyệt đơn của nhân viên cùng phòng (PhongBanId match), không duyệt đơn của chính mình — scope check
+- **BR-08**: GD.PGD duyệt đơn bất kỳ, không kiểm tra phòng — không giới hạn scope
+- **BR-09**: Trừ ngày phép (UpsertBalanceAsync) chỉ khi duyệt ở cấp cuối cùng (ApprovedLevel == maxLevel)
+- **BR-10**: State machine: pending (ApprovedLevel=0) → pending (ApprovedLevel=1..maxLevel-1) → approved (ApprovedLevel=maxLevel) | rejected; cancelled từ pending hoặc pending (ApprovedLevel < maxLevel)
 
 ### Trace
 
@@ -204,7 +204,7 @@
 
 - **4a. Xóa loại phép đang được sử dụng**: Hệ thống báo lỗi (FK constraint từ LeaveRequests/LeaveBalances)
 - **4b. Mã loại phép (Code) là duy nhất**: Validate unique constraint
-- **5a. Cấu hình cấp phê duyệt**: 1 cấp (chỉ ApprovalLevel=1) → LD.PCM/GD.PGD duyệt một lần → approved. 2 cấp (ApprovalLevel=1 + 2) → LD.PCM duyệt → approved_leader, GD.PGD duyệt → approved
+- **5a. Cấu hình cấp phê duyệt**: 1 cấp (ApprovalLevel=1) → duyệt một lần → approved. N cấp (1-5) → mỗi cấp tăng ApprovedLevel, cấp cuối → approved. OR logic: nhiều vai trò ở cùng cấp
 
 ### Business Rules
 
@@ -314,7 +314,7 @@
 | UC | Tên | Trạng thái | Ghi chú |
 |----|-----|-----------|---------|
 | UC26 | Gửi đơn xin nghỉ phép | ✅ implemented | Create/Update/Cancel/My endpoints |
-| UC27 | Phê duyệt / từ chối | ✅ implemented | Config-driven 1/2 cấp duyệt, status approved_leader/approved |
+| UC27 | Phê duyệt / từ chối | ✅ implemented | Config-driven N-level approval (1-5 cấp), ApprovedLevel tracking, OR logic per level |
 | UC28 | Theo dõi đơn nghỉ phép | ✅ implemented | My/List/Calendar + LeaveBalances |
 | UC29 | Tổng hợp lịch nghỉ phép | ⚠️ partial | Page exists, no dedicated API |
 | UC30 | Cấu hình quy định | ✅ implemented | Config CRUD + LeaveTypes CRUD |

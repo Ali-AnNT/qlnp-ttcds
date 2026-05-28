@@ -13,6 +13,7 @@ internal sealed record LeaveRequestDto(
     decimal TotalDays,
     string? Reason,
     string Status,
+    int ApprovedLevel,
     long? RequestedApproverId,
     long? ApprovedBy,
     DateTime? ApprovedAt,

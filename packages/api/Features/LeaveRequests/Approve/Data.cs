@@ -4,8 +4,7 @@ using QLNP.Api.Entities;
 
 namespace QLNP.Api.Features.LeaveRequests.Approve;
 
-internal sealed class Data
-{
+internal sealed class Data {
     private readonly AppDbContext _db;
 
     public Data(AppDbContext db) => _db = db;
@@ -16,17 +15,14 @@ internal sealed class Data
             .Include(lr => lr.LeaveType)
             .FirstOrDefaultAsync(lr => lr.Id == id, ct);
 
-    public async Task<List<int>> GetApprovalLevelsAsync(long leaveTypeId, CancellationToken ct) =>
+    public async Task<List<LeaveConfig>> GetApprovalConfigsAsync(long leaveTypeId, CancellationToken ct) =>
         await _db.LeaveConfigs
             .Where(c => c.LeaveTypeId == leaveTypeId)
-            .Select(c => c.ApprovalLevel)
-            .Distinct()
-            .OrderBy(l => l)
+            .OrderBy(c => c.ApprovalLevel)
             .ToListAsync(ct);
 
     // Returns false if UsedDays would exceed TotalDays
-    public async Task<bool> UpsertBalanceAsync(LeaveRequest entity, CancellationToken ct)
-    {
+    public async Task<bool> UpsertBalanceAsync(LeaveRequest entity, CancellationToken ct) {
         var year = entity.StartDate.Year;
         var balance = await _db.LeaveBalances
             .FirstOrDefaultAsync(b =>
@@ -34,10 +30,8 @@ internal sealed class Data
                 b.LeaveTypeId == entity.LeaveTypeId &&
                 b.Year == year, ct);
 
-        if (balance is null)
-        {
-            balance = new LeaveBalance
-            {
+        if (balance is null) {
+            balance = new LeaveBalance {
                 UserId = entity.UserId,
                 LeaveTypeId = entity.LeaveTypeId,
                 Year = year,

@@ -3,10 +3,8 @@ using QLNP.Api.Entities;
 
 namespace QLNP.Api.Features.LeaveRequests.Create;
 
-internal sealed class Mapper : Mapper<Request, LeaveRequestDto, LeaveRequest>
-{
-    public override LeaveRequest ToEntity(Request r) => new()
-    {
+internal sealed class Mapper : Mapper<Request, LeaveRequestDto, LeaveRequest> {
+    public override LeaveRequest ToEntity(Request r) => new() {
         LeaveTypeId = r.LeaveTypeId,
         StartDate = r.StartDate,
         EndDate = r.EndDate,

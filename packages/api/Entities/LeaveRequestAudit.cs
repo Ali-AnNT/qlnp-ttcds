@@ -3,8 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace QLNP.Api.Entities;
 
-public class LeaveRequestAudit
-{
+public class LeaveRequestAudit {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public long Id { get; set; }

@@ -2,7 +2,6 @@ using QLNP.Api.Middleware;
 
 namespace QLNP.Api.Auth;
 
-public interface ICurrentUserProvider
-{
+public interface ICurrentUserProvider {
     CurrentUser GetCurrentUser();
 }

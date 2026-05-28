@@ -5,6 +5,7 @@ using System.Text;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using QLNP.Api.Auth;
 using QLNP.Api.Data;
 
 namespace QLNP.Api.Features.Auth.DevLogin;
@@ -13,41 +14,35 @@ internal sealed record Request(string UserName);
 
 internal sealed record Response(string Token, string FullName, string Role);
 
-internal sealed class Endpoint : Endpoint<Request, Response>
-{
+internal sealed class Endpoint : Endpoint<Request, Response> {
     private readonly AppDbContext _db;
     private readonly IConfiguration _config;
 
-    public Endpoint(AppDbContext db, IConfiguration config)
-    {
+    public Endpoint(AppDbContext db, IConfiguration config) {
         _db = db;
         _config = config;
     }
 
-    public override void Configure()
-    {
+    public override void Configure() {
         Post("/api/auth/dev/login");
         AllowAnonymous();
         Description(x => x.WithTags("Auth Dev"));
     }
 
-    public override async Task HandleAsync(Request req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(Request req, CancellationToken ct) {
         // Runtime guard: only when DevMode.Enabled is true
         var devMode = _config.GetSection("DevMode").GetValue<bool>("Enabled");
-        if (!devMode)
-        {
+        if (!devMode) {
             await Send.NotFoundAsync(ct);
             return;
         }
 
-        // Hardcoded role map for dev test accounts — no UserRoles/service dependency
-        var devRoles = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["quantri"] = "QLNP.QTHT",
-            ["trinh.vo"] = "QLNP.GD.PGD",
-            ["nvhau.ttcds"] = "QLNP.LD.PCM",
-            ["htquy.ttcds"] = "QLNP.CB.PCM",
+        // Dev role map using centralized constants
+        var devRoles = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) {
+            ["quantri"] = AppRoles.Admin,
+            ["trinh.vo"] = AppRoles.Director,
+            ["nvhau.ttcds"] = AppRoles.Leader,
+            ["htquy.ttcds"] = AppRoles.Staff,
         };
 
         if (!devRoles.TryGetValue(req.UserName, out var role))

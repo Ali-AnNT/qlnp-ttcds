@@ -172,8 +172,8 @@ namespace QLNP.Api.Data.Migrations
 
                     b.Property<string>("ApproverRole")
                         .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<long>("LeaveTypeId")
                         .HasColumnType("bigint");
@@ -185,6 +185,71 @@ namespace QLNP.Api.Data.Migrations
                     b.ToTable("LeaveConfigs", t =>
                         {
                             t.HasCheckConstraint("CK_LeaveConfig_ApprovalLevel", "ApprovalLevel >= 1");
+                        });
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1L,
+                            ApprovalLevel = 1,
+                            ApproverRole = "QLNP.LD.PCM",
+                            LeaveTypeId = 1L
+                        },
+                        new
+                        {
+                            Id = 2L,
+                            ApprovalLevel = 2,
+                            ApproverRole = "QLNP.GD.PGD",
+                            LeaveTypeId = 1L
+                        },
+                        new
+                        {
+                            Id = 3L,
+                            ApprovalLevel = 1,
+                            ApproverRole = "QLNP.LD.PCM",
+                            LeaveTypeId = 2L
+                        },
+                        new
+                        {
+                            Id = 4L,
+                            ApprovalLevel = 2,
+                            ApproverRole = "QLNP.GD.PGD",
+                            LeaveTypeId = 2L
+                        },
+                        new
+                        {
+                            Id = 5L,
+                            ApprovalLevel = 1,
+                            ApproverRole = "QLNP.LD.PCM",
+                            LeaveTypeId = 3L
+                        },
+                        new
+                        {
+                            Id = 6L,
+                            ApprovalLevel = 2,
+                            ApproverRole = "QLNP.GD.PGD",
+                            LeaveTypeId = 3L
+                        },
+                        new
+                        {
+                            Id = 7L,
+                            ApprovalLevel = 1,
+                            ApproverRole = "QLNP.LD.PCM",
+                            LeaveTypeId = 4L
+                        },
+                        new
+                        {
+                            Id = 8L,
+                            ApprovalLevel = 1,
+                            ApproverRole = "QLNP.LD.PCM",
+                            LeaveTypeId = 5L
+                        },
+                        new
+                        {
+                            Id = 9L,
+                            ApprovalLevel = 2,
+                            ApproverRole = "QLNP.GD.PGD",
+                            LeaveTypeId = 5L
                         });
                 });
 
@@ -201,6 +266,11 @@ namespace QLNP.Api.Data.Migrations
 
                     b.Property<long?>("ApprovedBy")
                         .HasColumnType("bigint");
+
+                    b.Property<int>("ApprovedLevel")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()

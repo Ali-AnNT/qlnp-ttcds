@@ -4,11 +4,9 @@ using QLNP.Api.Entities;
 
 namespace QLNP.Api.Features.Reports.Export;
 
-internal sealed class Data(AppDbContext db)
-{
+internal sealed class Data(AppDbContext db) {
     public async Task<List<LeaveRequest>> GetLeaveRequestsAsync(
-        string? status, DateOnly? from, DateOnly? to, CancellationToken ct)
-    {
+        string? status, DateOnly? from, DateOnly? to, CancellationToken ct) {
         var q = db.LeaveRequests
             .Include(r => r.User)
                 .ThenInclude(u => u!.DonVi)

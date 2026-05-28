@@ -13,10 +13,8 @@ internal sealed record Request(
     long? RequestedApproverId
 );
 
-internal sealed class Validator : Validator<Request>
-{
-    public Validator(AppDbContext db)
-    {
+internal sealed class Validator : Validator<Request> {
+    public Validator(AppDbContext db) {
         RuleFor(x => x.LeaveTypeId)
             .MustAsync(async (id, ct) =>
                 await db.LeaveTypes.AnyAsync(t => t.Id == id && t.IsActive, ct))

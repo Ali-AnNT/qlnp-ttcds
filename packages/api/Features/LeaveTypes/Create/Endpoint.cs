@@ -1,31 +1,27 @@
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
+using QLNP.Api.Auth;
 
 namespace QLNP.Api.Features.LeaveTypes.Create;
 
-internal sealed class Endpoint : Endpoint<Request, LeaveTypeDto, Mapper>
-{
+internal sealed class Endpoint : Endpoint<Request, LeaveTypeDto, Mapper> {
     private readonly Data _data;
 
     public Endpoint(Data data) => _data = data;
 
-    public override void Configure()
-    {
+    public override void Configure() {
         Post("/api/leave-types");
-        Roles("QLNP.QTHT");
+        Roles(AppRoles.Admin);
         Tags("Leave Types");
     }
 
-    public override async Task HandleAsync(Request r, CancellationToken ct)
-    {
+    public override async Task HandleAsync(Request r, CancellationToken ct) {
         var entity = Map.ToEntity(r);
 
-        try
-        {
+        try {
             await _data.CreateAsync(entity, ct);
         }
-        catch (DbUpdateException)
-        {
+        catch (DbUpdateException) {
             AddError("Không thể tạo loại nghỉ (mã có thể đã tồn tại)");
             await Send.ErrorsAsync(409, ct);
             return;

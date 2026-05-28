@@ -9,7 +9,7 @@ import { CalendarDays, Loader2, LogIn } from "lucide-react";
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === "true";
 
 const DEV_USERS = [
-  { username: "quantri", label: "quantri (QTHT)" },
+  { username: "quantri", label: "quantri (QTHT) — Quản trị" },
   { username: "trinh.vo", label: "trinh.vo (GD.PGD) — Lãnh đạo đơn vị" },
   { username: "nvhau.ttcds", label: "nvhau.ttcds (LD.PCM) — Lãnh đạo phòng" },
   { username: "htquy.ttcds", label: "htquy.ttcds (CB.PCM) — Chuyên viên" },

@@ -8,7 +8,7 @@
 | **Organization** | Trung Tam Chuyen Doi So (TTCDS) |
 | **Domain** | Quan ly nghi phep noi bo |
 | **Platform** | Web application (SPA) |
-| **Current Version** | 0.3.2 (backend/API readiness in progress) |
+| **Current Version** | 0.4.0 (configurable N-level approval) |
 
 ## 2. Purpose
 
@@ -39,10 +39,13 @@ Xay dung he thong noi bo thay the quy trinh xin nghi phep thu cong (giay to, ema
 - Huy don
 
 ### 4.2 Phe Duyet Don Nghi Phep (LD.PCM, GD.PGD)
-- Phe duyet 2 cap (configurable): Lanh dao phong -> Giam doc
+- Phe duyet N cap (configurable 1-5 cap moi loai phep): Lanh dao phong -> Giam doc (hoac nhieu cap tuy cau hinh)
+- OR logic: bat ky vai tro nao duoc cau hinh tai cap do deu co the phe duyet
+- Scope: LD.PCM chi duyet don trong cung phong ban (khong duyet don cua minh); GD.PGD khong gioi han phong ban
 - Xem chi tiet don: nhan vien, loai phep, thoi gian, ly do
 - Phe duyet / tu choi kem ly do
 - Bang dieu khien danh cho nguoi phe duyet hien thi cac don cho xu ly
+- Hien thi tien do phe duyet (VD: "TP da duyet (cap 1/2)")
 
 ### 4.3 Theo Doi Lich Nghi Phep (All Roles)
 - Lich dang thang (calendar grid): hien thi ngay nghi cua tung nhan vien
@@ -71,7 +74,7 @@ Xay dung he thong noi bo thay the quy trinh xin nghi phep thu cong (giay to, ema
 ### 4.7 Cau Hinh He Thong (QTHT)
 - Tab Cau hinh chung: chu ky nam, so ngay mac dinh theo vai tro
 - Tab Loai nghi phep (CRUD): ten, ma, so ngay mac dinh, mo ta
-- Tab Cau hinh phe duyet (CRUD): loai phep + cap phe duyet + vai tro nguoi duyet
+- Tab Cau hinh phe duyet (CRUD): loai phep + cap phe duyet (1-5) + vai tro nguoi duyet
 
 ## 5. Non-Functional Requirements
 

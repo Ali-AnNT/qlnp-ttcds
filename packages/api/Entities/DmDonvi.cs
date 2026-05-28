@@ -1,10 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace QLNP.Api.Entities;
 
-public partial class DmDonvi
-{
+public partial class DmDonvi {
     public long DonViId { get; set; }
 
     public string? MaDonVi { get; set; }

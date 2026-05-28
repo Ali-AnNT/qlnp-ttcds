@@ -4,19 +4,16 @@ using QLNP.Api.Data;
 
 namespace QLNP.Api.Features.LeaveRequests.List;
 
-internal sealed class Data
-{
+internal sealed class Data {
     private readonly AppDbContext _db;
     private readonly ICurrentUserProvider _currentUser;
 
-    public Data(AppDbContext db, ICurrentUserProvider currentUser)
-    {
+    public Data(AppDbContext db, ICurrentUserProvider currentUser) {
         _db = db;
         _currentUser = currentUser;
     }
 
-    public async Task<List<LeaveRequestDto>> GetAsync(CancellationToken ct)
-    {
+    public async Task<List<LeaveRequestDto>> GetAsync(CancellationToken ct) {
         var user = _currentUser.GetCurrentUser();
         var query = _db.LeaveRequests
             .Include(lr => lr.User)
@@ -24,16 +21,13 @@ internal sealed class Data
             .Include(lr => lr.LeaveType)
             .AsQueryable();
 
-        if (user.Roles.Contains("QLNP.GD.PGD") || user.Roles.Contains("QLNP.QTHT"))
-        {
+        if (user.Roles.Contains(AppRoles.Director) || user.Roles.Contains(AppRoles.Admin)) {
             // No filter
         }
-        else if (user.Roles.Contains("QLNP.LD.PCM"))
-        {
+        else if (user.Roles.Contains(AppRoles.Leader)) {
             query = query.Where(lr => lr.User.PhongBanId == user.PhongBanId);
         }
-        else
-        {
+        else {
             query = query.Where(lr => lr.UserId == user.UserId);
         }
 
@@ -45,7 +39,7 @@ internal sealed class Data
                 lr.User.DonVi != null ? lr.User.DonVi.TenDonVi ?? "" : "",
                 lr.LeaveTypeId, lr.LeaveType.Name,
                 lr.StartDate, lr.EndDate, lr.TotalDays,
-                lr.Reason, lr.Status, lr.RequestedApproverId,
+                lr.Reason, lr.Status, lr.ApprovedLevel, lr.RequestedApproverId,
                 lr.ApprovedBy, lr.ApprovedAt, lr.RejectedReason, lr.CreatedAt, lr.UpdatedAt))
             .ToListAsync(ct);
     }

@@ -1,15 +1,14 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using QLNP.Api.Auth;
 using QLNP.Api.Entities;
 
 namespace QLNP.Api.Data;
 
-public partial class AppDbContext : DbContext
-{
+public partial class AppDbContext : DbContext {
     public AppDbContext(DbContextOptions<AppDbContext> options)
-        : base(options)
-    {
+        : base(options) {
     }
 
     // System tables (scaffolded, excluded from migrations)
@@ -23,12 +22,10 @@ public partial class AppDbContext : DbContext
     public DbSet<LeaveConfig> LeaveConfigs { get; set; }
     public DbSet<LeaveRequestAudit> LeaveRequestAudits { get; set; }
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
+    protected override void OnModelCreating(ModelBuilder modelBuilder) {
         // ---- System tables (read-only, excluded from migrations) ----
 
-        modelBuilder.Entity<DmDonvi>(entity =>
-        {
+        modelBuilder.Entity<DmDonvi>(entity => {
             entity.HasKey(e => e.DonViId)
                 .HasName("PK__DM_DONVI__1CB88576D84B4D4C")
                 .IsClustered(false);
@@ -59,8 +56,7 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.Website).HasMaxLength(100);
         });
 
-        modelBuilder.Entity<UserMaster>(entity =>
-        {
+        modelBuilder.Entity<UserMaster>(entity => {
             entity.HasKey(e => e.UserMasterId).HasName("PK__USER_MAS__CA9BC5E270CE69C2");
 
             entity.ToTable("USER_MASTER", t => t.ExcludeFromMigrations());
@@ -89,13 +85,11 @@ public partial class AppDbContext : DbContext
 
         // ---- QLNP tables (Code First) ----
 
-        modelBuilder.Entity<LeaveType>(entity =>
-        {
+        modelBuilder.Entity<LeaveType>(entity => {
             entity.HasIndex(e => e.Code).IsUnique();
         });
 
-        modelBuilder.Entity<LeaveBalance>(entity =>
-        {
+        modelBuilder.Entity<LeaveBalance>(entity => {
             entity.HasIndex(e => new { e.UserId, e.LeaveTypeId, e.Year }).IsUnique();
             entity.HasOne(e => e.User)
                 .WithMany()
@@ -105,8 +99,7 @@ public partial class AppDbContext : DbContext
                 .HasForeignKey(e => e.LeaveTypeId);
         });
 
-        modelBuilder.Entity<LeaveRequest>(entity =>
-        {
+        modelBuilder.Entity<LeaveRequest>(entity => {
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.UserId);
             entity.HasOne(e => e.User)
@@ -124,18 +117,17 @@ public partial class AppDbContext : DbContext
                 .HasForeignKey(e => e.RequestedApproverId)
                 .OnDelete(DeleteBehavior.Restrict);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
+            entity.Property(e => e.ApprovedLevel).HasDefaultValue(0);
         });
 
-        modelBuilder.Entity<LeaveConfig>(entity =>
-        {
+        modelBuilder.Entity<LeaveConfig>(entity => {
             entity.HasOne(e => e.LeaveType)
                 .WithMany(lt => lt.Configs)
                 .HasForeignKey(e => e.LeaveTypeId);
             entity.ToTable(t => t.HasCheckConstraint("CK_LeaveConfig_ApprovalLevel", "ApprovalLevel >= 1"));
         });
 
-        modelBuilder.Entity<LeaveRequestAudit>(entity =>
-        {
+        modelBuilder.Entity<LeaveRequestAudit>(entity => {
             entity.HasIndex(e => e.LeaveRequestId);
             entity.HasOne(e => e.LeaveRequest)
                 .WithMany(lr => lr.Audits)
@@ -156,6 +148,19 @@ public partial class AppDbContext : DbContext
             new LeaveType { Id = 3, Name = "Nghỉ việc riêng", Code = "NVR", DefaultDays = 3, Description = "Nghỉ việc riêng có lương", IsActive = true },
             new LeaveType { Id = 4, Name = "Nghỉ không lương", Code = "NKL", DefaultDays = 0, Description = "Nghỉ không hưởng lương", IsActive = true },
             new LeaveType { Id = 5, Name = "Nghỉ thai sản", Code = "NTS", DefaultDays = 180, Description = "Nghỉ thai sản", IsActive = true }
+        );
+
+        // Initial baseline only — runtime updates via Config/Update endpoint (ReplaceAllAsync) will replace these rows
+        modelBuilder.Entity<LeaveConfig>().HasData(
+            new LeaveConfig { Id = 1, LeaveTypeId = 1, ApprovalLevel = 1, ApproverRole = AppRoles.Leader },
+            new LeaveConfig { Id = 2, LeaveTypeId = 1, ApprovalLevel = 2, ApproverRole = AppRoles.Director },
+            new LeaveConfig { Id = 3, LeaveTypeId = 2, ApprovalLevel = 1, ApproverRole = AppRoles.Leader },
+            new LeaveConfig { Id = 4, LeaveTypeId = 2, ApprovalLevel = 2, ApproverRole = AppRoles.Director },
+            new LeaveConfig { Id = 5, LeaveTypeId = 3, ApprovalLevel = 1, ApproverRole = AppRoles.Leader },
+            new LeaveConfig { Id = 6, LeaveTypeId = 3, ApprovalLevel = 2, ApproverRole = AppRoles.Director },
+            new LeaveConfig { Id = 7, LeaveTypeId = 4, ApprovalLevel = 1, ApproverRole = AppRoles.Leader },
+            new LeaveConfig { Id = 8, LeaveTypeId = 5, ApprovalLevel = 1, ApproverRole = AppRoles.Leader },
+            new LeaveConfig { Id = 9, LeaveTypeId = 5, ApprovalLevel = 2, ApproverRole = AppRoles.Director }
         );
 
         OnModelCreatingPartial(modelBuilder);
