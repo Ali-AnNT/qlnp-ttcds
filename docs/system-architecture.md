@@ -19,21 +19,35 @@ Host Website (SSO Portal)
 ASP.NET 10 FastEndpoints API
   ├─ JWT Bearer Authentication (Issuer, Audience, SigningKey from appsettings.json)
   ├─ ICurrentUserProvider (reads ClaimsPrincipal from JWT, returns CurrentUser record)
-  ├─ Features/                     ← Vertical Slices
-  │   ├─ Auth/Me/                  MeEndpoint (implemented)
-  │   ├─ Config/Get, Update/       config endpoints implemented
-  │   ├─ Departments/List, Get/    department reference endpoints
-  │   ├─ LeaveBalances/List, My, Seed/  lazy/startup balance seeding
-  │   ├─ SystemConfigs/Get, Update/     key-value system settings (QTHT-only write)
-  │   ├─ LeaveRequests/List, Create, Update, Approve, Reject, Cancel/  ← config-driven N-level approval
-  │   │   ├─ ApprovalHelper.cs (shared logic: GetApprovalFlow, CanApproveAtLevel, GetMaxLevel, GetNextLevelRoles)
-	  │   │   ├─ LeaveRequestMapping.cs (shared DRY DTO mapping, includes ApprovedLevel)
-  │   │   └─ BusinessDayCalculator.cs (T2-T6 inclusive)
-  │   ├─ Reports/Export/           ClosedXML .xlsx export
-  │   └─ LeaveTypes/List, Create, Update, Delete/  ← Roles("QTHT")
+  ├─ Features/                     ← Vertical Slices (VSA {Action}{Role}.cs pattern)
+  │   ├─ Auth/Me/, DevLogin/       Auth endpoints
+  │   ├─ Departments/List/, Get/   department reference endpoints
+  │   ├─ LeaveBalances/List/, My/  balance endpoints + seed helpers
+  │   ├─ LeaveRequests/List, Create, Update, Approve, Reject, Cancel, My/  ← config-driven N-level approval
+  │   │   ├─ LeaveRequestMapping.cs (shared DRY DTO mapping, includes ApprovedLevel)
+  │   │   └─ LeaveRequestDto.cs (shared DTO)
+  │   ├─ LeaveTypes/List, Create, Update, Delete/  ← Roles(AppRoles.Admin)
+  │   ├─ SystemConfigs/Get, Update, GetLeaveConfigs, ReplaceLeaveConfigs/  ← system settings + approval config
+  │   └─ Reports/Export/           ClosedXML .xlsx export
+  ├─ Shared/                        ← Cross-cutting shared code
+  │   ├─ Domain/                    ← Entities, domain services, helpers
+  │   │   ├─ LeaveRequest.cs, LeaveType.cs, LeaveBalance.cs, ... (all domain entities)
+  │   │   ├─ ApprovalHelper.cs, BusinessDayCalculator.cs       (domain logic)
+  │   │   ├─ LeaveBalanceService.cs, ILeaveBalanceService.cs    (domain service)
+  │   │   └─ LeaveBalanceSeeding.cs                              (seeding logic)
+  │   ├─ Contracts/                 ← Shared response envelopes
+  │   │   ├─ Result<T>             (success/error envelope)
+  │   │   └─ PagedData<T>          (paginated list envelope)
+  │   ├─ Groups/                    ← FastEndpoints route groups
+  │   │   └─ AuthGroup, LeaveRequestGroup, LeaveTypeGroup, LeaveBalanceGroup, DepartmentGroup, SystemConfigGroup
+  │   └─ Middleware/
+  │       └─ CurrentUser.cs         (CurrentUser record)
+  ├─ Infrastructure/
+  │   └─ Auth/                      ← Auth infrastructure
+  │       ├─ ICurrentUserProvider.cs, CurrentUserProvider.cs, Roles.cs (AppRoles constants)
   ├─ Data/AppDbContext              (EF Core 9 + SQL Server)
   │   ├─ System tables: USER_MASTER, DM_DONVI (ExcludeFromMigrations)
-	  │   └─ App tables: LeaveTypes, LeaveBalances, LeaveRequests (incl. ApprovedLevel), LeaveConfigs, SystemConfigs, LeaveRequestAudits
+  │   └─ App tables: LeaveTypes, LeaveBalances, LeaveRequests (incl. ApprovedLevel), LeaveConfigs, SystemConfigs, LeaveRequestAudits
   └─ SQL Server (existing `VI_NGHIPHEP` database)
 ```
 
@@ -68,10 +82,15 @@ ASP.NET 10 FastEndpoints API
 ```
 
 **Nguyên tắc chính**:
-- Mỗi feature là một vertical slice khép kín: Endpoint + Request DTO + Response DTO + Validator + Handler logic
-- Data access qua EF Core DbContext (DI inject), không có repository layer riêng
-- Cross-cutting concerns (current user resolution, DB connection, logging) nằm trong middleware hoặc shared utilities
-- Thêm feature mới = thêm 1 folder trong Features/, không đụng đến code hiện có
+- Mỗi feature là một vertical slice khép kín: Endpoint + Request DTO + Response DTO + Validator + Mapper + Handler logic
+- VSA file naming: `{Action}{Role}.cs` pattern (e.g., `CreateLeaveRequestEndpoint.cs`, `ListLeaveRequestsEndpoint.cs`)
+- Data access qua EF Core DbContext (property injection `= null!;`), không có repository layer riêng, không có Data.cs classes
+- Domain entities in `Shared/Domain/` (namespace: `QLNP.Api.Shared.Domain`), not in `Entities/`
+- Auth infrastructure in `Infrastructure/Auth/` (namespace: `QLNP.Api.Infrastructure.Auth`), not in `Auth/`
+- Cross-cutting concerns (current user resolution, response envelopes, route groups) nằm trong `Shared/` (Contracts, Groups, Middleware)
+- Route groups in `Shared/Groups/` define URL prefixes per feature area
+- Response envelopes: `Result<T>` (success/error) and `PagedData<T>` (paginated lists) in `Shared/Contracts/`
+- Thêm feature mới = thêm endpoint files trong Features/, thêm route group trong Shared/Groups/, không đụng đến code hiện có
 
 ## Component Tree
 
@@ -133,7 +152,7 @@ sequenceDiagram
     Store-->>Component: Re-render with new state
     Component-->>User: Updated UI
 
-    Note over FE,DB: Mỗi endpoint handler dùng AppDbContext + ICurrentUserProvider qua DI injection
+    Note over FE,DB: Mỗi endpoint handler dùng AppDbContext + ICurrentUserProvider qua property injection (= null!;)
 ```
 
 ## Database ERD
@@ -216,7 +235,7 @@ erDiagram
 
 ### Seed Data
 - LeaveTypes: NPN (12 days), NO (30 days), NVR (3 days), NKL (0 days), NTS (180 days) -- seeded via `HasData` in `AppDbContext.OnModelCreating`
-- LeaveConfigs: 9 rows seeded via `HasData` establishing the initial approval-level baseline per LeaveType. This baseline is required so `MigrateLegacyStatusesAsync` can correctly calculate max approval levels per LeaveType at startup. The `Config/Update` endpoint (`ReplaceAllAsync`) can overwrite these rows at runtime.
+- LeaveConfigs: 9 rows seeded via `HasData` establishing the initial approval-level baseline per LeaveType. This baseline is required so `MigrateLegacyStatusesAsync` can correctly calculate max approval levels per LeaveType at startup. The `SystemConfigs/ReplaceLeaveConfigs` endpoint can overwrite these rows at runtime.
 
   | LeaveTypeId (Code) | ApprovalLevel | ApproverRole |
   |---------------------|---------------|--------------|
@@ -310,7 +329,7 @@ stateDiagram-v2
 - OR logic per level: any configured approver role can advance the request
 - Scope: LD.PCM can only approve requests from same department (not own); GD.PGD has no scope restriction
 - Balance deduction only on final approval (ApprovedLevel == maxLevel)
-- `ApprovalHelper.cs` provides shared logic: GetApprovalFlow, CanApproveAtLevel, GetMaxLevel, GetNextLevelRoles
+- `ApprovalHelper.cs` (in `Shared/Domain/`) provides shared logic: GetApprovalFlow, CanApproveAtLevel, GetMaxLevel, GetNextLevelRoles
 
 ## Deployment Architecture
 
@@ -350,7 +369,7 @@ graph TD
 | **EF Core** thay vì Dapper | Type-safe LINQ queries, migrations built-in, change tracking. Phù hợp khi làm việc với DB có sẵn (scaffold system tables + Code First app tables) |
 | **JWT Bearer Auth** thay vì gateway headers | SSO Portal issues JWT, app nhận qua postMessage (iframe) hoặc Authorization header. API validates JWT via symmetric key. ICurrentUserProvider reads claims → CurrentUser record. Đã bỏ CurrentUserMiddleware và gateway headers |
 | **ExcludeFromMigrations** cho system tables | USER_MASTER, DM_DONVI là các bảng có sẵn của hệ thống khác. Không được phép thay đổi schema. EF Core chỉ đọc dữ liệu |
-| **Vertical Slice Architecture** thay vì N-tier | Code tổ chức theo feature, không theo layer kỹ thuật. Thêm/sửa feature = làm việc trong 1 folder, không lan sang các layer khác → giảm coupling, tăng cohesion |
+| **Vertical Slice Architecture** thay vì N-tier | Code tổ chức theo feature, không theo layer kỹ thuật. VSA `{Action}{Role}.cs` file naming. Thêm/sửa feature = làm việc trong endpoint files, không lan sang các layer khác → giảm coupling, tăng cohesion. Property injection (`= null!;`) thay vì constructor injection; Data.cs classes eliminated |
 | Single Zustand store | Data-only state management. Auth state moved to React Context. Limited state surface area for intranet app |
 | Role-based sidebar (not route guards) | SPA UX: all routes mounted, navigation elements hidden by role. Simple and effective for intranet |
 | Business days calculation (date-fns) | Standard for government/education leave tracking |

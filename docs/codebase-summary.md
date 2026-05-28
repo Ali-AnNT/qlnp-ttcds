@@ -8,7 +8,7 @@
 React SPA with fetch-based API client, Zustand data store, AuthContext (JWT Bearer auth). UI built with shadcn/ui components on Tailwind CSS.
 
 ### Backend (packages/api)
-.NET 10 + FastEndpoints v8.1.0 + EF Core 9.0.0 + SQL Server. Vertical slice architecture. JWT Bearer authentication; ICurrentUserProvider reads claims from JWT to resolve CurrentUser.
+.NET 10 + FastEndpoints v8.1.0 + EF Core 9.0.0 + SQL Server. Vertical slice architecture (VSA) with `{Action}{Role}.cs` file naming. JWT Bearer authentication; ICurrentUserProvider reads claims from JWT to resolve CurrentUser. Property injection (`= null!;`) pattern for endpoints; no Data.cs classes.
 
 **Data flow**: React Component -> Zustand Store -> api/client.ts (fetch + JWT Bearer) -> FastEndpoints Endpoint -> AppDbContext (EF Core) -> SQL Server
 
@@ -162,37 +162,39 @@ Authorization via `CurrentUser.Role` from AuthContext:
 
 ## Current API Endpoints
 
+> **Role names**: Auth column shows both AppRoles constant and JWT claim value. Code uses `AppRoles` constants (e.g., `AppRoles.Staff` = `"QLNP.CB.PCM"`), JWT contains `QLNP.*` format claims.
+
 | Method | Route | Auth | Description |
 |--------|-------|------|-------------|
 | GET | /api/auth/me | Authenticated | Returns current user from JWT claims |
 | POST | /api/auth/dev/login | Dev only | Issues dev JWT for configured test users |
 | GET | /api/leave-types | Authenticated | List all leave types |
-| POST | /api/leave-types | QTHT | Create leave type (FluentValidation) |
-| PUT | /api/leave-types/{id} | QTHT | Update leave type |
-| DELETE | /api/leave-types/{id} | QTHT | Soft delete leave type |
+| POST | /api/leave-types | QTHT (Admin) | Create leave type (FluentValidation) |
+| PUT | /api/leave-types/{id} | QTHT (Admin) | Update leave type |
+| DELETE | /api/leave-types/{id} | QTHT (Admin) | Soft delete leave type |
 | GET | /api/departments | Authenticated | List departments |
 | GET | /api/departments/{id} | Authenticated | Get department by id |
 | GET | /api/leave-requests | Authenticated (role-filtered) | List requests: own/dept/all by role |
 | GET | /api/leave-requests/my | Authenticated | List current user's requests |
-| POST | /api/leave-requests | CB.PCM, LD.PCM | Create request (business days, overlap check) |
-| PUT | /api/leave-requests/{id} | CB.PCM, LD.PCM | Update pending request |
-| POST | /api/leave-requests/{id}/approve | LD.PCM, GD.PGD | Config-driven N-level approval (OR logic per level). Balance deducted only on final approval (ApprovedLevel == maxLevel). Scope: LD.PCM = same department, GD.PGD = no restriction |
-| POST | /api/leave-requests/{id}/reject | LD.PCM, GD.PGD | Reject request (uses ApprovalHelper for auth check at current level) |
-| POST | /api/leave-requests/{id}/cancel | CB.PCM, LD.PCM | Cancel any pending request (ApprovedLevel < maxLevel) |
+| POST | /api/leave-requests | Staff (CB.PCM), Leader (LD.PCM) | Create request (business days, overlap check) |
+| PUT | /api/leave-requests/{id} | Staff (CB.PCM), Leader (LD.PCM) | Update pending request |
+| POST | /api/leave-requests/{id}/approve | Leader (LD.PCM), Director (GD.PGD) | Config-driven N-level approval (OR logic per level). Balance deducted only on final approval (ApprovedLevel == maxLevel). Scope: LD.PCM = same department, GD.PGD = no restriction |
+| POST | /api/leave-requests/{id}/reject | Leader (LD.PCM), Director (GD.PGD) | Reject request (uses ApprovalHelper for auth check at current level) |
+| POST | /api/leave-requests/{id}/cancel | Staff (CB.PCM), Leader (LD.PCM) | Cancel any pending request (ApprovedLevel < maxLevel) |
 | GET | /api/leave-balances | Authenticated | List balances, with startup/lazy seed support |
 | GET | /api/leave-balances/my | Authenticated | List current user's balances, lazily seeded |
-| GET | /api/config | Authenticated | List config and approval config |
-| PUT | /api/config | QTHT | Replace approval config items |
+| GET | /api/system-configs/leave-configs | Authenticated | List approval config items |
+| PUT | /api/system-configs/leave-configs | QTHT (Admin) | Replace approval config items |
 | GET | /api/system-configs | Authenticated | List all system config key-value pairs |
-| PUT | /api/system-configs | QTHT | Replace all system config key-value pairs |
+| PUT | /api/system-configs | QTHT (Admin) | Replace all system config key-value pairs |
 | GET | /api/reports/export | GD.PGD | Export formatted `.xlsx` report |
 
 ## Remaining Backend Gaps
 
-| Directory | Status |
-|-----------|--------|
-| LeaveRequests/UpdateByApprover | Directory scaffold exists; endpoint not implemented |
-| LeaveRequests/History | Directory scaffold exists; endpoint not implemented |
+| Area | Status |
+|------|--------|
+| LeaveRequests/UpdateByApprover | Not yet implemented |
+| LeaveRequests/History | Not yet implemented |
 | Audit logging wiring | `LeaveRequestAudit` table exists; mutation endpoints do not yet write audit rows |
 
 ## N-Level Approval Architecture
@@ -208,7 +210,7 @@ Each `LeaveType` can have N approval levels (1-5), configured via `LeaveConfigs`
 - Status values: `pending | approved | rejected | cancelled` (legacy `approved_leader` / `approved_director` removed)
 
 ### ApprovalHelper (Shared Logic)
-`Features/LeaveRequests/ApprovalHelper.cs` provides:
+`Shared/Domain/ApprovalHelper.cs` provides:
 - `GetApprovalFlow(List<LeaveConfig>)` -- groups configs by level into sorted dictionary
 - `GetMaxLevel(Dictionary<int, List<string>>)` -- returns highest approval level
 - `CanApproveAtLevel(CurrentUser, LeaveRequest, flow, targetLevel)` -- auth check with scope (LD.PCM = same department, GD.PGD = no restriction)

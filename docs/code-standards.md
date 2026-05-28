@@ -171,109 +171,138 @@ export default MyComponent;
 ```
 packages/api/
 ├── Program.cs                        # FastEndpoints + EF Core DI registration
-├── Entities/                         # Domain entities
-│   ├── UserMaster.cs                 # Scaffolded from USER_MASTER
-│   ├── DmDonvi.cs                    # Scaffolded from DM_DONVI
-│   ├── LeaveType.cs                  # Code First
-│   ├── LeaveBalance.cs               # Code First
-│   ├── LeaveRequest.cs               # Code First (incl. ApprovedLevel for N-level approval)
-│   ├── LeaveRequestAudit.cs          # Code First
-│   ├── LeaveConfig.cs                # Code First
-│   └── SystemConfig.cs               # Code First (key-value settings)
+├── Shared/                           # Cross-cutting shared code
+│   ├── Domain/                       # Domain entities + services (namespace: QLNP.Api.Shared.Domain)
+│   │   ├── UserMaster.cs             # Scaffolded from USER_MASTER
+│   │   ├── DmDonvi.cs                # Scaffolded from DM_DONVI
+│   │   ├── LeaveType.cs              # Code First
+│   │   ├── LeaveBalance.cs           # Code First
+│   │   ├── LeaveRequest.cs           # Code First (incl. ApprovedLevel for N-level approval)
+│   │   ├── LeaveRequestAudit.cs      # Code First
+│   │   ├── LeaveConfig.cs            # Code First
+│   │   ├── SystemConfig.cs           # Code First (key-value settings)
+│   │   ├── UserRole.cs               # Role constants
+│   │   ├── ApprovalHelper.cs         # Shared N-level approval logic
+│   │   ├── BusinessDayCalculator.cs  # T2-T6 inclusive count
+│   │   ├── LeaveBalanceService.cs    # Domain service for balance operations
+│   │   ├── ILeaveBalanceService.cs   # Interface for LeaveBalanceService
+│   │   └── LeaveBalanceSeeding.cs    # Balance seeding logic
+│   ├── Contracts/                     # Shared response envelopes (namespace: QLNP.Api.Shared.Contracts)
+│   │   ├── Result.cs                 # Result<T> success/error envelope
+│   │   └── PagedData.cs             # PagedData<T> paginated list envelope
+│   ├── Groups/                        # FastEndpoints route groups (namespace: QLNP.Api.Shared.Groups)
+│   │   ├── AuthGroup.cs             # /api/auth
+│   │   ├── LeaveRequestGroup.cs     # /api/leave-requests
+│   │   ├── LeaveTypeGroup.cs        # /api/leave-types
+│   │   ├── LeaveBalanceGroup.cs     # /api/leave-balances
+│   │   ├── DepartmentGroup.cs       # /api/departments
+│   │   └── SystemConfigGroup.cs     # /api/system-configs
+│   ├── Middleware/                    # (namespace: QLNP.Api.Shared.Middleware)
+│   │   └── CurrentUser.cs            # CurrentUser record (UserId, DisplayName, UnitId, PhongBanId, DeviceId, Roles, UserIdUBTP, PhongBanIdUBTP, DonViIdUBTP)
+│   └── LinqExtension.cs              # LINQ helpers
+├── Infrastructure/
+│   └── Auth/                          # Auth infrastructure (namespace: QLNP.Api.Infrastructure.Auth)
+│       ├── ICurrentUserProvider.cs    # Interface for current user resolution
+│       ├── CurrentUserProvider.cs     # Reads claims from ClaimsPrincipal (JWT)
+│       └── Roles.cs                   # AppRoles constants (Admin, Director, Leader, Staff)
 ├── Data/
 │   ├── AppDbContext.cs               # EF Core context + OnModelCreating + seed data
 │   ├── AppDbContextFactory.cs        # Design-time factory for migrations
+│   ├── SeedHelper.cs                 # Startup seeding logic
 │   └── Migrations/                   # EF Core migrations
-├── Features/                         # Vertical slices
-│   ├── Auth/Me/                      # MeEndpoint (implemented)
-│   ├── Config/Get, Update/           # Config endpoints
-│   ├── Departments/List, Get/        # Department reference endpoints
-│   ├── LeaveBalances/List, My, Seed/ # Balance endpoints + seed helpers
-│   ├── SystemConfigs/Get, Update/    # Key-value system settings (QTHT-only write)
-│   ├── LeaveRequests/
-│   │   ├── List/ Create/ Update/     # P1 implemented (role-based filtering, business days, overlap)
-│   │   ├── Approve/ Reject/ Cancel/  # Config-driven N-level approval (ApprovalHelper + OR logic per level)
-│   │   ├── History/ UpdateByApprover/# Scaffolded gaps
-│   │   ├── BusinessDayCalculator.cs  # T2-T6 inclusive count
-│   │   ├── ApprovalHelper.cs         # Shared N-level approval logic (GetApprovalFlow, CanApproveAtLevel, GetMaxLevel, GetNextLevelRoles)
-│   │   └── LeaveRequestDto.cs        # Shared DTO (incl. ApprovedLevel)
-│   ├── Reports/Export/               # ClosedXML .xlsx export
-│   └── LeaveTypes/List, Create, Update, Delete/  # Roles("QTHT")
-├── Auth/
-│   ├── ICurrentUserProvider.cs       # Interface for current user resolution
-│   └── CurrentUserProvider.cs        # Reads claims from ClaimsPrincipal (JWT)
-└── Middleware/
-    └── CurrentUser.cs                # CurrentUser record (UserId, DisplayName, UnitId, PhongBanId, DeviceId, Roles, UserIdUBTP, PhongBanIdUBTP, DonViIdUBTP)
+├── Features/                         # Vertical slices (VSA {Action}{Role}.cs pattern)
+│   ├── Auth/Me/, DevLogin/          # Auth endpoints
+│   ├── Departments/List/, Get/       # Department reference endpoints
+│   ├── LeaveBalances/List/, My/      # Balance endpoints
+│   ├── LeaveRequests/                 # Leave request endpoints
+│   │   ├── Create/                    # CreateLeaveRequestEndpoint, Request, Validator, Mapper
+│   │   ├── List/                      # ListLeaveRequestsEndpoint
+│   │   ├── My/                        # MyLeaveRequestsEndpoint
+│   │   ├── Update/                    # UpdateLeaveRequestEndpoint, Request, Validator, Mapper
+│   │   ├── Approve/                   # ApproveLeaveRequestEndpoint
+│   │   ├── Reject/                    # RejectLeaveRequestEndpoint, Request, Validator
+│   │   ├── Cancel/                    # CancelLeaveRequestEndpoint
+│   │   ├── LeaveRequestDto.cs        # Shared DTO (incl. ApprovedLevel)
+│   │   └── LeaveRequestMapping.cs    # Shared DRY DTO mapping
+│   ├── LeaveTypes/                    # Leave type CRUD (Admin-only)
+│   │   ├── List/, Create/, Update/, Delete/  # Each: {Action}LeaveTypeEndpoint.cs
+│   │   └── LeaveTypeDto.cs
+│   ├── SystemConfigs/                 # System settings + approval config
+│   │   ├── Get/, Update/             # SystemConfig endpoints
+│   │   ├── GetLeaveConfigs/           # GetLeaveConfigsEndpoint
+│   │   ├── ReplaceLeaveConfigs/       # ReplaceLeaveConfigsEndpoint
+│   │   ├── SystemConfigDto.cs, LeaveConfigDto.cs
+│   │   └── ReplaceLeaveConfigsResponse.cs
+│   └── Reports/Export/                # ClosedXML .xlsx export
 ```
 
 ### Naming Conventions
 
 | Artifact | Convention | Example |
 |----------|-----------|---------|
-| Endpoint classes | PascalCase, suffix `Endpoint` | `LoginEndpoint`, `CreateLeaveRequestEndpoint` |
-| Request DTOs | PascalCase, suffix `Request` | `LoginRequest`, `CreateEmployeeRequest` |
-| Response DTOs | PascalCase, suffix `Response` | `LoginResponse`, `EmployeeResponse` |
-| Validator classes | PascalCase, suffix `Validator` | `LoginValidator` |
-| Feature folders | PascalCase | `Auth/`, `LeaveRequests/`, `Config/` |
+| Endpoint files | `{Action}{Role}.cs` VSA pattern | `CreateLeaveRequestEndpoint.cs`, `ListLeaveRequestsEndpoint.cs` |
+| Endpoint classes | PascalCase, suffix `Endpoint` | `CreateLeaveRequestEndpoint`, `ListLeaveRequestsEndpoint` |
+| Request DTOs | PascalCase, suffix `Request` | `CreateLeaveRequestRequest`, `UpdateSystemConfigRequest` |
+| Response DTOs | PascalCase, suffix `Response` | `ReplaceLeaveConfigsResponse` |
+| Validator classes | PascalCase, suffix `Validator` | `CreateLeaveRequestValidator`, `RejectLeaveRequestValidator` |
+| Mapper classes | PascalCase, suffix `Mapper` | `CreateLeaveRequestMapper`, `UpdateLeaveRequestMapper` |
+| Domain entities | In `Shared/Domain/`, PascalCase | `LeaveRequest.cs`, `SystemConfig.cs`, `ApprovalHelper.cs` |
+| Route Groups | In `Shared/Groups/`, suffix `Group` | `LeaveRequestGroup`, `SystemConfigGroup` |
+| Response envelopes | In `Shared/Contracts/`, generic `record` | `Result<T>`, `PagedData<T>` |
+| Auth infrastructure | In `Infrastructure/Auth/` | `ICurrentUserProvider.cs`, `Roles.cs` (AppRoles constants) |
+| Feature folders | PascalCase | `Auth/`, `LeaveRequests/`, `SystemConfigs/` |
 | SQL tables (system) | UPPER_SNAKE_CASE | `USER_MASTER`, `DM_DONVI` |
 | SQL tables (app) | PascalCase (EF default) | `LeaveRequests`, `LeaveBalances` |
 
-### Endpoint Pattern (REPR + EF Core)
+### Endpoint Pattern (REPR + Property Injection)
 
 ```csharp
-// {Feature}/Models.cs
-internal sealed record Request(
-    long LeaveTypeId, DateTime StartDate, DateTime EndDate,
-    string Reason, long? RequestedApproverId);
-
-internal sealed record Response(LeaveRequestDto LeaveRequest);
-
-// {Feature}/Data.cs -- Data access via AppDbContext DI
-internal sealed class Data
+// {Action}{Role}.cs — e.g. CreateLeaveRequestEndpoint.cs
+internal sealed class CreateLeaveRequestEndpoint
+    : Endpoint<CreateLeaveRequestRequest, Result<LeaveRequestDto>, CreateLeaveRequestMapper>
 {
-    private readonly AppDbContext _db;
-    public Data(AppDbContext db) => _db = db;
-    public async Task<LeaveRequest?> GetByIdAsync(long id, CancellationToken ct) =>
-        await _db.LeaveRequests.Include(lr => lr.User).ThenInclude(u => u!.DonVi)
-            .Include(lr => lr.LeaveType).FirstOrDefaultAsync(lr => lr.Id == id, ct);
-}
-
-// {Feature}/Endpoint.cs
-internal sealed class Endpoint : Endpoint<Request, Response, Mapper>
-{
-    private readonly Data _data;
-    private readonly ICurrentUserProvider _currentUser;
-
-    public Endpoint(Data data, ICurrentUserProvider currentUser) { _data = data; _currentUser = currentUser; }
+    // Property injection — no constructor, no Data.cs class
+    public AppDbContext Db { get; set; } = null!;
+    public ICurrentUserProvider CurrentUser { get; set; } = null!;
 
     public override void Configure()
     {
-        Post("/api/leave-requests");
-        Roles("CB.PCM", "LD.PCM");  // FastEndpoints role-based auth
+        Post("");                      // Route prefix comes from Group<LeaveRequestGroup>()
+        Group<LeaveRequestGroup>();    // Route group defines prefix: /api/leave-requests
+        Roles(AppRoles.Staff, AppRoles.Leader);  // AppRoles constants, not magic strings
     }
 
-    public override async Task HandleAsync(Request r, CancellationToken ct)
+    public override async Task HandleAsync(CreateLeaveRequestRequest r, CancellationToken ct)
     {
-        var user = _currentUser.GetCurrentUser();  // Claims-based current user
-        // ... business logic + EF Core queries via _data ...
+        var user = CurrentUser.GetCurrentUser();
+        // ... business logic + EF Core queries directly via Db ...
     }
 }
 ```
+
+Key changes from pre-VSA:
+- **Property injection** (`= null!;`) replaces constructor injection and `Data.cs` classes
+- **Route Groups** (`Group<T>()`) define URL prefixes; endpoints use relative routes (`Post("")`, `Get("")`)
+- **`AppRoles` constants** replace magic strings like `"CB.PCM"` — defined in `Infrastructure/Auth/Roles.cs`
+- **`Result<T>`** envelope wraps all responses for consistent `{ Success, Data, Message, Errors }` format
+- **No `Data.cs`** — endpoints query `Db` (AppDbContext) directly
 
 ### FastEndpoints Pipeline
 
 ```
 HTTP Request
+  → Route Group prefix (e.g. /api/leave-requests from LeaveRequestGroup)
   → JWT Bearer Authentication (Issuer/Audience/SigningKey validation)
-  → Authorization (claims-based, Roles() attribute)
+  → Authorization (claims-based, Roles(AppRoles.*) attribute)
   → Validator.ValidateAsync()       [FluentValidation, auto]
-  → Endpoint.HandleAsync()           [business logic + Data class + EF Core]
-  → HTTP Response
+  → Endpoint.HandleAsync()           [business logic + property-injected Db + CurrentUser]
+  → Result<T> envelope response
 ```
 
 ### Data Access (EF Core)
 
-- Endpoint nhận `AppDbContext` qua constructor DI injection
+- Endpoint nhận `AppDbContext` qua property injection (`Db { get; set; } = null!;`), không dùng constructor injection
+- Domain entities in `Shared/Domain/` (namespace: `QLNP.Api.Shared.Domain`), not `Entities/`
 - System tables (USER_MASTER, DM_DONVI): read-only, `ExcludeFromMigrations()`
 - App tables (LeaveRequests, LeaveBalances, LeaveConfigs, SystemConfigs, LeaveRequestAudits, ...): Code First, managed by migrations
 - LINQ queries thay vì SQL thuần, type-safe compile-time check
@@ -282,16 +311,18 @@ HTTP Request
 ### API Conventions
 
 - Request/Response dùng C# `record` types
+- All responses wrapped in `Result<T>` envelope: `{ Success, Data, Message, Errors }`
+- Paginated lists use `PagedData<T>`: `{ Items, TotalCount, Page, PageSize }`
 - CurrentUser resolved from Claims via ICurrentUserProvider (UserId, DisplayName, UnitId, PhongBanId, Roles list)
-- Role check: FastEndpoints `Roles()` attribute (compile-time) hoặc `CurrentUser.Roles.Contains()` trong handler logic
+- Role check: FastEndpoints `Roles(AppRoles.*)` with constants from `Infrastructure/Auth/Roles.cs`
 - Multi-role users: `CurrentUser.Roles` là `List<string>`, nhiều roles possible (VD: LD.PCM + GD.PGD)
-- Response format nhất quán: `{ data, error }` envelope
+- Route Groups define URL prefixes: endpoints use relative routes (`Post("")`, `Get("")`)
 - Error response dùng `AddError()` hoặc `ThrowError()` của FastEndpoints
 - Dev mode: ICurrentUserProvider fallback to userId=1, roles=["QTHT"] khi anonymous (no JWT)
 
 ### N-Level Approval Pattern
 
-Approval logic is config-driven and shared via `ApprovalHelper.cs`:
+Approval logic is config-driven and shared via `ApprovalHelper.cs` (in `Shared/Domain/`):
 
 ```csharp
 // ApprovalHelper provides shared logic for N-level approval
