@@ -12,7 +12,7 @@ using QLNP.Api.Data;
 namespace QLNP.Api.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260528044352_AddUserRolesAndSimplifyLeaveBalance")]
+    [Migration("20260528063012_AddUserRolesAndSimplifyLeaveBalance")]
     partial class AddUserRolesAndSimplifyLeaveBalance
     {
         /// <inheritdoc />
