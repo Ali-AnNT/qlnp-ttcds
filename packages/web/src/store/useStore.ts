@@ -49,7 +49,12 @@ export const useStore = create<AppState>((set, get) => ({
   getLeaveType: (id) => get().leaveTypes.find((t) => t.id === id),
 
   addLeaveRequest: async (req) => {
-    const { data, error } = await leaveRequestsApi.create(req);
+    const { data, error } = await leaveRequestsApi.create({
+      leaveTypeId: req.leaveTypeId,
+      startDate: req.startDate,
+      endDate: req.endDate,
+      reason: req.reason,
+    });
     if (!error && data) {
       set((s) => ({ leaveRequests: [data, ...s.leaveRequests] }));
     }

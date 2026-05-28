@@ -26,7 +26,6 @@ export interface CreateLeaveRequestDto {
   leaveTypeId: number;
   startDate: string;
   endDate: string;
-  totalDays: number;
   reason?: string;
 }
 
@@ -38,15 +37,14 @@ export const leaveRequestsApi = {
       ).toString()}`
     ),
   listMy: () => api.get<LeaveRequestDto[]>("/leave-requests/my"),
-  get: (id: number) => api.get<LeaveRequestDto>(`/leave-requests/${id}`),
   create: (data: CreateLeaveRequestDto) =>
     api.post<LeaveRequestDto>("/leave-requests", data),
   update: (id: number, data: Partial<CreateLeaveRequestDto>) =>
     api.put<LeaveRequestDto>(`/leave-requests/${id}`, data),
   approve: (id: number) =>
     api.post<LeaveRequestDto>(`/leave-requests/${id}/approve`),
-  reject: (id: number, reason?: string) =>
-    api.post<LeaveRequestDto>(`/leave-requests/${id}/reject`, { reason }),
+  reject: (id: number, rejectedReason?: string) =>
+    api.post<LeaveRequestDto>(`/leave-requests/${id}/reject`, { rejectedReason }),
   cancel: (id: number) =>
     api.post<LeaveRequestDto>(`/leave-requests/${id}/cancel`),
 };

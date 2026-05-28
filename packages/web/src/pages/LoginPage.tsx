@@ -31,7 +31,7 @@ const LoginPage = () => {
     setDevLoggingIn(true);
     setDevError("");
     const { data, error } = await api.post<{ token: string }>(
-      "/auth/dev/login",
+      "/auth/dev-login",
       { userName: devUser },
     );
     if (error || !data) {

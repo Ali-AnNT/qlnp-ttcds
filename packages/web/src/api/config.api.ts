@@ -8,6 +8,6 @@ export interface ConfigDto {
 }
 
 export const configApi = {
-  get: () => api.get<ConfigDto[]>("/config"),
-  update: (data: ConfigDto[]) => api.put<ConfigDto[]>("/config", data),
+  get: () => api.get<ConfigDto[]>("/system-configs/leave-configs"),
+  update: (data: ConfigDto[]) => api.put<ConfigDto[]>("/system-configs/leave-configs", data),
 };
