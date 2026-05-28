@@ -24,6 +24,7 @@ ASP.NET 10 FastEndpoints API
   │   ├─ Config/Get, Update/       config endpoints implemented
   │   ├─ Departments/List, Get/    department reference endpoints
   │   ├─ LeaveBalances/List, My, Seed/  lazy/startup balance seeding
+  │   ├─ SystemConfigs/Get, Update/     key-value system settings (QTHT-only write)
   │   ├─ LeaveRequests/List, Create, Update, Approve, Reject, Cancel/  ← config-driven N-level approval
   │   │   ├─ ApprovalHelper.cs (shared logic: GetApprovalFlow, CanApproveAtLevel, GetMaxLevel, GetNextLevelRoles)
 	  │   │   ├─ LeaveRequestMapping.cs (shared DRY DTO mapping, includes ApprovedLevel)
@@ -32,7 +33,7 @@ ASP.NET 10 FastEndpoints API
   │   └─ LeaveTypes/List, Create, Update, Delete/  ← Roles("QTHT")
   ├─ Data/AppDbContext              (EF Core 9 + SQL Server)
   │   ├─ System tables: USER_MASTER, DM_DONVI (ExcludeFromMigrations)
-	  │   └─ App tables: LeaveTypes, LeaveBalances, LeaveRequests (incl. ApprovedLevel), LeaveConfigs, LeaveRequestAudits
+	  │   └─ App tables: LeaveTypes, LeaveBalances, LeaveRequests (incl. ApprovedLevel), LeaveConfigs, SystemConfigs, LeaveRequestAudits
   └─ SQL Server (existing `VI_NGHIPHEP` database)
 ```
 
@@ -204,6 +205,13 @@ erDiagram
         int ApprovalLevel "CK >= 1"
         string ApproverRole "max 10"
     }
+    SystemConfigs {
+        bigint Id PK
+        string ConfigKey UK "max 50"
+        string ConfigValue "max 100"
+        string Description_nullable "max 200"
+        datetime2 UpdatedAt
+    }
 ```
 
 ### Seed Data
@@ -222,7 +230,20 @@ erDiagram
   | 5 (NTS)             | 1             | LD.PCM       |
   | 5 (NTS)             | 2             | GD.PGD       |
 
-- LeaveBalances: seeded on startup for active `USER_MASTER` users and lazily during `/leave-balances` reads
+- SystemConfigs: 8 rows seeded via `HasData` providing configurable system settings. Overwritable at runtime via `PUT /api/system-configs` (QTHT-only).
+
+  | Id | ConfigKey | ConfigValue | Description |
+  |----|-----------|-------------|-------------|
+  | 1  | max_annual_leave | 12 | So ngay phep nam toi da |
+  | 2  | min_request_days | 1 | So ngay toi thieu khi tao don |
+  | 3  | max_carry_over | 5 | So ngay phep chuyen sang nam sau |
+  | 4  | leave_cycle | yearly | Chu ky tinh phep |
+  | 5  | default_days_CB.PCM | 14 | Mac dinh CB.PCM |
+  | 6  | default_days_LD.PCM | 14 | Mac dinh LD.PCM |
+  | 7  | default_days_GD.PGD | 16 | Mac dinh GD.PGD |
+  | 8  | default_days_QTHT | 12 | Mac dinh QTHT |
+
+- LeaveBalances: seeded on startup for active `USER_MASTER` users and lazily during `/leave-balances` reads. NPN TotalDays uses role-based defaults from SystemConfigs (`default_days_{role}`); correction applied for unused NPN balances that differ from role default
 - Roles: resolved from JWT claims; dev-login maps known test users to roles. `UserRoles` table was dropped.
 
 ## Authentication Flow

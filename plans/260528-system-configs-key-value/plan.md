@@ -1,7 +1,7 @@
 ---
 title: "SystemConfigs Key-Value Table"
 description: "Add SystemConfigs key-value table for general settings (max_annual_leave, min_request_days, max_carry_over, leave_cycle) and per-role default days. Wire ConfigPage General tab to real backend. Enhance LeaveBalance lazy seed with role-based NPN defaults."
-status: pending
+status: complete
 priority: P2
 branch: "feat/configurable-approval-levels"
 tags: [system-configs, key-value, config, seed, leave-balance]
@@ -23,10 +23,10 @@ Add persistent system-level configuration storage. Currently general settings (m
 
 | Phase | Name | Status | Effort |
 |-------|------|--------|--------|
-| 1 | [Entity + Migration](./phase-01-entity-migration.md) | Pending | 1h |
-| 2 | [API Endpoints](./phase-02-api-endpoints.md) | Pending | 1.5h |
-| 3 | [Frontend ConfigPage](./phase-03-frontend-configpage.md) | Pending | 1.5h |
-| 4 | [LeaveBalance Seed Enhancement](./phase-04-leavebalance-seed-enhancement.md) | Pending | 1h |
+| 1 | [Entity + Migration](./phase-01-entity-migration.md) | Complete | 1h |
+| 2 | [API Endpoints](./phase-02-api-endpoints.md) | Complete | 1.5h |
+| 3 | [Frontend ConfigPage](./phase-03-frontend-configpage.md) | Complete | 1.5h |
+| 4 | [LeaveBalance Seed Enhancement](./phase-04-leavebalance-seed-enhancement.md) | Complete | 1h |
 
 ## Dependencies
 

@@ -178,7 +178,8 @@ packages/api/
 │   ├── LeaveBalance.cs               # Code First
 │   ├── LeaveRequest.cs               # Code First (incl. ApprovedLevel for N-level approval)
 │   ├── LeaveRequestAudit.cs          # Code First
-│   └── LeaveConfig.cs                # Code First
+│   ├── LeaveConfig.cs                # Code First
+│   └── SystemConfig.cs               # Code First (key-value settings)
 ├── Data/
 │   ├── AppDbContext.cs               # EF Core context + OnModelCreating + seed data
 │   ├── AppDbContextFactory.cs        # Design-time factory for migrations
@@ -188,6 +189,7 @@ packages/api/
 │   ├── Config/Get, Update/           # Config endpoints
 │   ├── Departments/List, Get/        # Department reference endpoints
 │   ├── LeaveBalances/List, My, Seed/ # Balance endpoints + seed helpers
+│   ├── SystemConfigs/Get, Update/    # Key-value system settings (QTHT-only write)
 │   ├── LeaveRequests/
 │   │   ├── List/ Create/ Update/     # P1 implemented (role-based filtering, business days, overlap)
 │   │   ├── Approve/ Reject/ Cancel/  # Config-driven N-level approval (ApprovalHelper + OR logic per level)
@@ -273,9 +275,9 @@ HTTP Request
 
 - Endpoint nhận `AppDbContext` qua constructor DI injection
 - System tables (USER_MASTER, DM_DONVI): read-only, `ExcludeFromMigrations()`
-- App tables (LeaveRequests, LeaveBalances, ...): Code First, managed by migrations
+- App tables (LeaveRequests, LeaveBalances, LeaveConfigs, SystemConfigs, LeaveRequestAudits, ...): Code First, managed by migrations
 - LINQ queries thay vì SQL thuần, type-safe compile-time check
-- Seed data configured trong `OnModelCreating`
+- Seed data configured trong `OnModelCreating`: LeaveTypes (5), LeaveConfigs (9 rows), SystemConfigs (8 key-value rows for system settings and role-based NPN defaults)
 
 ### API Conventions
 

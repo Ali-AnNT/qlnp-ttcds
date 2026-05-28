@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Entity + Migration"
-status: pending
+status: complete
 priority: P2
 effort: "1h"
 dependencies: []

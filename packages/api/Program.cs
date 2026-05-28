@@ -69,6 +69,8 @@ builder.Services.AddScoped<QLNP.Api.Features.LeaveRequests.Reject.Data>();
 builder.Services.AddScoped<QLNP.Api.Features.LeaveRequests.Cancel.Data>();
 builder.Services.AddScoped<QLNP.Api.Features.Config.Get.Data>();
 builder.Services.AddScoped<QLNP.Api.Features.Config.Update.Data>();
+builder.Services.AddScoped<QLNP.Api.Features.SystemConfigs.Get.Data>();
+builder.Services.AddScoped<QLNP.Api.Features.SystemConfigs.Update.Data>();
 builder.Services.AddScoped<QLNP.Api.Features.LeaveBalances.List.Data>();
 builder.Services.AddScoped<QLNP.Api.Features.LeaveBalances.My.Data>();
 builder.Services.AddScoped<QLNP.Api.Features.Departments.List.Data>();
