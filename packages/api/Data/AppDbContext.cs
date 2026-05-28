@@ -22,6 +22,7 @@ public partial class AppDbContext : DbContext {
     public DbSet<LeaveConfig> LeaveConfigs { get; set; }
     public DbSet<LeaveRequestAudit> LeaveRequestAudits { get; set; }
     public DbSet<SystemConfig> SystemConfigs { get; set; }
+    public DbSet<UserRole> UserRoles { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
         // ---- System tables (read-only, excluded from migrations) ----
@@ -91,13 +92,19 @@ public partial class AppDbContext : DbContext {
         });
 
         modelBuilder.Entity<LeaveBalance>(entity => {
-            entity.HasIndex(e => new { e.UserId, e.LeaveTypeId, e.Year }).IsUnique();
+            entity.HasIndex(e => new { e.UserId, e.Year }).IsUnique();
             entity.HasOne(e => e.User)
                 .WithMany()
                 .HasForeignKey(e => e.UserId);
-            entity.HasOne(e => e.LeaveType)
-                .WithMany(lt => lt.Balances)
-                .HasForeignKey(e => e.LeaveTypeId);
+        });
+
+        modelBuilder.Entity<UserRole>(entity => {
+            entity.HasKey(e => e.UserId);
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
         });
 
         modelBuilder.Entity<LeaveRequest>(entity => {

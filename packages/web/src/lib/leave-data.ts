@@ -104,15 +104,6 @@ export interface LeaveRequest {
   updated_at: string;
 }
 
-export interface LeaveBalance {
-  id: string;
-  employee_id: string;
-  leave_type_id: string;
-  year: number;
-  total_days: number;
-  used_days: number;
-}
-
 export interface ApprovalConfig {
   id: string;
   leave_type_id: string;

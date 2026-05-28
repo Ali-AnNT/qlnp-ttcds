@@ -3,12 +3,11 @@ import { api } from "./client";
 export interface LeaveBalanceDto {
   id: number;
   userId: number;
-  leaveTypeId: number;
-  leaveTypeName?: string;
   year: number;
   totalDays: number;
   usedDays: number;
   remainingDays: number;
+  role?: string;
 }
 
 export const leaveBalancesApi = {

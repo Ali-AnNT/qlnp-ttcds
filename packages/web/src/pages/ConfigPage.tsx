@@ -265,20 +265,27 @@ const ConfigPage = () => {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {([AppRoles.Staff, AppRoles.Leader, AppRoles.Director, AppRoles.Admin] as UserRole[]).map((role) => (
-                    <div key={role} className="flex items-center gap-2">
-                      <Label className="text-xs w-40 truncate">{roleLabels[role]}</Label>
-                      <Input
-                        type="number"
-                        min={0}
-                        className="w-20 h-8 text-sm"
-                        value={getRoleDefaultDays(role)}
-                        onChange={(e) => setRoleDefaultDays(role, e.target.value)}
-                        disabled={!isAdmin}
-                      />
-                      <span className="text-xs text-muted-foreground">ngày</span>
-                    </div>
-                  ))}
+                  {([AppRoles.Staff, AppRoles.Leader, AppRoles.Director, AppRoles.Admin] as UserRole[]).map((role) => {
+                    const maxAnnual = Number.isNaN(parseFloat(getSystemConfig("max_annual_leave"))) ? 12 : parseFloat(getSystemConfig("max_annual_leave"));
+                    const rawDefault = parseFloat(getRoleDefaultDays(role));
+                    const roleDefault = Number.isNaN(rawDefault) ? maxAnnual : rawDefault;
+                    const effectiveDays = Math.min(maxAnnual, roleDefault);
+                    return (
+                      <div key={role} className="flex items-center gap-2">
+                        <Label className="text-xs w-40 truncate">{roleLabels[role]}</Label>
+                        <Input
+                          type="number"
+                          min={0}
+                          className="w-20 h-8 text-sm"
+                          value={getRoleDefaultDays(role)}
+                          onChange={(e) => setRoleDefaultDays(role, e.target.value)}
+                          disabled={!isAdmin}
+                        />
+                        <span className="text-xs text-muted-foreground">ngày</span>
+                        <span className="text-xs text-muted-foreground ml-1">&#8594; hiệu lực: <strong>{effectiveDays}</strong></span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 

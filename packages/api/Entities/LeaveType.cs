@@ -21,7 +21,6 @@ public class LeaveType {
 
     public bool IsActive { get; set; } = true;
 
-    public ICollection<LeaveBalance> Balances { get; set; } = new List<LeaveBalance>();
     public ICollection<LeaveRequest> Requests { get; set; } = new List<LeaveRequest>();
     public ICollection<LeaveConfig> Configs { get; set; } = new List<LeaveConfig>();
 }

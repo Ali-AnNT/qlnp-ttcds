@@ -15,8 +15,7 @@ internal sealed class Data {
         // Lazy-seed: ensure balance rows exist before querying
         if (userId.HasValue) {
             await Seed.Data.EnsureBalancesAsync(_db, userId.Value, effectiveYear, ct);
-        }
-        else {
+        } else {
             // Admin view — seed for all active users
             var userIds = await _db.UserMaster
                 .Where(u => u.Used == true)
@@ -25,9 +24,7 @@ internal sealed class Data {
             await Seed.Data.EnsureBalancesForUsersAsync(_db, userIds, effectiveYear, ct);
         }
 
-        var query = _db.LeaveBalances
-            .Include(b => b.LeaveType)
-            .AsQueryable();
+        var query = _db.LeaveBalances.AsQueryable();
 
         if (year.HasValue)
             query = query.Where(b => b.Year == year.Value);
@@ -36,12 +33,12 @@ internal sealed class Data {
             query = query.Where(b => b.UserId == userId.Value);
 
         return await query
-            .OrderBy(b => b.UserId).ThenBy(b => b.LeaveTypeId)
+            .OrderBy(b => b.UserId).ThenBy(b => b.Year)
             .Select(b => new LeaveBalanceDto(
-                b.Id, b.UserId, b.LeaveTypeId,
-                b.LeaveType.Name,
+                b.Id, b.UserId,
                 b.Year, b.TotalDays, b.UsedDays,
-                b.TotalDays - b.UsedDays))
+                b.TotalDays - b.UsedDays,
+                b.Role))
             .ToListAsync(ct);
     }
 }

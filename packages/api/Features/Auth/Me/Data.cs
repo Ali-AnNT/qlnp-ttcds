@@ -2,16 +2,19 @@ using Microsoft.EntityFrameworkCore;
 using QLNP.Api.Auth;
 using QLNP.Api.Data;
 using QLNP.Api.Middleware;
+using QLNP.Api.Shared.Services;
 
 namespace QLNP.Api.Features.Auth.Me;
 
 internal sealed class Data {
     private readonly AppDbContext _db;
     private readonly ICurrentUserProvider _userProvider;
+    private readonly ILeaveBalanceService _balanceService;
 
-    public Data(AppDbContext db, ICurrentUserProvider userProvider) {
+    public Data(AppDbContext db, ICurrentUserProvider userProvider, ILeaveBalanceService balanceService) {
         _db = db;
         _userProvider = userProvider;
+        _balanceService = balanceService;
     }
 
     public CurrentUser GetCurrentUser() => _userProvider.GetCurrentUser();
@@ -22,6 +25,9 @@ internal sealed class Data {
 
         var currentUser = _userProvider.GetCurrentUser();
         var role = MapRole(currentUser.Roles);
+
+        // Upsert role and recalculate balance if changed
+        await _balanceService.UpsertRoleAndRecalculateAsync(userId, role, ct);
 
         return new Response(
             UserId: user.UserMasterId,

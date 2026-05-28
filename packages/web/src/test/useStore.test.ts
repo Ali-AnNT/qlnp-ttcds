@@ -102,11 +102,11 @@ describe("useStore", () => {
         {
           id: 1,
           userId: 1,
-          leaveTypeId: 1,
           year: 2025,
           totalDays: 12,
           usedDays: 0,
           remainingDays: 12,
+          role: "QLNP.CB.PCM",
         },
       ],
       error: null,

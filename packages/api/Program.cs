@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using QLNP.Api.Auth;
 using QLNP.Api.Data;
+using QLNP.Api.Shared.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -76,6 +77,9 @@ builder.Services.AddScoped<QLNP.Api.Features.LeaveBalances.My.Data>();
 builder.Services.AddScoped<QLNP.Api.Features.Departments.List.Data>();
 builder.Services.AddScoped<QLNP.Api.Features.Departments.Get.Data>();
 builder.Services.AddScoped<QLNP.Api.Features.Reports.Export.Data>();
+
+// Services
+builder.Services.AddScoped<ILeaveBalanceService, LeaveBalanceService>();
 
 var app = builder.Build();
 

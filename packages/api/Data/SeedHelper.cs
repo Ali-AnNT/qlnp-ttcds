@@ -1,12 +1,11 @@
 using Microsoft.EntityFrameworkCore;
-using QLNP.Api.Data;
 using QLNP.Api.Entities;
 
 namespace QLNP.Api.Data;
 
 /// <summary>
 /// One-time and yearly startup seed for LeaveBalances.
-/// Creates balance rows for all active users × active leave types for the current year.
+/// Creates a single balance row per (UserId, Year) for all active users.
 /// Idempotent — safe to run on every app start.
 /// </summary>
 public static class SeedHelper {

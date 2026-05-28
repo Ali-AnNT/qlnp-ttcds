@@ -67,11 +67,7 @@ internal sealed class Endpoint : EndpointWithoutRequest<LeaveRequestDto> {
         // If this is the final level, mark as approved and deduct balance
         if (targetLevel == maxLevel) {
             entity.Status = "approved";
-
-            if (!await _data.UpsertBalanceAsync(entity, ct)) {
-                AddError("Nhân viên đã vượt quá định mức ngày phép");
-                await Send.ErrorsAsync(422, ct); return;
-            }
+            await _data.UpsertBalanceAsync(entity, ct);
         }
         // Otherwise stays pending (partially approved)
 

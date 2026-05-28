@@ -65,7 +65,8 @@ const DashboardPage = () => {
     }
     return map;
   }, [approvalConfigs]);
-  const remainingDays = myBalances.reduce((s, b) => s + b.remainingDays, 0);
+  const remainingDays = myBalances[0]?.remainingDays ?? 0;
+  const totalDaysAllowed = myBalances[0]?.totalDays ?? 0;
 
   const metrics = [
     {
@@ -126,15 +127,15 @@ const DashboardPage = () => {
         ))}
       </div>
 
-      {/* {!loading && myBalances.length > 0 && (
+      {!loading && myBalances.length > 0 && (
         <div>
-          <h2 className="text-base font-semibold mb-3">Chi tiết ngày phép ({currentYear})</h2>
+          <h2 className="text-base font-semibold mb-3">Ngày phép năm {currentYear}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {myBalances.map((b) => (
               <LeaveBalanceCard
                 key={b.id}
                 balance={{
-                  label: b.leaveTypeName || `Loại phép #${b.leaveTypeId}`,
+                  label: "Nghỉ phép năm",
                   total: b.totalDays,
                   used: b.usedDays,
                   remaining: b.remainingDays,
@@ -143,7 +144,7 @@ const DashboardPage = () => {
             ))}
           </div>
         </div>
-      )} */}
+      )}
 
       <div className="flex flex-wrap gap-2">
         {(user?.role === AppRoles.Staff || user?.role === AppRoles.Leader) && (

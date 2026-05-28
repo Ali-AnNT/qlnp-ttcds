@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using QLNP.Api.Auth;
 using QLNP.Api.Data;
+using QLNP.Api.Shared.Services;
 
 namespace QLNP.Api.Features.Auth.DevLogin;
 
@@ -17,10 +18,12 @@ internal sealed record Response(string Token, string FullName, string Role);
 internal sealed class Endpoint : Endpoint<Request, Response> {
     private readonly AppDbContext _db;
     private readonly IConfiguration _config;
+    private readonly ILeaveBalanceService _balanceService;
 
-    public Endpoint(AppDbContext db, IConfiguration config) {
+    public Endpoint(AppDbContext db, IConfiguration config, ILeaveBalanceService balanceService) {
         _db = db;
         _config = config;
+        _balanceService = balanceService;
     }
 
     public override void Configure() {
@@ -54,6 +57,9 @@ internal sealed class Endpoint : Endpoint<Request, Response> {
 
         if (user is null)
             ThrowError("User not found in USER_MASTER");
+
+        // Upsert role and recalculate balance if changed
+        await _balanceService.UpsertRoleAndRecalculateAsync(user.UserMasterId, role, ct);
 
         // Build JWT claims matching what external SSO provides
         var jwtConfig = _config.GetSection("Jwt");
