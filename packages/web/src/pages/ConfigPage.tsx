@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { roleLabels, type UserRole, AppRoles } from "@/lib/leave-data";
 import { leaveTypesApi, type LeaveTypeDto } from "@/api/leave-types.api";
 import { configApi, type ConfigDto } from "@/api/config.api";
+import { systemConfigsApi, type SystemConfigDto } from "@/api/system-configs.api";
 import { toast } from "sonner";
 import { Pencil, Plus, Trash2, Save } from "lucide-react";
 
@@ -47,16 +48,35 @@ const ConfigPage = () => {
 
   const [savingConfig, setSavingConfig] = useState(false);
 
-  const [defaultDaysByRole, setDefaultDaysByRole] = useState<Record<string, string>>({
-    [AppRoles.Staff]: "12",
-    [AppRoles.Leader]: "14",
-    [AppRoles.Director]: "16",
-    [AppRoles.Admin]: "12",
-  });
+  const [systemConfigs, setSystemConfigs] = useState<SystemConfigDto[]>([]);
+
+  const getSystemConfig = (key: string) => systemConfigs.find((c) => c.configKey === key)?.configValue ?? "";
+  const getRoleDefaultDays = (role: string) => {
+    const suffix = role.replace("QLNP.", "");
+    return getSystemConfig(`default_days_${suffix}`);
+  };
+  const setRoleDefaultDays = (role: string, value: string) => {
+    const suffix = role.replace("QLNP.", "");
+    const key = `default_days_${suffix}`;
+    setSystemConfigs((prev) => {
+      const existing = prev.find((c) => c.configKey === key);
+      if (existing) return prev.map((c) => c.configKey === key ? { ...c, configValue: value } : c);
+      return [...prev, { id: 0, configKey: key, configValue: value, description: null, updatedAt: new Date().toISOString() }];
+    });
+  };
+
+  const setGeneralConfig = (key: string, value: string) => {
+    setSystemConfigs((prev) => {
+      const existing = prev.find((c) => c.configKey === key);
+      if (existing) return prev.map((c) => c.configKey === key ? { ...c, configValue: value } : c);
+      return [...prev, { id: 0, configKey: key, configValue: value, description: null, updatedAt: new Date().toISOString() }];
+    });
+  };
 
   const [allLeaveTypes, setAllLeaveTypes] = useState<LeaveTypeDto[]>([]);
 
   useEffect(() => {
+    loadSystemConfigs();
     loadApprovalConfigs();
     loadAllLeaveTypes();
   }, []);
@@ -73,6 +93,11 @@ const ConfigPage = () => {
   const loadAllLeaveTypes = async () => {
     const { data } = await leaveTypesApi.list();
     if (data) setAllLeaveTypes(data);
+  };
+
+  const loadSystemConfigs = async () => {
+    const { data } = await systemConfigsApi.get();
+    if (data) setSystemConfigs(data);
   };
 
   // Leave Type CRUD
@@ -146,10 +171,13 @@ const ConfigPage = () => {
   // General Config Save
   const saveGeneralConfig = async () => {
     setSavingConfig(true);
-    const roles: UserRole[] = [AppRoles.Staff, AppRoles.Leader, AppRoles.Director, AppRoles.Admin];
-    // TODO: Save per-role default days via dedicated config once backend endpoint exists
-    // For now, this config data updates the leave_balances.default_days via leave_config endpoint
-    toast.success("Đã lưu cấu hình chung");
+    const { error } = await systemConfigsApi.update(systemConfigs);
+    if (error) {
+      toast.error("Lỗi lưu cấu hình chung");
+    } else {
+      toast.success("Đã lưu cấu hình chung");
+      await loadSystemConfigs();
+    }
     setSavingConfig(false);
   };
 
@@ -167,14 +195,75 @@ const ConfigPage = () => {
         </TabsList>
 
         {/* Tab 1: General config */}
-        <TabsContent value="general">
+        <TabsContent value="general" className="space-y-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Cài đặt chung</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs w-40">Số ngày phép tối đa/năm</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    className="w-20 h-8 text-sm"
+                    value={getSystemConfig("max_annual_leave")}
+                    onChange={(e) => setGeneralConfig("max_annual_leave", e.target.value)}
+                    disabled={!isAdmin}
+                  />
+                  <span className="text-xs text-muted-foreground">ngày</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs w-40">Số ngày tối thiểu/đơn</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    className="w-20 h-8 text-sm"
+                    value={getSystemConfig("min_request_days")}
+                    onChange={(e) => setGeneralConfig("min_request_days", e.target.value)}
+                    disabled={!isAdmin}
+                  />
+                  <span className="text-xs text-muted-foreground">ngày</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs w-40">Số ngày phép chuyển sang</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    className="w-20 h-8 text-sm"
+                    value={getSystemConfig("max_carry_over")}
+                    onChange={(e) => setGeneralConfig("max_carry_over", e.target.value)}
+                    disabled={!isAdmin}
+                  />
+                  <span className="text-xs text-muted-foreground">ngày</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs w-40">Chu kỳ tính phép</Label>
+                  <Select
+                    value={getSystemConfig("leave_cycle") || "yearly"}
+                    onValueChange={(v) => setGeneralConfig("leave_cycle", v)}
+                    disabled={!isAdmin}
+                  >
+                    <SelectTrigger className="w-28 h-8 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="yearly">Hàng năm</SelectItem>
+                      <SelectItem value="monthly">Hàng tháng</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Số ngày phép năm mặc định theo loại nhân viên</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Số ngày phép năm mặc định theo loại nhân viên</Label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {([AppRoles.Staff, AppRoles.Leader, AppRoles.Director, AppRoles.Admin] as UserRole[]).map((role) => (
                     <div key={role} className="flex items-center gap-2">
@@ -183,8 +272,8 @@ const ConfigPage = () => {
                         type="number"
                         min={0}
                         className="w-20 h-8 text-sm"
-                        value={defaultDaysByRole[role] || "12"}
-                        onChange={(e) => setDefaultDaysByRole((prev) => ({ ...prev, [role]: e.target.value }))}
+                        value={getRoleDefaultDays(role)}
+                        onChange={(e) => setRoleDefaultDays(role, e.target.value)}
                         disabled={!isAdmin}
                       />
                       <span className="text-xs text-muted-foreground">ngày</span>

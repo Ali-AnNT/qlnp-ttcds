@@ -11,7 +11,8 @@ namespace QLNP.Api.Features.LeaveBalances.Seed;
 /// </summary>
 public static class Data {
     public static async Task EnsureBalancesAsync(
-        AppDbContext db, long userId, int year, CancellationToken ct) {
+        AppDbContext db, long userId, int year, CancellationToken ct,
+        string? userRole = null) {
         var existingTypeIds = await db.LeaveBalances
             .Where(b => b.UserId == userId && b.Year == year)
             .Select(b => b.LeaveTypeId)
@@ -25,11 +26,22 @@ public static class Data {
 
         if (missing.Count == 0) return;
 
+        // Load role-based default days from SystemConfigs if role provided
+        Dictionary<string, string>? roleConfigMap = null;
+        if (userRole is not null) {
+            var suffix = userRole.Replace("QLNP.", "");
+            roleConfigMap = await db.SystemConfigs
+                .Where(c => c.ConfigKey == $"default_days_{suffix}")
+                .ToDictionaryAsync(c => c.ConfigKey, c => c.ConfigValue, ct);
+        }
+
+        var npnType = activeTypes.FirstOrDefault(lt => lt.Code == "NPN");
+
         var newBalances = missing.Select(lt => new LeaveBalance {
             UserId = userId,
             LeaveTypeId = lt.Id,
             Year = year,
-            TotalDays = lt.DefaultDays,
+            TotalDays = ResolveTotalDays(lt, npnType?.Id, userRole, roleConfigMap),
             UsedDays = 0
         }).ToList();
 
@@ -47,6 +59,18 @@ public static class Data {
                     entry.State = EntityState.Detached;
             }
         }
+    }
+
+    private static decimal ResolveTotalDays(
+        LeaveType lt, long? npnTypeId, string? userRole,
+        Dictionary<string, string>? roleConfigMap) {
+        if (userRole is not null && npnTypeId.HasValue && lt.Id == npnTypeId.Value && roleConfigMap is not null) {
+            var suffix = userRole.Replace("QLNP.", "");
+            var key = $"default_days_{suffix}";
+            if (roleConfigMap.TryGetValue(key, out var val) && decimal.TryParse(val, out var days))
+                return days;
+        }
+        return lt.DefaultDays;
     }
 
     /// <summary>

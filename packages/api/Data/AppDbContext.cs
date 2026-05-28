@@ -21,6 +21,7 @@ public partial class AppDbContext : DbContext {
     public DbSet<LeaveRequest> LeaveRequests { get; set; }
     public DbSet<LeaveConfig> LeaveConfigs { get; set; }
     public DbSet<LeaveRequestAudit> LeaveRequestAudits { get; set; }
+    public DbSet<SystemConfig> SystemConfigs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
         // ---- System tables (read-only, excluded from migrations) ----
@@ -140,6 +141,11 @@ public partial class AppDbContext : DbContext {
             entity.Property(e => e.ChangedAt).HasDefaultValueSql("SYSUTCDATETIME()");
         });
 
+        modelBuilder.Entity<SystemConfig>(entity => {
+            entity.HasIndex(e => e.ConfigKey).IsUnique();
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
+        });
+
         // ---- Seed data ----
 
         modelBuilder.Entity<LeaveType>().HasData(
@@ -161,6 +167,18 @@ public partial class AppDbContext : DbContext {
             new LeaveConfig { Id = 7, LeaveTypeId = 4, ApprovalLevel = 1, ApproverRole = AppRoles.Leader },
             new LeaveConfig { Id = 8, LeaveTypeId = 5, ApprovalLevel = 1, ApproverRole = AppRoles.Leader },
             new LeaveConfig { Id = 9, LeaveTypeId = 5, ApprovalLevel = 2, ApproverRole = AppRoles.Director }
+        );
+
+        // General settings and per-role default days for NPN leave type
+        modelBuilder.Entity<SystemConfig>().HasData(
+            new SystemConfig { Id = 1, ConfigKey = "max_annual_leave", ConfigValue = "12", Description = "So ngay phep nam toi da" },
+            new SystemConfig { Id = 2, ConfigKey = "min_request_days", ConfigValue = "1", Description = "So ngay toi thieu khi tao don" },
+            new SystemConfig { Id = 3, ConfigKey = "max_carry_over", ConfigValue = "5", Description = "So ngay phep chuyen sang nam sau" },
+            new SystemConfig { Id = 4, ConfigKey = "leave_cycle", ConfigValue = "yearly", Description = "Chu ky tinh phep" },
+            new SystemConfig { Id = 5, ConfigKey = "default_days_CB.PCM", ConfigValue = "14", Description = "Mac dinh CB.PCM" },
+            new SystemConfig { Id = 6, ConfigKey = "default_days_LD.PCM", ConfigValue = "14", Description = "Mac dinh LD.PCM" },
+            new SystemConfig { Id = 7, ConfigKey = "default_days_GD.PGD", ConfigValue = "16", Description = "Mac dinh GD.PGD" },
+            new SystemConfig { Id = 8, ConfigKey = "default_days_QTHT", ConfigValue = "12", Description = "Mac dinh QTHT" }
         );
 
         OnModelCreatingPartial(modelBuilder);

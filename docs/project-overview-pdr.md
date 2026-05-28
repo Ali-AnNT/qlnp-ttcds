@@ -8,7 +8,7 @@
 | **Organization** | Trung Tam Chuyen Doi So (TTCDS) |
 | **Domain** | Quan ly nghi phep noi bo |
 | **Platform** | Web application (SPA) |
-| **Current Version** | 0.4.0 (configurable N-level approval) |
+| **Current Version** | 0.5.0 (SystemConfigs key-value settings) |
 
 ## 2. Purpose
 
@@ -72,7 +72,7 @@ Xay dung he thong noi bo thay the quy trinh xin nghi phep thu cong (giay to, ema
 - Loc theo ky: nam / quy / thang
 
 ### 4.7 Cau Hinh He Thong (QTHT)
-- Tab Cau hinh chung: chu ky nam, so ngay mac dinh theo vai tro
+- Tab Cau hinh chung: 8 configurable system settings stored in SystemConfigs key-value table (max_annual_leave, min_request_days, max_carry_over, leave_cycle, default_days per role: CB.PCM, LD.PCM, GD.PGD, QTHT). QTHT-only write access via PUT /api/system-configs
 - Tab Loai nghi phep (CRUD): ten, ma, so ngay mac dinh, mo ta
 - Tab Cau hinh phe duyet (CRUD): loai phep + cap phe duyet (1-5) + vai tro nguoi duyet
 

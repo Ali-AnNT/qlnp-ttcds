@@ -21,7 +21,8 @@ internal sealed class Endpoint : EndpointWithoutRequest<List<LeaveBalanceDto>> {
     public override async Task HandleAsync(CancellationToken ct) {
         var user = _currentUser.GetCurrentUser();
         var year = Query<int?>("year", isRequired: false);
-        var items = await _data.GetByUserIdAsync(user.UserId, year, ct);
+        var primaryRole = user.Roles.FirstOrDefault();
+        var items = await _data.GetByUserIdAsync(user.UserId, year, primaryRole, ct);
         await Send.OkAsync(items, ct);
     }
 }

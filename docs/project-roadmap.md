@@ -66,6 +66,8 @@ All Supabase-related issues resolved by architecture migration:
 | Reports export endpoint | Done | 2026-05-21 |
 | LeaveRequestAudit entity + migration | Done | 2026-05-25 |
 | Lazy/startup LeaveBalance seeding | Done | 2026-05-25 |
+| SystemConfigs key-value table + GET/PUT endpoints + ConfigPage wiring | Done | 2026-05-28 |
+| LeaveBalance role-based NPN defaults from SystemConfigs + correction | Done | 2026-05-28 |
 | Frontend integration against real API | In progress | 2026-05-25 |
 | API integration tests + Vitest updates | Planned | TBD |
 | README/deployment/docs sync | In progress | 2026-05-25 |
@@ -109,8 +111,8 @@ May 2026 (COMPLETED): Phase 1 - Architecture Migration
     - JWT Bearer auth + ICurrentUserProvider
     - Features directory scaffolded, core endpoints implemented
 
-May 14-27 2026 (IN PROGRESS): Phase 1.1 - Endpoint Implementation & Release Readiness
-    - Done: Auth/Me, DevLogin, LeaveTypes CRUD, Departments, LeaveBalances List/My/Seed, Config Get/Update, LeaveRequests List/My/Create/Update/Approve/Reject/Cancel, Reports Export, Configurable N-Level Approval, Configurable N-Level Approval (ApprovedLevel, ApprovalHelper, legacy migration)
+May 14-28 2026 (IN PROGRESS): Phase 1.1 - Endpoint Implementation & Release Readiness
+    - Done: Auth/Me, DevLogin, LeaveTypes CRUD, Departments, LeaveBalances List/My/Seed, Config Get/Update, LeaveRequests List/My/Create/Update/Approve/Reject/Cancel, Reports Export, Configurable N-Level Approval, SystemConfigs key-value table + GET/PUT endpoints, LeaveBalance role-based NPN defaults + correction, ConfigPage General tab wired to SystemConfigs API
     - Remaining: UpdateByApprover, History, audit write wiring, embed host sample, integration testing
     - Integration testing
     - Documentation/deployment sync

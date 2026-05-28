@@ -4,7 +4,7 @@ using QLNP.Api.Auth;
 
 namespace QLNP.Api.Features.Config.Update;
 
-internal sealed class Endpoint : Endpoint<Request, Response> {
+internal sealed class Endpoint : Endpoint<List<ConfigDto>, Response> {
     private readonly Data _data;
 
     public Endpoint(Data data) => _data = data;
@@ -15,9 +15,9 @@ internal sealed class Endpoint : Endpoint<Request, Response> {
         Tags("Config");
     }
 
-    public override async Task HandleAsync(Request r, CancellationToken ct) {
+    public override async Task HandleAsync(List<ConfigDto> req, CancellationToken ct) {
         try {
-            await _data.ReplaceAllAsync(r.Items, ct);
+            await _data.ReplaceAllAsync(req, ct);
         }
         catch (DbUpdateException) {
             AddError("Không thể cập nhật cấu hình");

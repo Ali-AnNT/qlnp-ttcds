@@ -1,5 +1,23 @@
 # Project Changelog - QLNP-TTCDS
 
+## v0.5.0 -- 2026-05-28 -- SystemConfigs Key-Value Settings
+
+### Added
+- `SystemConfig` entity (key-value storage): Id, ConfigKey (unique, max 50), ConfigValue (max 100), Description (nullable, max 200), UpdatedAt
+- `SystemConfigs` DbSet in AppDbContext + EF migration `AddSystemConfigsTable` (unique index on ConfigKey)
+- 8 seeded SystemConfig rows: max_annual_leave, min_request_days, max_carry_over, leave_cycle, default_days_CB.PCM, default_days_LD.PCM, default_days_GD.PGD, default_days_QTHT
+- `GET /api/system-configs` endpoint (authenticated) -- returns all config key-value pairs ordered by ConfigKey
+- `PUT /api/system-configs` endpoint (QTHT-only) -- replaces all system configs (full replace strategy)
+- `SystemConfigDto` record shared across Get/Update endpoints
+- Frontend `system-configs.api.ts` module: `SystemConfigDto` type + `systemConfigsApi.get()/update()`
+- ConfigPage General tab wired to SystemConfigs API with 8 editable settings (max_annual_leave, min_request_days, max_carry_over, leave_cycle, 4x default_days per role)
+
+### Changed
+- LeaveBalance seeding (`Seed/Data.EnsureBalancesAsync`): NPN TotalDays now resolves from `default_days_{role}` SystemConfig when user role is provided, falling back to LeaveType.DefaultDays
+- LeaveBalance `/my` endpoint: `CorrectNpnBalanceAsync` corrects unused NPN balances that differ from role-based SystemConfig default
+- ConfigPage: General tab now reads from and writes to SystemConfigs API (was previously local/mock data)
+- AppDbContext: `SystemConfigs` table registered with unique index on ConfigKey
+
 ## v0.4.0 -- 2026-05-27 -- Configurable N-Level Approval
 
 ### Breaking Changes

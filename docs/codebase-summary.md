@@ -63,6 +63,7 @@ User Action -> Component -> useStore action -> api module -> fetch("/api/...")
 | `src/api/leave-requests.api.ts` | LeaveRequestDto (incl. approvedLevel), CreateLeaveRequestDto + leaveRequestsApi.list/create/update/approve/reject/cancel() |
 | `src/api/leave-balances.api.ts` | LeaveBalanceDto + leaveBalancesApi.list/my() |
 | `src/api/config.api.ts` | ConfigDto + configApi.get/update() |
+| `src/api/system-configs.api.ts` | SystemConfigDto + systemConfigsApi.get/update() |
 
 ### Library / Shared Code
 
@@ -94,7 +95,7 @@ User Action -> Component -> useStore action -> api module -> fetch("/api/...")
 | `SummaryPage.tsx` | /summary | Year/type filter. Per-department table (clickable -> employee detail sub-table). Pie chart by leave type |
 | `ReportsPage.tsx` | /reports | 3 KPI cards, bar chart by department, pie chart by type. UI still exports local CSV; backend `/api/reports/export` supports formatted `.xlsx` |
 | `ViolationsPage.tsx` | /violations | Employees exceeding 12-day limit. Per-employee + per-department tables. Pie + bar charts. Period filter (year/quarter/month) |
-| `ConfigPage.tsx` | /config | 3 tabs: General config (cycle year, default days per role), Leave Types CRUD, Approval Config CRUD (leave_type + level 1-5 + approver_role) |
+| `ConfigPage.tsx` | /config | 3 tabs: General config (8 system-configurable settings via SystemConfigs API), Leave Types CRUD, Approval Config CRUD (leave_type + level 1-5 + approver_role) |
 | `NotFound.tsx` | * | 404 page |
 
 ### Hooks
@@ -150,11 +151,13 @@ Authorization via `CurrentUser.Role` from AuthContext:
 - `LeaveBalances` - Id, UserId, LeaveTypeId, Year, TotalDays, UsedDays. UNIQUE(UserId, LeaveTypeId, Year)
 - `LeaveRequests` - Id, UserId, LeaveTypeId, StartDate, EndDate, TotalDays, Reason, Status, ApprovedLevel (default 0), RequestedApproverId (nullable), ApprovedBy, ApprovedAt, RejectedReason, CreatedAt, UpdatedAt. Nav props: User, LeaveType, Approver, RequestedApprover
 - `LeaveConfigs` - Id, LeaveTypeId, ApprovalLevel (CK >= 1), ApproverRole
+- `SystemConfigs` - Id, ConfigKey (UK, max 50), ConfigValue (max 100), Description (nullable, max 200), UpdatedAt
 - `LeaveRequestAudits` - Id, LeaveRequestId, ChangedBy, ChangedAt, FieldName, OldValue, NewValue
 
 ### Seed Data
 - 3 LeaveTypes: annual (12d), sick (0d), personal (3d)
-- LeaveBalances are seeded at startup for active `USER_MASTER` users and lazily on `/leave-balances` reads for active leave types in the current year
+- 8 SystemConfigs: max_annual_leave (12), min_request_days (1), max_carry_over (5), leave_cycle (yearly), default_days_CB.PCM (14), default_days_LD.PCM (14), default_days_GD.PGD (16), default_days_QTHT (12)
+- LeaveBalances are seeded at startup for active `USER_MASTER` users and lazily on `/leave-balances` reads for active leave types in the current year. NPN TotalDays uses role-based defaults from SystemConfigs when available; correction applied for unused NPN balances that differ from role default
 - Roles are resolved from JWT claims. Dev-login maps known usernames to test roles; `UserRoles` table was dropped by migration
 
 ## Current API Endpoints
@@ -180,6 +183,8 @@ Authorization via `CurrentUser.Role` from AuthContext:
 | GET | /api/leave-balances/my | Authenticated | List current user's balances, lazily seeded |
 | GET | /api/config | Authenticated | List config and approval config |
 | PUT | /api/config | QTHT | Replace approval config items |
+| GET | /api/system-configs | Authenticated | List all system config key-value pairs |
+| PUT | /api/system-configs | QTHT | Replace all system config key-value pairs |
 | GET | /api/reports/export | GD.PGD | Export formatted `.xlsx` report |
 
 ## Remaining Backend Gaps

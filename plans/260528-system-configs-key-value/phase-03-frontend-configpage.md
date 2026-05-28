@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Frontend ConfigPage"
-status: pending
+status: complete
 priority: P2
 effort: "1.5h"
 dependencies: [2]
