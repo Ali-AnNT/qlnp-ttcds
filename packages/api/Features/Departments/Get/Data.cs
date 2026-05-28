@@ -3,8 +3,7 @@ using QLNP.Api.Data;
 
 namespace QLNP.Api.Features.Departments.Get;
 
-internal sealed class Data
-{
+internal sealed class Data {
     private readonly AppDbContext _db;
 
     public Data(AppDbContext db) => _db = db;

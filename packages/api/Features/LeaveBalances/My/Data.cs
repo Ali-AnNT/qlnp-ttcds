@@ -4,14 +4,12 @@ using QLNP.Api.Features.LeaveBalances.Seed;
 
 namespace QLNP.Api.Features.LeaveBalances.My;
 
-internal sealed class Data
-{
+internal sealed class Data {
     private readonly AppDbContext _db;
 
     public Data(AppDbContext db) => _db = db;
 
-    public async Task<List<LeaveBalanceDto>> GetByUserIdAsync(long userId, int? year, CancellationToken ct)
-    {
+    public async Task<List<LeaveBalanceDto>> GetByUserIdAsync(long userId, int? year, CancellationToken ct) {
         var effectiveYear = year ?? DateTime.UtcNow.Year;
 
         // Lazy-seed: ensure balance rows exist for all active leave types

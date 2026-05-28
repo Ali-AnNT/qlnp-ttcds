@@ -5,26 +5,22 @@ using QLNP.Api.Features.LeaveRequests;
 
 namespace QLNP.Api.Features.LeaveRequests.Cancel;
 
-internal sealed class Endpoint : EndpointWithoutRequest<LeaveRequestDto>
-{
+internal sealed class Endpoint : EndpointWithoutRequest<LeaveRequestDto> {
     private readonly Data _data;
     private readonly ICurrentUserProvider _currentUser;
 
-    public Endpoint(Data data, ICurrentUserProvider currentUser)
-    {
+    public Endpoint(Data data, ICurrentUserProvider currentUser) {
         _data = data;
         _currentUser = currentUser;
     }
 
-    public override void Configure()
-    {
+    public override void Configure() {
         Post("/api/leave-requests/{id}/cancel");
         Roles(AppRoles.Staff, AppRoles.Leader);
         Tags("Leave Requests");
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
+    public override async Task HandleAsync(CancellationToken ct) {
         var id = Route<long>("id");
         var currentUser = _currentUser.GetCurrentUser();
 
@@ -32,15 +28,13 @@ internal sealed class Endpoint : EndpointWithoutRequest<LeaveRequestDto>
         if (entity is null) { await Send.NotFoundAsync(ct); return; }
 
         // Owner check
-        if (entity.UserId != currentUser.UserId)
-        {
+        if (entity.UserId != currentUser.UserId) {
             await Send.ForbiddenAsync(ct); return;
         }
 
         // Can only cancel pending requests (including partially approved)
         // Cannot cancel approved or rejected requests
-        if (entity.Status != "pending")
-        {
+        if (entity.Status != "pending") {
             AddError("Chỉ có thể hủy đơn đang chờ duyệt");
             await Send.ErrorsAsync(409, ct); return;
         }
@@ -48,12 +42,10 @@ internal sealed class Endpoint : EndpointWithoutRequest<LeaveRequestDto>
         entity.Status = "cancelled";
         entity.UpdatedAt = DateTime.UtcNow;
 
-        try
-        {
+        try {
             await _data.SaveAsync(ct);
         }
-        catch (DbUpdateException)
-        {
+        catch (DbUpdateException) {
             AddError("Không thể xử lý đơn xin nghỉ");
             await Send.ErrorsAsync(409, ct); return;
         }

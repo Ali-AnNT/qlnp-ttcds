@@ -8,14 +8,12 @@ namespace QLNP.Api.Features.LeaveRequests;
 /// Shared helper for config-driven N-level approval logic.
 /// Each LeaveType can have N approval levels, with multiple roles per level (OR logic).
 /// </summary>
-public static class ApprovalHelper
-{
+public static class ApprovalHelper {
     /// <summary>
     /// Groups LeaveConfigs by ApprovalLevel, returning a sorted dictionary
     /// where key = level (1-based) and value = list of approver roles for that level.
     /// </summary>
-    public static Dictionary<int, List<string>> GetApprovalFlow(List<LeaveConfig> configs)
-    {
+    public static Dictionary<int, List<string>> GetApprovalFlow(List<LeaveConfig> configs) {
         return configs
             .GroupBy(c => c.ApprovalLevel)
             .OrderBy(g => g.Key)
@@ -26,8 +24,7 @@ public static class ApprovalHelper
     /// Returns the maximum approval level from the flow.
     /// Returns 0 if the flow is empty.
     /// </summary>
-    public static int GetMaxLevel(Dictionary<int, List<string>> flow)
-    {
+    public static int GetMaxLevel(Dictionary<int, List<string>> flow) {
         return flow.Count > 0 ? flow.Keys.Max() : 0;
     }
 
@@ -36,8 +33,7 @@ public static class ApprovalHelper
     /// Returns (canApprove, errorMessage).
     /// </summary>
     public static (bool canApprove, string? errorMessage) CanApproveAtLevel(
-        CurrentUser user, LeaveRequest request, Dictionary<int, List<string>> flow, int targetLevel)
-    {
+        CurrentUser user, LeaveRequest request, Dictionary<int, List<string>> flow, int targetLevel) {
         if (!flow.TryGetValue(targetLevel, out var roles))
             return (false, "Không tìm thấy cấu hình phê duyệt cho cấp này");
 
@@ -47,8 +43,7 @@ public static class ApprovalHelper
             return (false, "Bạn không có quyền phê duyệt ở cấp này");
 
         // Scope check: LD.PCM can only approve requests from same department, not own requests
-        if (userRoleAtLevel == AppRoles.Leader)
-        {
+        if (userRoleAtLevel == AppRoles.Leader) {
             if (request.UserId == user.UserId)
                 return (false, "Không thể phê duyệt đơn của chính mình");
 
@@ -63,8 +58,7 @@ public static class ApprovalHelper
     /// Gets the roles that can approve at the next level for a request.
     /// Returns null if no config exists (request cannot be approved).
     /// </summary>
-    public static List<string>? GetNextLevelRoles(Dictionary<int, List<string>> flow, int currentApprovedLevel)
-    {
+    public static List<string>? GetNextLevelRoles(Dictionary<int, List<string>> flow, int currentApprovedLevel) {
         var nextLevel = currentApprovedLevel + 1;
         return flow.TryGetValue(nextLevel, out var roles) ? roles : null;
     }

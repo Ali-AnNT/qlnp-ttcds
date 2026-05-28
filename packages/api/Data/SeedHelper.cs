@@ -9,10 +9,8 @@ namespace QLNP.Api.Data;
 /// Creates balance rows for all active users × active leave types for the current year.
 /// Idempotent — safe to run on every app start.
 /// </summary>
-public static class SeedHelper
-{
-    public static async Task SeedLeaveBalancesAsync(AppDbContext db)
-    {
+public static class SeedHelper {
+    public static async Task SeedLeaveBalancesAsync(AppDbContext db) {
         var year = DateTime.UtcNow.Year;
 
         var userIds = await db.UserMaster
@@ -31,16 +29,14 @@ public static class SeedHelper
     /// - approved_leader → pending + ApprovedLevel = 1 (still awaiting next level)
     /// Idempotent — safe to run on every app start.
     /// </summary>
-    public static async Task MigrateLegacyStatusesAsync(AppDbContext db)
-    {
+    public static async Task MigrateLegacyStatusesAsync(AppDbContext db) {
         // 1. Migrate approved_director → approved (legacy from before ApprovedLevel existed)
         var directorAffected = await db.LeaveRequests
             .Where(lr => lr.Status == "approved_director")
             .ExecuteUpdateAsync(setters => setters
                 .SetProperty(lr => lr.Status, "approved"));
 
-        if (directorAffected > 0)
-        {
+        if (directorAffected > 0) {
             await db.Database.ExecuteSqlRawAsync(
                 "UPDATE LeaveRequestAudits SET NewValue = 'approved' WHERE NewValue = 'approved_director'");
             await db.Database.ExecuteSqlRawAsync(
@@ -55,8 +51,7 @@ public static class SeedHelper
                 .SetProperty(lr => lr.Status, "pending")
                 .SetProperty(lr => lr.ApprovedLevel, 1));
 
-        if (leaderAffected > 0)
-        {
+        if (leaderAffected > 0) {
             await db.Database.ExecuteSqlRawAsync(
                 "UPDATE LeaveRequestAudits SET NewValue = 'pending' WHERE NewValue = 'approved_leader'");
             await db.Database.ExecuteSqlRawAsync(
@@ -68,8 +63,7 @@ public static class SeedHelper
             .Where(lr => lr.Status == "approved" && lr.ApprovedLevel == 0)
             .ToListAsync();
 
-        if (approvedRequests.Count > 0)
-        {
+        if (approvedRequests.Count > 0) {
             var leaveTypeIds = approvedRequests.Select(lr => lr.LeaveTypeId).Distinct().ToList();
             var maxLevelsByType = await db.LeaveConfigs
                 .Where(c => leaveTypeIds.Contains(c.LeaveTypeId))
@@ -77,8 +71,7 @@ public static class SeedHelper
                 .Select(g => new { LeaveTypeId = g.Key, MaxLevel = g.Max(c => c.ApprovalLevel) })
                 .ToDictionaryAsync(x => x.LeaveTypeId, x => x.MaxLevel);
 
-            foreach (var req in approvedRequests)
-            {
+            foreach (var req in approvedRequests) {
                 if (maxLevelsByType.TryGetValue(req.LeaveTypeId, out var maxLevel))
                     req.ApprovedLevel = maxLevel;
                 else

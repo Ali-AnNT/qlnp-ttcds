@@ -6,26 +6,22 @@ using QLNP.Api.Features.LeaveRequests;
 
 namespace QLNP.Api.Features.LeaveRequests.Approve;
 
-internal sealed class Endpoint : EndpointWithoutRequest<LeaveRequestDto>
-{
+internal sealed class Endpoint : EndpointWithoutRequest<LeaveRequestDto> {
     private readonly Data _data;
     private readonly ICurrentUserProvider _currentUser;
 
-    public Endpoint(Data data, ICurrentUserProvider currentUser)
-    {
+    public Endpoint(Data data, ICurrentUserProvider currentUser) {
         _data = data;
         _currentUser = currentUser;
     }
 
-    public override void Configure()
-    {
+    public override void Configure() {
         Post("/api/leave-requests/{id}/approve");
         Roles(AppRoles.Leader, AppRoles.Director, AppRoles.Admin);
         Tags("Leave Requests");
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
+    public override async Task HandleAsync(CancellationToken ct) {
         var id = Route<long>("id");
         var currentUser = _currentUser.GetCurrentUser();
 
@@ -34,8 +30,7 @@ internal sealed class Endpoint : EndpointWithoutRequest<LeaveRequestDto>
 
         // Get approval config for this leave type
         var configs = await _data.GetApprovalConfigsAsync(entity.LeaveTypeId, ct);
-        if (configs.Count == 0)
-        {
+        if (configs.Count == 0) {
             AddError("Chưa cấu hình phê duyệt cho loại phép này");
             await Send.ErrorsAsync(403, ct); return;
         }
@@ -45,23 +40,20 @@ internal sealed class Endpoint : EndpointWithoutRequest<LeaveRequestDto>
         var targetLevel = entity.ApprovedLevel + 1;
 
         // Check if already fully approved
-        if (targetLevel > maxLevel)
-        {
+        if (targetLevel > maxLevel) {
             AddError("Đơn đã được phê duyệt");
             await Send.ErrorsAsync(409, ct); return;
         }
 
         // Check if request is in correct state
-        if (entity.Status != "pending")
-        {
+        if (entity.Status != "pending") {
             AddError("Không thể duyệt đơn ở trạng thái này");
             await Send.ErrorsAsync(409, ct); return;
         }
 
         // Check if user can approve at this level
         var (canApprove, errorMessage) = ApprovalHelper.CanApproveAtLevel(currentUser, entity, flow, targetLevel);
-        if (!canApprove)
-        {
+        if (!canApprove) {
             AddError(errorMessage ?? "Bạn không có quyền phê duyệt đơn này");
             await Send.ErrorsAsync(403, ct); return;
         }
@@ -73,24 +65,20 @@ internal sealed class Endpoint : EndpointWithoutRequest<LeaveRequestDto>
         entity.UpdatedAt = DateTime.UtcNow;
 
         // If this is the final level, mark as approved and deduct balance
-        if (targetLevel == maxLevel)
-        {
+        if (targetLevel == maxLevel) {
             entity.Status = "approved";
 
-            if (!await _data.UpsertBalanceAsync(entity, ct))
-            {
+            if (!await _data.UpsertBalanceAsync(entity, ct)) {
                 AddError("Nhân viên đã vượt quá định mức ngày phép");
                 await Send.ErrorsAsync(422, ct); return;
             }
         }
         // Otherwise stays pending (partially approved)
 
-        try
-        {
+        try {
             await _data.SaveAsync(ct);
         }
-        catch (DbUpdateException)
-        {
+        catch (DbUpdateException) {
             AddError("Không thể xử lý đơn xin nghỉ");
             await Send.ErrorsAsync(409, ct); return;
         }

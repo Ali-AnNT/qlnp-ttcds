@@ -4,8 +4,7 @@ using QLNP.Api.Entities;
 
 namespace QLNP.Api.Features.LeaveRequests.Create;
 
-internal sealed class Data
-{
+internal sealed class Data {
     private readonly AppDbContext _db;
 
     public Data(AppDbContext db) => _db = db;
@@ -25,8 +24,7 @@ internal sealed class Data
                 lr.StartDate <= end &&
                 lr.EndDate >= start, ct);
 
-    public async Task CreateAsync(LeaveRequest entity, CancellationToken ct)
-    {
+    public async Task CreateAsync(LeaveRequest entity, CancellationToken ct) {
         _db.LeaveRequests.Add(entity);
         await _db.SaveChangesAsync(ct);
     }

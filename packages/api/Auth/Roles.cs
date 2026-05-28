@@ -4,8 +4,7 @@ namespace QLNP.Api.Auth;
 /// Centralized role string constants. All role references use the full QLNP.* format.
 /// Prevents typos and ensures consistency across JWT claims, authorization, and business logic.
 /// </summary>
-public static class AppRoles
-{
+public static class AppRoles {
     public const string Admin = "QLNP.QTHT";
     public const string Director = "QLNP.GD.PGD";
     public const string Leader = "QLNP.LD.PCM";

@@ -3,24 +3,20 @@ using QLNP.Api.Auth;
 
 namespace QLNP.Api.Features.Reports.Export;
 
-internal sealed class Endpoint : Endpoint<Request>
-{
+internal sealed class Endpoint : Endpoint<Request> {
     private readonly Data _data;
 
-    public Endpoint(Data data)
-    {
+    public Endpoint(Data data) {
         _data = data;
     }
 
-    public override void Configure()
-    {
+    public override void Configure() {
         Get("/api/reports/export");
         Roles(AppRoles.Director);
         Tags("Reports");
     }
 
-    public override async Task HandleAsync(Request req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(Request req, CancellationToken ct) {
         var requests = await _data.GetLeaveRequestsAsync(
             req.Status, req.From, req.To, ct);
 

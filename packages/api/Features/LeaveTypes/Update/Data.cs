@@ -3,8 +3,7 @@ using QLNP.Api.Entities;
 
 namespace QLNP.Api.Features.LeaveTypes.Update;
 
-internal sealed class Data
-{
+internal sealed class Data {
     private readonly AppDbContext _db;
 
     public Data(AppDbContext db) => _db = db;

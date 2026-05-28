@@ -2,8 +2,7 @@ using QLNP.Api.Entities;
 
 namespace QLNP.Api.Features.LeaveRequests;
 
-internal static class LeaveRequestMapping
-{
+internal static class LeaveRequestMapping {
     internal static LeaveRequestDto MapToDto(this LeaveRequest e) => new(
         e.Id, e.UserId, e.User?.HoTen ?? "",
         e.User?.DonViId,

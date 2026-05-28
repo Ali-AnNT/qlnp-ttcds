@@ -3,30 +3,27 @@ using FluentValidation;
 
 namespace QLNP.Api.Features.Reports.Export;
 
-internal sealed record Request
-{
+internal sealed record Request {
     public string? Status { get; init; }
     public DateOnly? From { get; init; }
     public DateOnly? To { get; init; }
     public string Period { get; init; } = "none";
 }
 
-internal sealed class Validator : Validator<Request>
-{
-    private static readonly string[] ValidStatuses =
+internal sealed class Validator : Validator<Request> {
+    private static readonly string[] _validStatuses =
         ["pending", "approved", "rejected", "cancelled"];
 
-    private static readonly string[] ValidPeriods =
+    private static readonly string[] _validPeriods =
         ["none", "month", "quarter", "year"];
 
-    public Validator()
-    {
+    public Validator() {
         RuleFor(x => x.Status)
-            .Must(s => s is null || ValidStatuses.Contains(s))
+            .Must(s => s is null || _validStatuses.Contains(s))
             .WithMessage("Invalid status value");
 
         RuleFor(x => x.Period)
-            .Must(p => ValidPeriods.Contains(p))
+            .Must(p => _validPeriods.Contains(p))
             .WithMessage("Period must be none, month, quarter, or year");
 
         RuleFor(x => x.To)
@@ -36,10 +33,8 @@ internal sealed class Validator : Validator<Request>
     }
 }
 
-internal static class StatusLabels
-{
-    private static readonly Dictionary<string, string> Map = new()
-    {
+internal static class StatusLabels {
+    private static readonly Dictionary<string, string> _map = new() {
         ["pending"] = "Chờ duyệt",
         ["approved"] = "Đã duyệt",
         ["rejected"] = "Từ chối",
@@ -47,5 +42,5 @@ internal static class StatusLabels
     };
 
     public static string ToVietnamese(string status)
-        => Map.GetValueOrDefault(status, status);
+        => _map.GetValueOrDefault(status, status);
 }

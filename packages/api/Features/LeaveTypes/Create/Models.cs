@@ -7,10 +7,8 @@ namespace QLNP.Api.Features.LeaveTypes.Create;
 
 internal sealed record Request(string Name, string Code, decimal DefaultDays, string? Description);
 
-internal sealed class Validator : Validator<Request>
-{
-    public Validator(AppDbContext db)
-    {
+internal sealed class Validator : Validator<Request> {
+    public Validator(AppDbContext db) {
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Tên loại nghỉ không được trống")
             .MaximumLength(100);

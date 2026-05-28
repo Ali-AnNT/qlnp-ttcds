@@ -6,11 +6,9 @@ using QLNP.Api.Entities;
 
 namespace QLNP.Api.Data;
 
-public partial class AppDbContext : DbContext
-{
+public partial class AppDbContext : DbContext {
     public AppDbContext(DbContextOptions<AppDbContext> options)
-        : base(options)
-    {
+        : base(options) {
     }
 
     // System tables (scaffolded, excluded from migrations)
@@ -24,12 +22,10 @@ public partial class AppDbContext : DbContext
     public DbSet<LeaveConfig> LeaveConfigs { get; set; }
     public DbSet<LeaveRequestAudit> LeaveRequestAudits { get; set; }
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
+    protected override void OnModelCreating(ModelBuilder modelBuilder) {
         // ---- System tables (read-only, excluded from migrations) ----
 
-        modelBuilder.Entity<DmDonvi>(entity =>
-        {
+        modelBuilder.Entity<DmDonvi>(entity => {
             entity.HasKey(e => e.DonViId)
                 .HasName("PK__DM_DONVI__1CB88576D84B4D4C")
                 .IsClustered(false);
@@ -60,8 +56,7 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.Website).HasMaxLength(100);
         });
 
-        modelBuilder.Entity<UserMaster>(entity =>
-        {
+        modelBuilder.Entity<UserMaster>(entity => {
             entity.HasKey(e => e.UserMasterId).HasName("PK__USER_MAS__CA9BC5E270CE69C2");
 
             entity.ToTable("USER_MASTER", t => t.ExcludeFromMigrations());
@@ -90,13 +85,11 @@ public partial class AppDbContext : DbContext
 
         // ---- QLNP tables (Code First) ----
 
-        modelBuilder.Entity<LeaveType>(entity =>
-        {
+        modelBuilder.Entity<LeaveType>(entity => {
             entity.HasIndex(e => e.Code).IsUnique();
         });
 
-        modelBuilder.Entity<LeaveBalance>(entity =>
-        {
+        modelBuilder.Entity<LeaveBalance>(entity => {
             entity.HasIndex(e => new { e.UserId, e.LeaveTypeId, e.Year }).IsUnique();
             entity.HasOne(e => e.User)
                 .WithMany()
@@ -106,8 +99,7 @@ public partial class AppDbContext : DbContext
                 .HasForeignKey(e => e.LeaveTypeId);
         });
 
-        modelBuilder.Entity<LeaveRequest>(entity =>
-        {
+        modelBuilder.Entity<LeaveRequest>(entity => {
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.UserId);
             entity.HasOne(e => e.User)
@@ -128,16 +120,14 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.ApprovedLevel).HasDefaultValue(0);
         });
 
-        modelBuilder.Entity<LeaveConfig>(entity =>
-        {
+        modelBuilder.Entity<LeaveConfig>(entity => {
             entity.HasOne(e => e.LeaveType)
                 .WithMany(lt => lt.Configs)
                 .HasForeignKey(e => e.LeaveTypeId);
             entity.ToTable(t => t.HasCheckConstraint("CK_LeaveConfig_ApprovalLevel", "ApprovalLevel >= 1"));
         });
 
-        modelBuilder.Entity<LeaveRequestAudit>(entity =>
-        {
+        modelBuilder.Entity<LeaveRequestAudit>(entity => {
             entity.HasIndex(e => e.LeaveRequestId);
             entity.HasOne(e => e.LeaveRequest)
                 .WithMany(lr => lr.Audits)
