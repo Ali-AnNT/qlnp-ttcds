@@ -37,7 +37,7 @@ const menuItems: MenuItem[] = [
   {
     label: "Đơn xin nghỉ phép",
     icon: FileText,
-    roles: [Staff, Leader, Admin],
+    roles: [Staff, Leader],
     children: [
       { label: "Tạo đơn mới", path: "/leave/new" },
       { label: "Danh sách đơn của tôi", path: "/leave/my" },
@@ -47,7 +47,7 @@ const menuItems: MenuItem[] = [
     label: "Phê duyệt đơn",
     path: "/approval",
     icon: CheckSquare,
-    roles: [Leader, Director, Admin],
+    roles: [Leader, Director],
   },
   {
     label: "Theo dõi lịch nghỉ phép",
@@ -59,19 +59,19 @@ const menuItems: MenuItem[] = [
     label: "Tổng hợp lịch nghỉ",
     path: "/summary",
     icon: PieChart,
-    roles: [Director, Admin],
+    roles: [Director],
   },
   {
     label: "Thống kê báo cáo",
     path: "/reports",
     icon: BarChart3,
-    roles: [Director, Admin],
+    roles: [Director],
   },
   {
     label: "Vượt mức quy định",
     path: "/violations",
     icon: AlertTriangle,
-    roles: [Director, Admin],
+    roles: [Director],
   },
   {
     label: "Cấu hình quy định",

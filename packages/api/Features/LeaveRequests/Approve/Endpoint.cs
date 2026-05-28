@@ -17,7 +17,7 @@ internal sealed class Endpoint : EndpointWithoutRequest<LeaveRequestDto> {
 
     public override void Configure() {
         Post("/api/leave-requests/{id}/approve");
-        Roles(AppRoles.Leader, AppRoles.Director, AppRoles.Admin);
+        Roles(AppRoles.Leader, AppRoles.Director);
         Tags("Leave Requests");
     }
 
