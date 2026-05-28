@@ -1,23 +1,27 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using FastEndpoints;
 using FastEndpoints.Swagger;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using QLNP.Api.Auth;
+using QLNP.Api.Infrastructure.Auth;
 using QLNP.Api.Data;
-using QLNP.Api.Shared.Services;
+using QLNP.Api.Shared.Domain;
+using QLNP.Api.Shared.Contracts;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddFastEndpoints()
     .SwaggerDocument(o => {
-        o.AutoTagPathSegmentIndex = 2;
         o.DocumentSettings = s => {
             s.Title = "QLNP API";
             s.Version = "v1";
         };
     });
+
+builder.Services.ConfigureHttpJsonOptions(o =>
+    o.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull);
 
 builder.Services.AddDbContext<AppDbContext>(opts =>
     opts.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -55,29 +59,6 @@ builder.Services.AddCors(options => {
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserProvider, CurrentUserProvider>();
 
-// Data classes
-builder.Services.AddScoped<QLNP.Api.Features.LeaveTypes.Create.Data>();
-builder.Services.AddScoped<QLNP.Api.Features.LeaveTypes.Update.Data>();
-builder.Services.AddScoped<QLNP.Api.Features.LeaveTypes.List.Data>();
-builder.Services.AddScoped<QLNP.Api.Features.LeaveTypes.Delete.Data>();
-builder.Services.AddScoped<QLNP.Api.Features.Auth.Me.Data>();
-builder.Services.AddScoped<QLNP.Api.Features.LeaveRequests.List.Data>();
-builder.Services.AddScoped<QLNP.Api.Features.LeaveRequests.My.Data>();
-builder.Services.AddScoped<QLNP.Api.Features.LeaveRequests.Create.Data>();
-builder.Services.AddScoped<QLNP.Api.Features.LeaveRequests.Update.Data>();
-builder.Services.AddScoped<QLNP.Api.Features.LeaveRequests.Approve.Data>();
-builder.Services.AddScoped<QLNP.Api.Features.LeaveRequests.Reject.Data>();
-builder.Services.AddScoped<QLNP.Api.Features.LeaveRequests.Cancel.Data>();
-builder.Services.AddScoped<QLNP.Api.Features.Config.Get.Data>();
-builder.Services.AddScoped<QLNP.Api.Features.Config.Update.Data>();
-builder.Services.AddScoped<QLNP.Api.Features.SystemConfigs.Get.Data>();
-builder.Services.AddScoped<QLNP.Api.Features.SystemConfigs.Update.Data>();
-builder.Services.AddScoped<QLNP.Api.Features.LeaveBalances.List.Data>();
-builder.Services.AddScoped<QLNP.Api.Features.LeaveBalances.My.Data>();
-builder.Services.AddScoped<QLNP.Api.Features.Departments.List.Data>();
-builder.Services.AddScoped<QLNP.Api.Features.Departments.Get.Data>();
-builder.Services.AddScoped<QLNP.Api.Features.Reports.Export.Data>();
-
 // Services
 builder.Services.AddScoped<ILeaveBalanceService, LeaveBalanceService>();
 
@@ -103,7 +84,11 @@ app.Use(async (ctx, next) => {
     await next(ctx);
 });
 
-app.UseFastEndpoints()
-    .UseSwaggerGen();
+app.UseFastEndpoints(config => {
+    config.Errors.ResponseBuilder = (failures, ctx, statusCode) => {
+        return Result<object>.Fail("Validation failed", failures.Select(f => f.ErrorMessage).ToArray());
+    };
+})
+.UseSwaggerGen();
 
 app.Run();

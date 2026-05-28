@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
-using QLNP.Api.Auth;
-using QLNP.Api.Entities;
+using QLNP.Api.Infrastructure.Auth;
+using QLNP.Api.Shared.Domain;
 
 namespace QLNP.Api.Data;
 

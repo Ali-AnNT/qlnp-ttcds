@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using QLNP.Api.Entities;
+using QLNP.Api.Shared.Domain;
 
 namespace QLNP.Api.Data;
 
@@ -19,7 +19,7 @@ public static class SeedHelper {
 
         if (userIds.Count == 0) return;
 
-        await Features.LeaveBalances.Seed.Data.EnsureBalancesForUsersAsync(db, userIds, year, CancellationToken.None);
+        await LeaveBalanceSeeding.EnsureBalancesForUsersAsync(db, userIds, year, CancellationToken.None);
     }
 
     /// <summary>
