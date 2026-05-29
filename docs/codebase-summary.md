@@ -10,7 +10,7 @@ React SPA with fetch-based API client, Zustand data store, AuthContext (JWT Bear
 ### Backend (packages/api)
 .NET 10 + FastEndpoints v8.1.0 + EF Core 9.0.0 + SQL Server. Vertical slice architecture (VSA) with `{Action}{Role}.cs` file naming. JWT Bearer authentication; ICurrentUserProvider reads claims from JWT to resolve CurrentUser. Property injection (`= null!;`) pattern for endpoints; no Data.cs classes.
 
-**Data flow**: React Component -> Zustand Store -> api/client.ts (fetch + JWT Bearer) -> FastEndpoints Endpoint -> AppDbContext (EF Core) -> SQL Server
+**Data flow**: React Component -> Zustand Store -> shared/api/client.ts (fetch + JWT Bearer) -> FastEndpoints Endpoint -> AppDbContext (EF Core) -> SQL Server
 
 ```
 User Action -> Component -> useStore action -> api module -> fetch("/api/...")
@@ -36,8 +36,10 @@ User Action -> Component -> useStore action -> api module -> fetch("/api/...")
 
 | File | Purpose |
 |------|---------|
-| `src/main.tsx` | ReactDOM.createRoot, renders App, imports index.css |
-| `src/App.tsx` | Root component. QueryClientProvider + TooltipProvider + Toaster + BrowserRouter. AuthGuard wraps AppLayout (redirects to /login if not authenticated). Defines all routes |
+| `src/main.tsx` | ReactDOM.createRoot, renders `<App />` from `./app/App`, imports index.css |
+| `src/app/App.tsx` | Root component. Renders `<Providers>` + `<AppRouter>` (extracted from former monolithic App.tsx) |
+| `src/app/providers.tsx` | QueryClientProvider + TooltipProvider + Toaster + Sonner + AuthProvider |
+| `src/app/router.tsx` | BrowserRouter + Routes + AuthGuard. Defines all route mappings |
 | `src/index.css` | Tailwind directives, CSS custom properties for shadcn theme (HSL values: blue primary #1e3a5f, blue accent #2563eb), Be Vietnam Pro Google Font import, custom scrollbar styles |
 
 ### Auth (Context)
@@ -56,7 +58,7 @@ User Action -> Component -> useStore action -> api module -> fetch("/api/...")
 
 | File | Purpose |
 |------|---------|
-| `src/api/client.ts` | Fetch wrapper: JWT from localStorage, Bearer auth header, ApiResponse<T> envelope, error handling |
+| `src/shared/api/client.ts` | Fetch wrapper: JWT from localStorage, Bearer auth header, ApiResponse<T> envelope, error handling. Re-exported via `@/shared` barrel |
 | `src/api/auth.api.ts` | AuthUser type + authApi.me() |
 | `src/api/departments.api.ts` | DepartmentDto + departmentsApi.list() |
 | `src/api/leave-types.api.ts` | LeaveTypeDto + leaveTypesApi.list/create/update/delete() |
@@ -65,13 +67,24 @@ User Action -> Component -> useStore action -> api module -> fetch("/api/...")
 | `src/api/config.api.ts` | ConfigDto + configApi.get/update() |
 | `src/api/system-configs.api.ts` | SystemConfigDto + systemConfigsApi.get/update() |
 
-### Library / Shared Code
+### Shared Infrastructure (`src/shared/`)
 
 | File | Purpose |
 |------|---------|
-| `src/lib/leave-data.ts` | Core types: UserRole (union), LeaveStatus (union: pending/approved/rejected/cancelled), Department, Employee, LeaveType, LeaveRequest, LeaveBalance, ApprovalConfig. Label maps: roleLabels, leaveStatusLabels. Helpers: getApprovalStatusLabel(), getApprovalStatusColor() for N-level progress display |
-| `src/lib/utils.ts` | cn() utility: merges Tailwind classes via clsx + tailwind-merge |
-| `src/lib/date-utils.ts` | formatDate(): parses ISO/date strings, formats to dd-MM-yyyy via date-fns |
+| `src/shared/index.ts` | Barrel file re-exporting: `cn`, `formatDate`, `api`, `useIsMobile` |
+| `src/shared/api/client.ts` | Fetch wrapper: JWT from localStorage, Bearer auth header, ApiResponse<T> envelope, error handling |
+| `src/shared/lib/utils.ts` | cn() utility: merges Tailwind classes via clsx + tailwind-merge |
+| `src/shared/lib/date-utils.ts` | formatDate(): parses ISO/date strings, formats to dd-MM-yyyy via date-fns |
+| `src/shared/hooks/use-mobile.tsx` | Detects viewport < 768px via matchMedia listener |
+| `src/shared/hooks/use-toast.ts` | shadcn/ui toast hook (auto-generated) |
+
+### Features (`src/features/`)
+
+| File | Purpose |
+|------|---------|
+| `src/features/shared-reference-data/index.ts` | Barrel re-exporting: AppRoles, roleLabels, leaveStatusLabels, UserRole, LeaveStatus, getApprovalStatusLabel, getApprovalStatusColor |
+| `src/features/shared-reference-data/constants/app-roles.ts` | Core types: UserRole (union), AppRoles constant object, LeaveStatus (union). Label maps: roleLabels, leaveStatusLabels |
+| `src/features/shared-reference-data/helpers/approval-status.ts` | getApprovalStatusLabel(), getApprovalStatusColor() for N-level progress display |
 
 ### Layout Components
 
@@ -102,12 +115,12 @@ User Action -> Component -> useStore action -> api module -> fetch("/api/...")
 
 | File | Purpose |
 |------|---------|
-| `use-mobile.tsx` | Detects viewport < 768px via matchMedia listener |
-| `use-toast.ts` | shadcn/ui toast hook (auto-generated) |
+| `src/shared/hooks/use-mobile.tsx` | Detects viewport < 768px via matchMedia listener |
+| `src/shared/hooks/use-toast.ts` | shadcn/ui toast hook (auto-generated) |
 
-### shadcn/ui Components (src/components/ui/)
+### shadcn/ui Components (`src/shared/ui/`)
 
-48 generated component files: accordion, alert, alert-dialog, aspect-ratio, avatar, badge, breadcrumb, button, calendar, card, carousel, chart, checkbox, collapsible, command, context-menu, dialog, drawer, dropdown-menu, form, hover-card, input, input-otp, label, menubar, navigation-menu, pagination, popover, progress, radio-group, resizable, scroll-area, select, separator, sheet, sidebar, skeleton, slider, sonner, switch, table, tabs, textarea, toast, toaster, toggle, toggle-group, tooltip.
+49 generated component files: accordion, alert, alert-dialog, aspect-ratio, avatar, badge, breadcrumb, button, calendar, card, carousel, chart, checkbox, collapsible, command, context-menu, dialog, drawer, dropdown-menu, form, hover-card, input, input-otp, label, menubar, navigation-menu, pagination, popover, progress, radio-group, resizable, scroll-area, select, separator, sheet, sidebar, skeleton, slider, sonner, switch, table, tabs, textarea, toast, toaster, toggle, toggle-group, tooltip.
 
 ## Key Patterns
 
@@ -116,13 +129,13 @@ User Action -> Component -> useStore action -> api module -> fetch("/api/...")
 2. If standalone + dev mode: JWT Bearer allows anonymous access to /api/auth/me with dev-mode fallback (userId=1, roles=["QTHT"])
 3. Production: JWT Bearer token issued by SSO Portal, attached as Authorization header
 4. `AuthProvider` calls `GET /api/auth/me` (with JWT Bearer) on mount to resolve user profile
-5. `AuthGuard` in App.tsx checks `user` from AuthContext; redirects to /login if null
+5. `AuthGuard` in `app/router.tsx` checks `user` from AuthContext; redirects to /login if null
 6. LoginPage shows "waiting for SSO" (embed mode) or loading spinner (no username/password form)
 
 ### Role-Based UI
 Authorization via `CurrentUser.Role` from AuthContext:
 - `AppSidebar.tsx`: filters menuItems by visible roles
-- `App.tsx`: routes are always mounted (no route-level guard), sidebar hides unauthorized links
+- `app/router.tsx`: routes are always mounted (no route-level guard), sidebar hides unauthorized links
 - Server-side: Endpoints check `CurrentUser.Role` in handler or PreProcessor
 
 ### Data Updates

@@ -8,7 +8,7 @@
 |----------|-----------|---------|
 | React components | PascalCase | `AppSidebar.tsx`, `LeaveNewPage.tsx` |
 | Files (components) | PascalCase | `DashboardPage.tsx`, `LeaveRequestForm.tsx` |
-| Files (utilities/hooks) | kebab-case | `use-mobile.tsx`, `date-utils.ts`, `leave-data.ts` |
+| Files (utilities/hooks) | kebab-case | `use-mobile.tsx`, `date-utils.ts`, `app-roles.ts` |
 | Functions / methods | camelCase | `formatDate()`, `loadData()`, `handleLogin()` |
 | Variables / state | camelCase | `currentUser`, `leaveRequests`, `isMobile` |
 | TypeScript types / interfaces | PascalCase | `UserRole`, `LeaveRequest`, `AppState` |
@@ -26,12 +26,12 @@
 ### Strictness
 - TypeScript 5.8, strict mode in tsconfig
 - All props, state, and function signatures typed explicitly
-- Avoid `any` - use proper types from `@/lib/leave-data.ts` and `@/api/*.api.ts`
+- Avoid `any` - use proper types from `@/features/shared-reference-data` and `@/api/*.api.ts`
 
 ### Type Imports
-Import domain types from shared `@/lib/leave-data.ts`, API DTOs from respective API modules:
+Import domain types from `@/features/shared-reference-data`, API DTOs from respective API modules:
 ```typescript
-import type { UserRole, LeaveStatus } from "@/lib/leave-data";
+import type { UserRole, LeaveStatus } from "@/features/shared-reference-data";
 import type { DepartmentDto } from "@/api/departments.api";
 ```
 
@@ -68,7 +68,7 @@ export const roleLabels: Record<UserRole, string> = {
 - No default export (use named export pattern)
 
 ### shadcn/ui Components
-- Auto-generated, located in `src/components/ui/`
+- Auto-generated, located in `src/shared/ui/`
 - Do NOT modify generated files manually
 - Extend via wrapper components in `src/components/`
 
@@ -78,8 +78,8 @@ export const roleLabels: Record<UserRole, string> = {
 2. Context imports (`@/contexts/AuthContext`)
 3. Store imports (`@/store/useStore`)
 4. API module imports (`@/api/...`)
-5. Library / utility imports (`@/lib/...`)
-6. UI component imports (`@/components/ui/...`)
+5. Shared infrastructure imports (`@/shared/...` -- lib, hooks, ui, api/client)
+6. Feature module imports (`@/features/...`)
 7. Shared component imports (`@/components/...`)
 8. Icon imports (lucide-react)
 9. Type imports (last)
@@ -88,8 +88,9 @@ Use `@/` path alias for all internal imports:
 ```typescript
 import { useAuth } from "@/contexts/AuthContext";
 import { useStore } from "@/store/useStore";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/shared/lib/utils";
+import { Button } from "@/shared/ui/button";
+import { type UserRole } from "@/features/shared-reference-data";
 import { CalendarDays } from "lucide-react";
 ```
 
@@ -111,7 +112,7 @@ import { CalendarDays } from "lucide-react";
 - Never mutate state directly; always use set()
 
 ### TanStack React Query
-- QueryClient created in App.tsx, provided via QueryClientProvider
+- QueryClient created in `app/providers.tsx`, provided via QueryClientProvider
 - Currently NOT used in pages (pages use Zustand directly)
 - Prepared for future server state caching
 
@@ -121,9 +122,9 @@ import { CalendarDays } from "lucide-react";
 import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStore } from "@/store/useStore";
-import { leaveStatusLabels, type LeaveStatus } from "@/lib/leave-data";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { leaveStatusLabels, type LeaveStatus } from "@/features/shared-reference-data";
+import { Badge } from "@/shared/ui/badge";
+import { cn } from "@/shared/lib/utils";
 
 const MyComponent = () => {
   const { user } = useAuth();

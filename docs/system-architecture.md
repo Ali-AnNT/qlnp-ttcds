@@ -11,9 +11,19 @@ Supabase architecture replaced by .NET API + SQL Server. All Supabase code, deps
 ```
 Host Website (SSO Portal)
   └─ iframe ─ React SPA (Vite)
-       ├─ AuthContext (JWT from postMessage or localStorage)
-       ├─ Zustand Store (data only, no auth)
-       └─ api/client.ts (fetch + Bearer JWT)
+       ├─ app/                        ← App shell (App.tsx, providers, router)
+       ├─ shared/                     ← Generic infrastructure (api client, lib, hooks, ui)
+       │   ├─ api/client.ts (fetch + Bearer JWT)
+       │   ├─ lib/ (utils, date-utils)
+       │   ├─ hooks/ (use-mobile, use-toast)
+       │   └─ ui/ (49 shadcn/ui components)
+       ├─ features/                   ← Feature modules
+       │   └─ shared-reference-data/  ← Types & labels split from old lib/leave-data.ts
+       ├─ contexts/AuthContext (JWT from postMessage or localStorage)
+       ├─ components/                 ← App-level shared components (sidebar, header, etc.)
+       ├─ pages/                      ← Route page components
+       ├─ store/useStore              ← Zustand Store (data only, no auth)
+       └─ api/                        ← Feature API modules (auth, departments, leave-*)
             │
             ▼ GET/POST/PUT/DELETE /api/*
 ASP.NET 10 FastEndpoints API
@@ -96,11 +106,14 @@ ASP.NET 10 FastEndpoints API
 
 ```mermaid
 graph TD
-    App[App.tsx]
-    App --> QCP[QueryClientProvider]
+    App[app/App.tsx]
+    App --> Providers[app/providers.tsx]
+    Providers --> QCP[QueryClientProvider]
     QCP --> TP[TooltipProvider]
+    TP --> Toaster
     TP --> AP[AuthProvider - AuthContext]
-    AP --> BR[BrowserRouter]
+    App --> Router[app/router.tsx]
+    Router --> BR[BrowserRouter]
     BR --> LP[LoginPage /login]
     BR --> AG[AuthGuard /]
     AG --> AL[AppLayout]
@@ -130,7 +143,7 @@ sequenceDiagram
     participant User as User (Browser)
     participant Component as React Component
     participant Store as Zustand Store
-    participant API as api/client.ts
+    participant API as shared/api/client.ts
     participant FE as FastEndpoints Endpoint
     participant DbCtx as AppDbContext
     participant DB as SQL Server
@@ -138,6 +151,7 @@ sequenceDiagram
     User->>Component: Form submit
     Component->>Store: action(payload)
     Store->>API: fetch("/api/leave-requests", { method: POST, body })
+    Note over API: client.ts in src/shared/api/
     API->>API: Attach JWT Authorization header
     API->>FE: HTTP Request
     FE->>FE: Resolve CurrentUser via ICurrentUserProvider (claims)
