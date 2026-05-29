@@ -48,8 +48,8 @@ src/
 | 5 | [Leave Requests](./phase-05-leave-requests.md) | ✅ Done | 1h |
 | 6 | [Approval](./phase-06-approval.md) | ✅ Done | 45m |
 | 7 | [Calendar](./phase-07-director-admin-features-calendar.md) | ✅ Done | 30m |
-| 8 | [Summary](./phase-08-summary.md) | Pending | 45m |
-| 9 | [Reports](./phase-09-reports.md) | Pending | 30m |
+| 8 | [Summary](./phase-08-summary.md) | ✅ Done | 45m |
+| 9 | [Reports](./phase-09-reports.md) | ✅ Done | 30m |
 | 10 | [Violations](./phase-10-violations.md) | Pending | 1h |
 | 11 | [Config](./phase-11-config.md) | Pending | 1h |
 | 12 | [Cleanup & ESLint Boundaries](./phase-12-cleanup-eslint-boundaries.md) | Pending | 1h |

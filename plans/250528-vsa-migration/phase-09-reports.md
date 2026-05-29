@@ -1,7 +1,7 @@
 ---
 phase: 9
 title: "Reports"
-status: pending
+status: done
 priority: P2
 effort: "30m"
 dependencies: [1, 2, 8]
@@ -70,8 +70,8 @@ features/reports/
 
 ## Success Criteria
 
-- [ ] Reports feature self-contained in `features/reports/`
-- [ ] Charts render correctly
-- [ ] CSV export works
-- [ ] No Zustand store usage
-- [ ] `bun run build` passes
+- [x] Reports feature self-contained in `features/reports/`
+- [x] Charts extracted into separate components (dept-bar-chart, type-pie-chart)
+- [x] CSV export logic preserved
+- [x] No Zustand store usage — replaced with TanStack Query via useReportsData hook
+- [x] `bun run build` passes

@@ -6,7 +6,7 @@ import { LeaveNewPage, LeaveMyPage } from "@/features/leave-requests";
 import { ApprovalPage } from "@/features/approval";
 import { CalendarPage } from "@/features/calendar";
 import { SummaryPage } from "@/features/summary";
-import ReportsPage from "@/pages/ReportsPage";
+import { ReportsPage } from "@/features/reports";
 import ViolationsPage from "@/pages/ViolationsPage";
 import ConfigPage from "@/pages/ConfigPage";
 import NotFound from "@/pages/NotFound";
