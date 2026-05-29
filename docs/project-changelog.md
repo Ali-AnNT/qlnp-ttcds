@@ -1,5 +1,27 @@
 # Project Changelog - QLNP-TTCDS
 
+## v0.6.0 -- 2026-05-29 -- VSA Phase 4: Dashboard Migration
+
+### Added
+- `src/features/dashboard/` feature module (VSA slice) with components, hooks, api, and barrel export
+- `src/features/dashboard/components/dashboard-page.tsx` -- DashboardPage moved from `src/pages/DashboardPage.tsx`
+- `src/features/dashboard/components/leave-balance-card.tsx` -- LeaveBalanceCard moved from `src/components/LeaveBalanceCard.tsx`
+- `src/features/dashboard/hooks/use-dashboard-stats.ts` -- TanStack Query hook combining leave balances, leave types, and approval configs queries
+- `src/features/dashboard/hooks/use-recent-requests.ts` -- TanStack Query hook with role-based query key (staff: own requests, managers: all)
+- `src/features/dashboard/api/dashboard.api.ts` -- Re-exports API types and modules needed by dashboard hooks
+- `src/features/dashboard/index.ts` -- Barrel export: DashboardPage, LeaveBalanceCard, LeaveBalanceInfo, useDashboardStats, useRecentRequests
+
+### Changed
+- `app/router.tsx`: DashboardPage import changed from `@/pages/DashboardPage` to `@/features/dashboard`
+- Dashboard data fetching: Zustand `useStore` replaced with TanStack Query hooks (`useDashboardStats`, `useRecentRequests`)
+- Dashboard imports: `@/components/ui/*` replaced with `@/shared/ui/*`, `@/lib/*` replaced with `@/shared/lib/*`
+
+### Removed
+- `src/pages/DashboardPage.tsx` (moved to features/dashboard/components/)
+- `src/components/LeaveBalanceCard.tsx` (moved to features/dashboard/components/)
+- `src/components/LeaveHistory.tsx` (unused stub, deleted)
+- Zustand store references removed from dashboard feature (4 selectors: leaveRequests, leaveBalances, leaveTypes, loadData)
+
 ## v0.5.0 -- 2026-05-28 -- SystemConfigs Key-Value Settings
 
 ### Added

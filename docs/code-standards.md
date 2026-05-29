@@ -57,16 +57,18 @@ export const roleLabels: Record<UserRole, string> = {
 
 ### Page Components
 - Default export (no named export wrapper)
-- Located in `src/pages/`
+- Located in `src/pages/` (legacy) or `src/features/{feature}/components/` (VSA-migrated)
 - One component per file
-- Use Zustand store directly via hooks
-- Call `loadData()` on mount via `useEffect`
+- Legacy pages use Zustand store directly via hooks; VSA-migrated pages use TanStack Query hooks
+- Legacy pages call `loadData()` on mount via `useEffect`; VSA-migrated pages rely on TanStack Query automatic fetching
 - Must be wrapped in AppLayout via React Router `<Outlet />`
 
 ### Feature Components (VSA)
 - Named exports for feature components
 - Located in `src/features/{feature}/components/`
 - Barrel `index.ts` re-exports public API
+- Data fetching via TanStack Query hooks in `src/features/{feature}/hooks/`
+- API type re-exports in `src/features/{feature}/api/`
 - Props interface defined inline or at top
 
 ### Layout & UI Components
@@ -84,14 +86,17 @@ export const roleLabels: Record<UserRole, string> = {
 
 1. React / React Router imports
 2. Auth feature imports (`@/features/auth`)
-3. Layout feature imports (`@/features/layout`)
-4. Store imports (`@/store/useStore`)
-5. API module imports (`@/api/...`)
-6. Shared infrastructure imports (`@/shared/...` -- lib, hooks, ui, api/client)
-7. Feature module imports (`@/features/...`)
-8. Shared component imports (`@/components/...`)
-9. Icon imports (lucide-react)
-10. Type imports (last)
+3. Dashboard feature imports (`@/features/dashboard`)
+4. Layout feature imports (`@/features/layout`)
+5. Shared reference data imports (`@/features/shared-reference-data`)
+6. Store imports (`@/store/useStore`) -- legacy only, use TanStack Query hooks for VSA features
+7. API module imports (`@/api/...`) -- or feature-local re-exports (`@/features/{feature}/api/...`)
+8. Shared infrastructure imports (`@/shared/...` -- lib, hooks, ui, api/client)
+9. TanStack Query imports (`@tanstack/react-query`)
+10. Feature module imports (`@/features/...`)
+11. Shared component imports (`@/components/...`) -- legacy, being migrated to features
+12. Icon imports (lucide-react)
+13. Type imports (last)
 
 Use `@/` path alias for all internal imports:
 ```typescript

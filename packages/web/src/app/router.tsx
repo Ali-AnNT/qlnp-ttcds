@@ -1,7 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { LoginPage, AuthGuard } from "@/features/auth";
 import { AppLayout } from "@/features/layout";
-import DashboardPage from "@/pages/DashboardPage";
+import { DashboardPage } from "@/features/dashboard";
 import LeaveNewPage from "@/pages/LeaveNewPage";
 import LeaveMyPage from "@/pages/LeaveMyPage";
 import ApprovalPage from "@/pages/ApprovalPage";

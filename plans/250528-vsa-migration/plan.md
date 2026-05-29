@@ -44,7 +44,7 @@ src/
 | 1 | [Shared Infrastructure & App Layer](./phase-01-shared-infrastructure-app-layer.md) | ✅ Done | 2h |
 | 2 | [Auth](./phase-02-core-features-auth.md) | ✅ Done | 30m |
 | 3 | [Layout](./phase-03-layout.md) | ✅ Done | 30m |
-| 4 | [Dashboard](./phase-04-dashboard.md) | Pending | 30m |
+| 4 | [Dashboard](./phase-04-dashboard.md) | ✅ Done | 30m |
 | 5 | [Leave Requests](./phase-05-leave-requests.md) | Pending | 1h |
 | 6 | [Approval](./phase-06-approval.md) | Pending | 45m |
 | 7 | [Calendar](./phase-07-director-admin-features-calendar.md) | Pending | 30m |

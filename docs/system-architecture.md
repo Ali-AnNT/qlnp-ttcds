@@ -4,7 +4,7 @@
 
 Supabase architecture replaced by .NET API + SQL Server. All Supabase code, deps, and migrations removed.
 
-## Current Architecture (Phase 3): .NET 10 + EF Core + JWT Bearer Auth
+## Current Architecture (Phase 4): .NET 10 + EF Core + JWT Bearer Auth
 
 ### High-Level
 
@@ -20,10 +20,14 @@ Host Website (SSO Portal)
        ├─ features/                   ← Feature modules (VSA)
        │   ├─ auth/                    ← Auth feature (api, components, contexts, hooks)
        │   │   └─ index.ts            ← Barrel: LoginPage, AuthProvider, useAuth, AuthGuard, authApi
+       │   ├─ dashboard/               ← Dashboard feature (components, hooks, api) [Phase 4]
+       │   │   └─ index.ts            ← Barrel: DashboardPage, LeaveBalanceCard, useDashboardStats, useRecentRequests
+       │   ├─ layout/                  ← Layout feature (components, api)
+       │   │   └─ index.ts            ← Barrel: AppLayout, AppSidebar, AppHeader, departmentsApi
        │   └─ shared-reference-data/  ← Types & labels split from old lib/leave-data.ts
        ├─ components/                 ← App-level shared components (sidebar, header, etc.)
-       ├─ pages/                      ← Route page components
-       ├─ store/useStore              ← Zustand Store (data only, no auth)
+       ├─ pages/                      ← Route page components (7 pages still using Zustand)
+       ├─ store/useStore              ← Zustand Store (data only, no auth) — partially migrated
        └─ api/                        ← Feature API modules (departments, leave-*)
             │
             ▼ GET/POST/PUT/DELETE /api/*
@@ -121,7 +125,7 @@ graph TD
     AL --> AS[AppSidebar - features/layout]
     AL --> AH[AppHeader - features/layout]
     AL --> OUT[Outlet]
-    OUT --> DP[DashboardPage]
+    OUT --> DP[DashboardPage - features/dashboard]
     OUT --> LNP[LeaveNewPage]
     OUT --> LMP[LeaveMyPage]
     OUT --> APV[ApprovalPage]
@@ -132,12 +136,47 @@ graph TD
     OUT --> CFP[ConfigPage]
     OUT --> NF[NotFound]
 
+    DP --> DS[useDashboardStats - TanStack Query]
+    DP --> DR[useRecentRequests - TanStack Query]
+    DP --> LBC[LeaveBalanceCard]
+
     AS --> MenuItems[MenuItems filtered by user.role]
     AH --> BC[Breadcrumb]
     AH --> UserMenu[User Avatar + Dropdown]
 ```
 
 ## Data Flow
+
+### Dashboard (TanStack Query -- migrated)
+
+```mermaid
+sequenceDiagram
+    participant User as User (Browser)
+    participant Component as DashboardPage
+    participant Hook as useDashboardStats / useRecentRequests
+    participant API as shared/api/client.ts
+    participant FE as FastEndpoints Endpoint
+    participant DbCtx as AppDbContext
+    participant DB as SQL Server
+
+    User->>Component: Navigate to /
+    Component->>Hook: useDashboardStats() / useRecentRequests()
+    Hook->>API: fetch("/api/leave-balances/my", ...)
+    Note over API: client.ts in src/shared/api/
+    API->>API: Attach JWT Authorization header
+    API->>FE: HTTP Request
+    FE->>FE: Resolve CurrentUser via ICurrentUserProvider
+    FE->>DbCtx: EF Core query (LINQ)
+    DbCtx->>DB: SQL
+    DB-->>DbCtx: Result rows
+    DbCtx-->>FE: Entities
+    FE-->>API: JSON Response
+    API-->>Hook: Response data (cached by TanStack Query)
+    Hook-->>Component: Re-render with cached data
+    Component-->>User: Updated UI
+```
+
+### Legacy Pages (Zustand Store -- not yet migrated)
 
 ```mermaid
 sequenceDiagram
@@ -166,9 +205,9 @@ sequenceDiagram
     Store->>Store: set(state => newState)
     Store-->>Component: Re-render with new state
     Component-->>User: Updated UI
-
-    Note over FE,DB: Mỗi endpoint handler dùng AppDbContext + ICurrentUserProvider qua property injection (= null!;)
 ```
+
+Note: 7 pages still use Zustand Store (LeaveNew, LeaveMy, Approval, Calendar, Summary, Reports, Violations, Config). Dashboard is the first page migrated to TanStack Query.
 
 ## Database ERD
 
@@ -385,7 +424,8 @@ graph TD
 | **JWT Bearer Auth** thay vì gateway headers | SSO Portal issues JWT, app nhận qua postMessage (iframe) hoặc Authorization header. API validates JWT via symmetric key. ICurrentUserProvider reads claims → CurrentUser record. Đã bỏ CurrentUserMiddleware và gateway headers |
 | **ExcludeFromMigrations** cho system tables | USER_MASTER, DM_DONVI là các bảng có sẵn của hệ thống khác. Không được phép thay đổi schema. EF Core chỉ đọc dữ liệu |
 | **Vertical Slice Architecture** thay vì N-tier | Code tổ chức theo feature, không theo layer kỹ thuật. VSA `{Action}{Role}.cs` file naming. Thêm/sửa feature = làm việc trong endpoint files, không lan sang các layer khác → giảm coupling, tăng cohesion. Property injection (`= null!;`) thay vì constructor injection; Data.cs classes eliminated |
-| Single Zustand store | Data-only state management. Auth state in `features/auth/contexts/`. Layout components in `features/layout/`. Limited state surface area for intranet app |
+| Zustand store (partial migration) | Data-only state management for legacy pages. Auth state in `features/auth/contexts/`. Dashboard migrated to TanStack Query hooks (`useDashboardStats`, `useRecentRequests`). 7 pages still consume Zustand store. Full migration planned (Phases 5-12) |
+| TanStack Query for server state | Dashboard uses TanStack Query hooks for data fetching with automatic caching. Will replace Zustand store for all remaining pages in subsequent VSA migration phases |
 | Role-based sidebar (not route guards) | SPA UX: all routes mounted, navigation elements hidden by role. `AppSidebar` in `features/layout/`. Simple and effective for intranet |
 | Business days calculation (date-fns) | Standard for government/education leave tracking |
 | shadcn/ui (Radix primitives) | Production-ready accessible components, customizable via CSS variables |

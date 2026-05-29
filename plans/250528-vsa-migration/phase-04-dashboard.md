@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "Dashboard"
-status: pending
+status: done
 priority: P2
 effort: "30m"
 dependencies: [1, 2, 3]
@@ -84,11 +84,11 @@ features/dashboard/
 
 ## Success Criteria
 
-- [ ] Dashboard feature self-contained in `features/dashboard/`
-- [ ] Dashboard renders correctly with user metrics
-- [ ] Balance cards display correct data
-- [ ] No Zustand store usage in dashboard (replaced with hooks)
-- [ ] `bun run build` passes
+- [x] Dashboard feature self-contained in `features/dashboard/`
+- [x] Dashboard renders correctly with user metrics
+- [x] Balance cards display correct data
+- [x] No Zustand store usage in dashboard (replaced with hooks)
+- [x] `bun run build` passes
 
 ## Risk Assessment
 

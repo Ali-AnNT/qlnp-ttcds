@@ -5,18 +5,26 @@
 **pnpm monorepo**: `packages/api` (.NET 10 backend) + `packages/web` (React SPA frontend).
 
 ### Frontend (packages/web)
-React SPA with fetch-based API client, Zustand data store, auth in features/auth/ (JWT Bearer auth), layout in features/layout/ (AppLayout, AppSidebar, AppHeader, departmentsApi). UI built with shadcn/ui components on Tailwind CSS.
+React SPA with fetch-based API client, Zustand data store (partially migrated to TanStack Query), auth in features/auth/ (JWT Bearer auth), layout in features/layout/ (AppLayout, AppSidebar, AppHeader, departmentsApi), dashboard in features/dashboard/ (DashboardPage, LeaveBalanceCard, TanStack Query hooks). UI built with shadcn/ui components on Tailwind CSS.
 
 ### Backend (packages/api)
 .NET 10 + FastEndpoints v8.1.0 + EF Core 9.0.0 + SQL Server. Vertical slice architecture (VSA) with `{Action}{Role}.cs` file naming. JWT Bearer authentication; ICurrentUserProvider reads claims from JWT to resolve CurrentUser. Property injection (`= null!;`) pattern for endpoints; no Data.cs classes.
 
-**Data flow**: React Component -> Zustand Store -> shared/api/client.ts (fetch + JWT Bearer) -> FastEndpoints Endpoint -> AppDbContext (EF Core) -> SQL Server
+**Data flow** (dashboard, migrated): React Component -> TanStack Query hooks -> shared/api/client.ts (fetch + JWT Bearer) -> FastEndpoints Endpoint -> AppDbContext (EF Core) -> SQL Server
+**Data flow** (legacy pages, Zustand): React Component -> Zustand Store -> shared/api/client.ts -> FastEndpoints Endpoint -> AppDbContext -> SQL Server
 
 ```
+Legacy (Zustand):
 User Action -> Component -> useStore action -> api module -> fetch("/api/...")
                                 |                              |
                                 v                              v
                           set() -> re-render            AppDbContext -> SQL
+
+Migrated (TanStack Query):
+User Action -> Component -> useXxxQuery hook -> api module -> fetch("/api/...")
+                                |                              |
+                                v                              v
+                          cache update -> re-render    AppDbContext -> SQL
 ```
 
 ## File-by-File Summary
@@ -87,6 +95,12 @@ User Action -> Component -> useStore action -> api module -> fetch("/api/...")
 | File | Purpose |
 |------|---------|
 | `src/features/auth/index.ts` | Barrel: exports LoginPage, AuthProvider, useAuth, AuthGuard, authApi, AuthUser |
+| `src/features/dashboard/index.ts` | Barrel: exports DashboardPage, LeaveBalanceCard, LeaveBalanceInfo, useDashboardStats, useRecentRequests |
+| `src/features/dashboard/components/dashboard-page.tsx` | Dashboard page: welcome banner, metric cards, quick actions, recent activity feed. Uses TanStack Query hooks (migrated from Zustand) |
+| `src/features/dashboard/components/leave-balance-card.tsx` | Per-type leave balance card with progress bar. Exports LeaveBalanceInfo type |
+| `src/features/dashboard/hooks/use-dashboard-stats.ts` | TanStack Query hook: fetches leave balances, leave types, and approval configs. Computes myBalances, maxLevelByType, remainingDays, totalDaysAllowed |
+| `src/features/dashboard/hooks/use-recent-requests.ts` | TanStack Query hook: fetches leave requests (staff: own only; managers: all). Computes pendingApproval, approvedCount, totalDaysUsed, recentRequests |
+| `src/features/dashboard/api/dashboard.api.ts` | Re-exports API types and modules needed by dashboard hooks (leaveBalancesApi, leaveRequestsApi, leaveTypesApi, configApi) |
 | `src/features/layout/index.ts` | Barrel: exports AppLayout, AppSidebar, AppHeader, departmentsApi, DepartmentDto |
 | `src/features/layout/components/app-layout.tsx` | Main layout: sidebar (collapsible, mobile responsive with overlay) + header + Outlet. Named export |
 | `src/features/layout/components/app-sidebar.tsx` | Role-based navigation. MenuItems filtered by user role. Expandable groups. Active state via NavLink. Logout button |
@@ -100,7 +114,7 @@ User Action -> Component -> useStore action -> api module -> fetch("/api/...")
 
 | File | Route | Purpose |
 |------|-------|---------|
-| `DashboardPage.tsx` | / | Welcome banner + metric cards + per-type leave balance cards + quick actions + recent activity |
+| `features/dashboard/components/dashboard-page.tsx` | / | Welcome banner + metric cards + per-type leave balance cards + quick actions + recent activity. **Migrated to VSA** -- uses TanStack Query hooks instead of Zustand |
 | `LeaveNewPage.tsx` | /leave/new | Form: leave type select, date range picker (business days calculation), reason textarea, approver display. Overlap detection against approved requests only (status="approved"). Submit creates via store.addLeaveRequest |
 | `LeaveMyPage.tsx` | /leave/my | Table of user's requests with status filter dropdown. Edit dialog (pre-submit), cancel action |
 | `ApprovalPage.tsx` | /approval | Pending requests table. Config-driven N-level approval filtering. Approve/reject actions with detail view dialog. Shows approval level progress (e.g., "TP da duyet (cap 1/2)") |
@@ -117,6 +131,8 @@ User Action -> Component -> useStore action -> api module -> fetch("/api/...")
 |------|---------|
 | `src/shared/hooks/use-mobile.tsx` | Detects viewport < 768px via matchMedia listener |
 | `src/shared/hooks/use-toast.ts` | shadcn/ui toast hook (auto-generated) |
+| `src/features/dashboard/hooks/use-dashboard-stats.ts` | TanStack Query hook: leave balances + leave types + approval configs for dashboard metrics |
+| `src/features/dashboard/hooks/use-recent-requests.ts` | TanStack Query hook: recent leave requests for dashboard activity feed |
 
 ### shadcn/ui Components (`src/shared/ui/`)
 
@@ -149,8 +165,10 @@ Authorization via `CurrentUser.Role` from `features/auth/`:
 - Year/quarter/month filters use date-fns sub-months/start-of-year etc.
 
 ### Data Loading
-- `loadData()` fetches all reference data in parallel (Promise.all) via API modules
-- Individual pages call loadData() on mount (useEffect) to refresh
+- `loadData()` fetches all reference data in parallel (Promise.all) via API modules (legacy Zustand pattern)
+- Individual pages call loadData() on mount (useEffect) to refresh (legacy Zustand pattern)
+- **Migrated (dashboard)**: TanStack Query hooks (`useDashboardStats`, `useRecentRequests`) with automatic caching and invalidation
+- **Legacy (7 pages remaining)**: Zustand store still consumed by LeaveNewPage, LeaveMyPage, ApprovalPage, CalendarPage, SummaryPage, ReportsPage, ViolationsPage, ConfigPage
 - Data scoping: API endpoint returns role-appropriate data based on CurrentUser
 
 ## Database (SQL Server - VI_NGHIPHEP)

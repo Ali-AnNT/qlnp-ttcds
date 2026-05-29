@@ -1,6 +1,6 @@
-import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/features/auth";
-import { useStore } from "@/store/useStore";
+import { useDashboardStats } from "../hooks/use-dashboard-stats";
+import { useRecentRequests } from "../hooks/use-recent-requests";
 import { formatDate } from "@/shared/lib/date-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Badge } from "@/shared/ui/badge";
@@ -8,65 +8,30 @@ import { CalendarDays, Clock, CheckCircle, FileText } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 import { Link } from "react-router-dom";
 import { Button } from "@/shared/ui/button";
-import { LeaveBalanceCard } from "@/components/LeaveBalanceCard";
 import {
   getApprovalStatusLabel,
   getApprovalStatusColor,
   AppRoles,
 } from "@/features/shared-reference-data";
-import { configApi, type ConfigDto } from "@/api/config.api";
-
-const statusLabels: Record<string, string> = {
-  pending: "Chờ duyệt",
-  approved: "Đã duyệt",
-  rejected: "Từ chối",
-  cancelled: "Đã hủy",
-};
 
 const DashboardPage = () => {
   const { user } = useAuth();
-  const leaveRequests = useStore((s) => s.leaveRequests);
-  const leaveTypes = useStore((s) => s.leaveTypes);
-  const leaveBalances = useStore((s) => s.leaveBalances);
-  const loadData = useStore((s) => s.loadData);
-  const [loading, setLoading] = useState(true);
-  const [approvalConfigs, setApprovalConfigs] = useState<ConfigDto[]>([]);
+  const {
+    leaveTypes,
+    maxLevelByType,
+    remainingDays,
+    loading: statsLoading,
+  } = useDashboardStats();
 
-  useEffect(() => {
-    configApi.get().then(({ data }) => {
-      if (data) setApprovalConfigs(data);
-    });
-  }, []);
+  const {
+    pendingApproval,
+    approvedCount,
+    totalDaysUsed,
+    recentRequests,
+    loading: requestsLoading,
+  } = useRecentRequests();
 
-  useEffect(() => {
-    setLoading(true);
-    loadData().finally(() => setLoading(false));
-  }, []);
-
-  const currentYear = new Date().getFullYear();
-  const myBalances = leaveBalances.filter(
-    (b) => b.userId === user?.userId && b.year === currentYear,
-  );
-
-  const myRequests = leaveRequests.filter((r) => r.userId === user?.userId);
-  const pendingApproval = leaveRequests.filter((r) => r.status === "pending");
-  const approvedCount = myRequests.filter(
-    (r) => r.status === "approved",
-  ).length;
-  const totalDaysUsed = myRequests
-    .filter((r) => r.status === "approved")
-    .reduce((s, r) => s + r.totalDays, 0);
-
-  const maxLevelByType = useMemo(() => {
-    const map = new Map<number, number>();
-    for (const c of approvalConfigs) {
-      const current = map.get(c.leaveTypeId) ?? 0;
-      if (c.approvalLevel > current) map.set(c.leaveTypeId, c.approvalLevel);
-    }
-    return map;
-  }, [approvalConfigs]);
-  const remainingDays = myBalances[0]?.remainingDays ?? 0;
-  const totalDaysAllowed = myBalances[0]?.totalDays ?? 0;
+  const loading = statsLoading || requestsLoading;
 
   const metrics = [
     {
@@ -77,10 +42,7 @@ const DashboardPage = () => {
     },
     {
       label: "Đơn đang chờ duyệt",
-      value:
-        user?.role === AppRoles.Staff
-          ? myRequests.filter((r) => r.status === "pending").length
-          : pendingApproval.length,
+      value: pendingApproval.length,
       icon: Clock,
       color: "text-warning",
     },
@@ -97,10 +59,6 @@ const DashboardPage = () => {
       color: "text-info",
     },
   ];
-
-  const recentRequests = (
-    user?.role === AppRoles.Staff ? myRequests : leaveRequests
-  ).slice(0, 8);
 
   return (
     <div className="space-y-6">

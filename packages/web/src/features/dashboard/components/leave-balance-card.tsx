@@ -27,3 +27,5 @@ export function LeaveBalanceCard({ balance }: { balance: LeaveBalanceInfo }) {
     </Card>
   );
 }
+
+export type { LeaveBalanceInfo };
