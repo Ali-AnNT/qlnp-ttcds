@@ -1,7 +1,7 @@
 ---
 phase: 8
 title: "Summary"
-status: done
+status: completed
 priority: P2
 effort: "45m"
 dependencies: [1, 2, 5, 7]
@@ -75,11 +75,11 @@ features/summary/
 
 ## Success Criteria
 
-- [ ] Summary feature self-contained in `features/summary/`
-- [ ] Department summary table renders with correct data
-- [ ] Pie chart by leave type works
-- [ ] No Zustand store usage
-- [ ] `bun run build` passes
+- [x] Summary feature self-contained in `features/summary/`
+- [x] Department summary table renders with correct data
+- [x] Pie chart by leave type works
+- [x] No Zustand store usage
+- [x] `bun run build` passes
 
 ## Risk Assessment
 

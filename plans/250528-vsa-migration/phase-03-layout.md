@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Layout"
-status: done
+status: completed
 priority: P1
 effort: "30m"
 dependencies: [1, 2]

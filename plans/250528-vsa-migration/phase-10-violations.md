@@ -1,7 +1,7 @@
 ---
 phase: 10
 title: "Violations"
-status: pending
+status: completed
 priority: P2
 effort: "1h"
 dependencies: [1, 2, 9]
@@ -91,12 +91,12 @@ features/violations/
 
 ## Success Criteria
 
-- [ ] Violations feature self-contained in `features/violations/`
-- [ ] All 7 components render correctly
-- [ ] Metrics, tables, charts, dialogs all functional
-- [ ] Each component file under 200 lines
-- [ ] No Zustand store usage
-- [ ] `bun run build` passes
+- [x] Violations feature self-contained in `features/violations/`
+- [x] All 7 components render correctly
+- [x] Metrics, tables, charts, dialogs all functional
+- [x] Each component file under 200 lines
+- [x] No Zustand store usage
+- [x] `bun run build` passes
 
 ## Risk Assessment
 

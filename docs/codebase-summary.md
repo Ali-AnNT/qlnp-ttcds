@@ -5,7 +5,7 @@
 **pnpm monorepo**: `packages/api` (.NET 10 backend) + `packages/web` (React SPA frontend).
 
 ### Frontend (packages/web)
-React SPA with fetch-based API client, Zustand data store (partially migrated to TanStack Query), auth in features/auth/ (JWT Bearer auth), layout in features/layout/ (AppLayout, AppSidebar, AppHeader, departmentsApi), dashboard in features/dashboard/ (DashboardPage, LeaveBalanceCard, TanStack Query hooks), leave-requests in features/leave-requests/ (LeaveNewPage, LeaveMyPage, TanStack Query hooks), config in features/config/ (leaveTypesApi, configApi). UI built with shadcn/ui components on Tailwind CSS.
+React SPA with fetch-based API client, Zustand data store (partially migrated to TanStack Query), auth in features/auth/ (JWT Bearer auth), layout in features/layout/ (AppLayout, AppSidebar, AppHeader, departmentsApi), dashboard in features/dashboard/ (DashboardPage, LeaveBalanceCard, TanStack Query hooks), leave-requests in features/leave-requests/ (LeaveNewPage, LeaveMyPage, TanStack Query hooks), violations in features/violations/ (ViolationsPage, TanStack Query hooks), config in features/config/ (leaveTypesApi, configApi). UI built with shadcn/ui components on Tailwind CSS.
 
 ### Backend (packages/api)
 .NET 10 + FastEndpoints v8.1.0 + EF Core 9.0.0 + SQL Server. Vertical slice architecture (VSA) with `{Action}{Role}.cs` file naming. JWT Bearer authentication; ICurrentUserProvider reads claims from JWT to resolve CurrentUser. Property injection (`= null!;`) pattern for endpoints; no Data.cs classes.
@@ -75,7 +75,7 @@ User Action -> Component -> useXxxQuery hook -> api module -> fetch("/api/...")
 | `src/shared/api/client.ts` | Fetch wrapper: JWT from localStorage, Bearer auth header, ApiResponse<T> envelope, error handling. Re-exported via `@/shared` barrel |
 | `src/api/leave-types.api.ts` | Legacy: LeaveTypeDto + leaveTypesApi CRUD. Still consumed by Zustand pages (Approval, Config, Calendar, etc.) |
 | `src/api/leave-requests.api.ts` | Legacy: LeaveRequestDto + leaveRequestsApi. Still consumed by Zustand pages (Approval) |
-| `src/api/leave-balances.api.ts` | Legacy: LeaveBalanceDto + leaveBalancesApi. Still consumed by Zustand pages (Violations) |
+| `src/api/leave-balances.api.ts` | Legacy: LeaveBalanceDto + leaveBalancesApi. No longer used by Violations (migrated to VSA) |
 | `src/api/config.api.ts` | Legacy: ConfigDto + configApi. Still consumed by Zustand pages (Approval, Calendar, Summary, Reports) |
 | `src/api/system-configs.api.ts` | Legacy: SystemConfigDto + systemConfigsApi. Still consumed by ConfigPage |
 
@@ -116,6 +116,14 @@ User Action -> Component -> useXxxQuery hook -> api module -> fetch("/api/...")
 | `src/features/leave-requests/api/types.ts` | LeaveRequestDto, CreateLeaveRequestDto, LeaveBalanceDto types |
 | `src/features/leave-requests/api/leave-requests.api.ts` | leaveRequestsApi: list, listMy, create, update, approve, reject, cancel |
 | `src/features/leave-requests/api/leave-balances.api.ts` | leaveBalancesApi: my() |
+| `src/features/violations/index.ts` | Barrel: exports ViolationsPage, useViolations, types |
+| `src/features/violations/components/violations-page.tsx` | Violations page: employees exceeding 12-day limit. Uses TanStack Query hooks |
+| `src/features/violations/components/violation-metrics.tsx` | Metric cards for violations |
+| `src/features/violations/components/violation-emp-table.tsx` | Table of employees with violations |
+| `src/features/violations/components/violation-dept-table.tsx` | Table of departments with violations |
+| `src/features/violations/components/violation-chart.tsx` | Charts for violation data (pie + bar) |
+| `src/features/violations/hooks/use-violations.ts` | TanStack Query hook: fetches violation data |
+| `src/features/violations/api/types.ts` | ViolationDto, DepartmentViolationDto types |
 | `src/features/config/index.ts` | Barrel: exports leaveTypesApi, configApi, LeaveTypeDto, ConfigDto |
 | `src/features/config/api/leave-types.api.ts` | LeaveTypeDto + leaveTypesApi CRUD |
 | `src/features/config/api/config.api.ts` | ConfigDto + configApi.get/update() |
@@ -134,7 +142,7 @@ User Action -> Component -> useXxxQuery hook -> api module -> fetch("/api/...")
 | `CalendarPage.tsx` | /calendar | Month grid with leave indicators + list view toggle. Department filter. date-fns month navigation |
 | `SummaryPage.tsx` | /summary | Year/type filter. Per-department table (clickable -> employee detail sub-table). Pie chart by leave type |
 | `ReportsPage.tsx` | /reports | 3 KPI cards, bar chart by department, pie chart by type. UI still exports local CSV; backend `/api/reports/export` supports formatted `.xlsx` |
-| `ViolationsPage.tsx` | /violations | Employees exceeding 12-day limit. Per-employee + per-department tables. Pie + bar charts. Period filter (year/quarter/month) |
+| `features/violations/components/violations-page.tsx` | /violations | Employees exceeding 12-day limit. Per-employee + per-department tables. Pie + bar charts. Period filter (year/quarter/month). **Migrated to VSA** -- uses TanStack Query hooks |
 | `ConfigPage.tsx` | /config | 3 tabs: General config (8 system-configurable settings via SystemConfigs API), Leave Types CRUD, Approval Config CRUD (leave_type + level 1-5 + approver_role) |
 | `NotFound.tsx` | * | 404 page |
 
@@ -150,6 +158,7 @@ User Action -> Component -> useXxxQuery hook -> api module -> fetch("/api/...")
 | `src/features/leave-requests/hooks/use-leave-balances.ts` | TanStack Query hook: fetches current user's leave balances |
 | `src/features/leave-requests/hooks/use-leave-types.ts` | TanStack Query hook: fetches all leave types |
 | `src/features/leave-requests/hooks/use-approval-configs.ts` | TanStack Query hook: fetches approval configs |
+| `src/features/violations/hooks/use-violations.ts` | TanStack Query hook: fetches violation data |
 
 ### shadcn/ui Components (`src/shared/ui/`)
 
@@ -185,7 +194,7 @@ Authorization via `CurrentUser.Role` from `features/auth/`:
 - `loadData()` fetches all reference data in parallel (Promise.all) via API modules (legacy Zustand pattern)
 - Individual pages call loadData() on mount (useEffect) to refresh (legacy Zustand pattern)
 - **Migrated (dashboard)**: TanStack Query hooks (`useDashboardStats`, `useRecentRequests`) with automatic caching and invalidation
-- **Legacy (6 pages remaining)**: Zustand store still consumed by ApprovalPage, CalendarPage, SummaryPage, ReportsPage, ViolationsPage, ConfigPage
+- **Legacy (5 pages remaining)**: Zustand store still consumed by ApprovalPage, CalendarPage, SummaryPage, ReportsPage, ConfigPage
 - Data scoping: API endpoint returns role-appropriate data based on CurrentUser
 
 ## Database (SQL Server - VI_NGHIPHEP)

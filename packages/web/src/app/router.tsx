@@ -7,7 +7,7 @@ import { ApprovalPage } from "@/features/approval";
 import { CalendarPage } from "@/features/calendar";
 import { SummaryPage } from "@/features/summary";
 import { ReportsPage } from "@/features/reports";
-import ViolationsPage from "@/pages/ViolationsPage";
+import { ViolationsPage } from "@/features/violations";
 import ConfigPage from "@/pages/ConfigPage";
 import NotFound from "@/pages/NotFound";
 
