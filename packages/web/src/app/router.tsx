@@ -8,7 +8,7 @@ import { CalendarPage } from "@/features/calendar";
 import { SummaryPage } from "@/features/summary";
 import { ReportsPage } from "@/features/reports";
 import { ViolationsPage } from "@/features/violations";
-import ConfigPage from "@/pages/ConfigPage";
+import { ConfigPage } from "@/features/config";
 import NotFound from "@/pages/NotFound";
 
 export function AppRouter() {

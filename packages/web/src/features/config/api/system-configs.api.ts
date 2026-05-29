@@ -1,12 +1,5 @@
 import { api } from "@/shared/api/client";
-
-export interface SystemConfigDto {
-  id: number;
-  configKey: string;
-  configValue: string;
-  description: string | null;
-  updatedAt: string;
-}
+import { SystemConfigDto } from "./types";
 
 export const systemConfigsApi = {
   get: () => api.get<SystemConfigDto[]>("/system-configs"),

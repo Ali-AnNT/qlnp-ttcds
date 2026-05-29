@@ -1,9 +1,7 @@
 import { create } from "zustand";
 import { departmentsApi, type DepartmentDto } from "@/features/layout";
-import { leaveTypesApi, type LeaveTypeDto } from "@/api/leave-types.api";
-import { leaveRequestsApi, type LeaveRequestDto, type CreateLeaveRequestDto } from "@/api/leave-requests.api";
-import { leaveBalancesApi, type LeaveBalanceDto } from "@/api/leave-balances.api";
-import { configApi, type ConfigDto } from "@/api/config.api";
+import { leaveTypesApi, type LeaveTypeDto, configApi, type ConfigDto } from "@/features/config";
+import { leaveRequestsApi, type LeaveRequestDto, type CreateLeaveRequestDto, leaveBalancesApi, type LeaveBalanceDto } from "@/features/leave-requests";
 
 interface AppState {
   departments: DepartmentDto[];

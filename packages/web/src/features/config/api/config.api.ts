@@ -1,11 +1,5 @@
 import { api } from "@/shared/api/client";
-
-export interface ConfigDto {
-  id: number;
-  leaveTypeId: number;
-  approvalLevel: number;
-  approverRole: string;
-}
+import { ConfigDto } from "./types";
 
 export const configApi = {
   get: () => api.get<ConfigDto[]>("/system-configs/leave-configs"),

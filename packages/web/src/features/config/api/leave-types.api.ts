@@ -1,13 +1,5 @@
 import { api } from "@/shared/api/client";
-
-export interface LeaveTypeDto {
-  id: number;
-  name: string;
-  code: string;
-  defaultDays: number;
-  description: string | null;
-  isActive: boolean;
-}
+import { LeaveTypeDto } from "./types";
 
 export const leaveTypesApi = {
   list: () => api.get<LeaveTypeDto[]>("/leave-types"),

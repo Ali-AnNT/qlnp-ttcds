@@ -5,7 +5,7 @@
 **pnpm monorepo**: `packages/api` (.NET 10 backend) + `packages/web` (React SPA frontend).
 
 ### Frontend (packages/web)
-React SPA with fetch-based API client, Zustand data store (partially migrated to TanStack Query), auth in features/auth/ (JWT Bearer auth), layout in features/layout/ (AppLayout, AppSidebar, AppHeader, departmentsApi), dashboard in features/dashboard/ (DashboardPage, LeaveBalanceCard, TanStack Query hooks), leave-requests in features/leave-requests/ (LeaveNewPage, LeaveMyPage, TanStack Query hooks), violations in features/violations/ (ViolationsPage, TanStack Query hooks), config in features/config/ (leaveTypesApi, configApi). UI built with shadcn/ui components on Tailwind CSS.
+React SPA with fetch-based API client, Zustand data store (partially migrated to TanStack Query), auth in features/auth/ (JWT Bearer auth), layout in features/layout/ (AppLayout, AppSidebar, AppHeader, departmentsApi), dashboard in features/dashboard/ (DashboardPage, LeaveBalanceCard, TanStack Query hooks), leave-requests in features/leave-requests/ (LeaveNewPage, LeaveMyPage, TanStack Query hooks), violations in features/violations/ (ViolationsPage, TanStack Query hooks), config in features/config/ (ConfigPage, leaveTypesApi, configApi, systemConfigsApi, TanStack Query hooks). UI built with shadcn/ui components on Tailwind CSS.
 
 ### Backend (packages/api)
 .NET 10 + FastEndpoints v8.1.0 + EF Core 9.0.0 + SQL Server. Vertical slice architecture (VSA) with `{Action}{Role}.cs` file naming. JWT Bearer authentication; ICurrentUserProvider reads claims from JWT to resolve CurrentUser. Property injection (`= null!;`) pattern for endpoints; no Data.cs classes.
@@ -73,11 +73,11 @@ User Action -> Component -> useXxxQuery hook -> api module -> fetch("/api/...")
 | File | Purpose |
 |------|---------|
 | `src/shared/api/client.ts` | Fetch wrapper: JWT from localStorage, Bearer auth header, ApiResponse<T> envelope, error handling. Re-exported via `@/shared` barrel |
-| `src/api/leave-types.api.ts` | Legacy: LeaveTypeDto + leaveTypesApi CRUD. Still consumed by Zustand pages (Approval, Config, Calendar, etc.) |
 | `src/api/leave-requests.api.ts` | Legacy: LeaveRequestDto + leaveRequestsApi. Still consumed by Zustand pages (Approval) |
 | `src/api/leave-balances.api.ts` | Legacy: LeaveBalanceDto + leaveBalancesApi. No longer used by Violations (migrated to VSA) |
-| `src/api/config.api.ts` | Legacy: ConfigDto + configApi. Still consumed by Zustand pages (Approval, Calendar, Summary, Reports) |
-| `src/api/system-configs.api.ts` | Legacy: SystemConfigDto + systemConfigsApi. Still consumed by ConfigPage |
+| `src/api/config.api.ts` | Legacy: ConfigDto + configApi. Still consumed by Zustand pages (Approval, Calendar, Summary, Reports). Config feature migrated to VSA but these exports are kept for legacy pages |
+| `src/api/system-configs.api.ts` | Deprecated: Migrated to features/config |
+| `src/api/leave-types.api.ts` | Deprecated: Migrated to features/config |
 
 ### Shared Infrastructure (`src/shared/`)
 
@@ -124,9 +124,17 @@ User Action -> Component -> useXxxQuery hook -> api module -> fetch("/api/...")
 | `src/features/violations/components/violation-chart.tsx` | Charts for violation data (pie + bar) |
 | `src/features/violations/hooks/use-violations.ts` | TanStack Query hook: fetches violation data |
 | `src/features/violations/api/types.ts` | ViolationDto, DepartmentViolationDto types |
-| `src/features/config/index.ts` | Barrel: exports leaveTypesApi, configApi, LeaveTypeDto, ConfigDto |
+| `src/features/config/index.ts` | Barrel: exports ConfigPage, leaveTypesApi, configApi, systemConfigsApi, types, hooks |
+| `src/features/config/components/config-page.tsx` | Thin shell for ConfigPage. Hosts 3 tabs: General, Leave Types, Approval Flow |
+| `src/features/config/components/general-settings.tsx` | General system settings section (extracted) |
+| `src/features/config/components/leave-type-manager.tsx` | Leave type CRUD section (extracted) |
+| `src/features/config/components/approval-flow-manager.tsx` | Approval flow configuration section (extracted) |
+| `src/features/config/hooks/use-leave-types.ts` | TanStack Query hook for leave types CRUD |
+| `src/features/config/hooks/use-system-configs.ts` | TanStack Query hook for system settings |
+| `src/features/config/hooks/use-approval-config.ts` | TanStack Query hook for approval levels |
 | `src/features/config/api/leave-types.api.ts` | LeaveTypeDto + leaveTypesApi CRUD |
 | `src/features/config/api/config.api.ts` | ConfigDto + configApi.get/update() |
+| `src/features/config/api/system-configs.api.ts` | SystemConfigDto + systemConfigsApi.get/update() |
 | `src/features/shared-reference-data/index.ts` | Barrel re-exporting: AppRoles, roleLabels, leaveStatusLabels, UserRole, LeaveStatus, getApprovalStatusLabel, getApprovalStatusColor |
 | `src/features/shared-reference-data/constants/app-roles.ts` | Core types: UserRole (union), AppRoles constant object, LeaveStatus (union). Label maps: roleLabels, leaveStatusLabels |
 | `src/features/shared-reference-data/helpers/approval-status.ts` | getApprovalStatusLabel(), getApprovalStatusColor() for N-level progress display |

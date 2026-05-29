@@ -1,7 +1,7 @@
 ---
 phase: 11
 title: "Config"
-status: pending
+status: completed
 priority: P2
 effort: "1h"
 dependencies: [1, 2, 5]
@@ -110,12 +110,12 @@ features/config/
 
 ## Success Criteria
 
-- [ ] Config feature self-contained in `features/config/`
-- [ ] All 7 components render correctly
-- [ ] System settings, leave types, approval config CRUD all work
-- [ ] Each component file under 200 lines
-- [ ] No Zustand store usage
-- [ ] `bun run build` passes
+- [x] Config feature self-contained in `features/config/`
+- [x] All 7 components render correctly
+- [x] System settings, leave types, approval config CRUD all work
+- [x] Each component file under 200 lines
+- [x] No Zustand store usage
+- [x] `bun run build` passes
 
 ## Risk Assessment
 

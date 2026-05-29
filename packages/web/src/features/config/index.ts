@@ -1,4 +1,8 @@
-// Config feature — owns leave-types CRUD and LeaveTypeDto.
-// Other features import LeaveTypeDto from here to avoid type drift.
-export { leaveTypesApi, type LeaveTypeDto } from "./api/leave-types.api";
-export { configApi, type ConfigDto } from "./api/config.api";
+export { ConfigPage } from "./components/config-page";
+export { configApi } from "./api/config.api";
+export { leaveTypesApi } from "./api/leave-types.api";
+export { systemConfigsApi } from "./api/system-configs.api";
+export type { ConfigDto, LeaveTypeDto, SystemConfigDto } from "./api/types";
+export { useLeaveTypes } from "./hooks/use-leave-types";
+export { useApprovalConfig } from "./hooks/use-approval-config";
+export { useSystemConfigs } from "./hooks/use-system-configs";

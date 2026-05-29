@@ -1,44 +1,36 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useStore } from "../store/useStore";
 
-vi.mock("@/features/layout/api/departments.api", () => ({
+vi.mock("@/features/layout", () => ({
   departmentsApi: {
     list: vi.fn(),
   },
 }));
 
-vi.mock("@/api/leave-types.api", () => ({
+vi.mock("@/features/config", () => ({
   leaveTypesApi: {
     list: vi.fn(),
   },
-}));
-
-vi.mock("@/api/leave-requests.api", () => ({
-  leaveRequestsApi: {
-    list: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-  },
-}));
-
-vi.mock("@/api/leave-balances.api", () => ({
-  leaveBalancesApi: {
-    list: vi.fn(),
-  },
-}));
-
-vi.mock("@/api/config.api", () => ({
   configApi: {
     get: vi.fn(),
   },
 }));
 
+vi.mock("@/features/leave-requests", () => ({
+  leaveRequestsApi: {
+    list: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+  },
+  leaveBalancesApi: {
+    list: vi.fn(),
+  },
+}));
+
 // Re-import mocked modules so we can control them in tests
 import { departmentsApi } from "@/features/layout";
-import { leaveTypesApi } from "@/api/leave-types.api";
-import { leaveRequestsApi } from "@/api/leave-requests.api";
-import { leaveBalancesApi } from "@/api/leave-balances.api";
-import { configApi } from "@/api/config.api";
+import { leaveTypesApi, configApi } from "@/features/config";
+import { leaveRequestsApi, leaveBalancesApi } from "@/features/leave-requests";
 
 describe("useStore", () => {
   beforeEach(() => {
