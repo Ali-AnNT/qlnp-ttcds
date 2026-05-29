@@ -1,18 +1,21 @@
+import { leaveTypesApi } from "@/features/config";
+import { departmentsApi } from "@/features/layout";
+import { leaveBalancesApi, leaveRequestsApi } from "@/features/leave-requests";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { leaveRequestsApi } from "@/features/leave-requests/api/leave-requests.api";
-import { departmentsApi } from "@/features/layout/api/departments.api";
-import { leaveTypesApi } from "@/features/config/api/leave-types.api";
-import { leaveBalancesApi } from "@/features/leave-requests/api/leave-balances.api";
-import { 
-  Period, 
-  UserAggregate, 
-  EmployeeViolation, 
+import {
   DepartmentViolation,
-  ViolationByType 
+  Period,
+  UserAggregate,
+  ViolationByType,
 } from "../api/types";
 
-export function useViolations(year: number, period: Period, month: number, quarter: number) {
+export function useViolations(
+  year: number,
+  period: Period,
+  month: number,
+  quarter: number,
+) {
   const lrQuery = useQuery({
     queryKey: ["leave-requests", "all"],
     queryFn: async () => {
@@ -45,7 +48,11 @@ export function useViolations(year: number, period: Period, month: number, quart
     },
   });
 
-  const isLoading = lrQuery.isLoading || deptQuery.isLoading || ltQuery.isLoading || lbQuery.isLoading;
+  const isLoading =
+    lrQuery.isLoading ||
+    deptQuery.isLoading ||
+    ltQuery.isLoading ||
+    lbQuery.isLoading;
 
   const leaveRequests = lrQuery.data ?? [];
   const departments = deptQuery.data ?? [];
@@ -59,11 +66,16 @@ export function useViolations(year: number, period: Period, month: number, quart
   }, [leaveRequests]);
 
   const getUserLimit = (userId: number) => {
-    const balances = leaveBalances.filter((b) => b.userId === userId && b.year === year);
+    const balances = leaveBalances.filter(
+      (b) => b.userId === userId && b.year === year,
+    );
     if (balances.length > 0) {
       return balances.reduce((sum, b) => sum + Number(b.totalDays), 0);
     }
-    const fallback = leaveTypes.reduce((sum, t) => sum + Number(t.defaultDays || 0), 0);
+    const fallback = leaveTypes.reduce(
+      (sum, t) => sum + Number(t.defaultDays || 0),
+      0,
+    );
     return fallback > 0 ? fallback : 12;
   };
 
@@ -88,10 +100,13 @@ export function useViolations(year: number, period: Period, month: number, quart
       if (existing) {
         existing.totalUsed += Number(r.totalDays);
         existing.requests.push(r);
-        const ltName = leaveTypes.find((t) => t.id === r.leaveTypeId)?.name || "Khác";
-        existing.byType[ltName] = (existing.byType[ltName] || 0) + Number(r.totalDays);
+        const ltName =
+          leaveTypes.find((t) => t.id === r.leaveTypeId)?.name || "Khác";
+        existing.byType[ltName] =
+          (existing.byType[ltName] || 0) + Number(r.totalDays);
       } else {
-        const ltName = leaveTypes.find((t) => t.id === r.leaveTypeId)?.name || "Khác";
+        const ltName =
+          leaveTypes.find((t) => t.id === r.leaveTypeId)?.name || "Khác";
         map.set(r.userId, {
           userId: r.userId,
           userName: r.userName || "",
@@ -117,34 +132,51 @@ export function useViolations(year: number, period: Period, month: number, quart
   }, [userAggregates, departments, leaveBalances, leaveTypes, year]);
 
   const departmentViolations = useMemo(() => {
-    return departments.map((d) => {
-      const deptUsers = userAggregates.filter((u) => u.donViId === d.donViId);
-      const totalUsed = deptUsers.reduce((s, u) => s + u.totalUsed, 0);
-      const allowed = deptUsers.reduce((s, u) => s + getUserLimit(u.userId), 0);
-      const overage = totalUsed - allowed;
+    return departments
+      .map((d) => {
+        const deptUsers = userAggregates.filter((u) => u.donViId === d.donViId);
+        const totalUsed = deptUsers.reduce((s, u) => s + u.totalUsed, 0);
+        const allowed = deptUsers.reduce(
+          (s, u) => s + getUserLimit(u.userId),
+          0,
+        );
+        const overage = totalUsed - allowed;
 
-      const violatingEmps = employeeViolations.filter((v) => v.dept?.donViId === d.donViId);
-      const totalEmpOverage = violatingEmps.reduce((s, v) => s + v.overage, 0);
+        const violatingEmps = employeeViolations.filter(
+          (v) => v.dept?.donViId === d.donViId,
+        );
+        const totalEmpOverage = violatingEmps.reduce(
+          (s, v) => s + v.overage,
+          0,
+        );
 
-      const byType: Record<string, number> = {};
-      deptUsers.forEach((u) => {
-        Object.entries(u.byType).forEach(([k, val]) => {
-          byType[k] = (byType[k] || 0) + val;
+        const byType: Record<string, number> = {};
+        deptUsers.forEach((u) => {
+          Object.entries(u.byType).forEach(([k, val]) => {
+            byType[k] = (byType[k] || 0) + val;
+          });
         });
-      });
 
-      return {
-        dept: d,
-        totalUsed,
-        allowed,
-        overage,
-        empCount: deptUsers.length,
-        violatingCount: violatingEmps.length,
-        totalEmpOverage,
-        byType,
-      } as DepartmentViolation;
-    }).filter((d) => d.violatingCount > 0 || d.overage > 0);
-  }, [departments, userAggregates, employeeViolations, leaveBalances, leaveTypes, year]);
+        return {
+          dept: d,
+          totalUsed,
+          allowed,
+          overage,
+          empCount: deptUsers.length,
+          violatingCount: violatingEmps.length,
+          totalEmpOverage,
+          byType,
+        } as DepartmentViolation;
+      })
+      .filter((d) => d.violatingCount > 0 || d.overage > 0);
+  }, [
+    departments,
+    userAggregates,
+    employeeViolations,
+    leaveBalances,
+    leaveTypes,
+    year,
+  ]);
 
   const violationByType = useMemo(() => {
     const map: Record<string, number> = {};
@@ -153,12 +185,16 @@ export function useViolations(year: number, period: Period, month: number, quart
         map[k] = (map[k] || 0) + val;
       });
     });
-    return Object.entries(map).map(([name, value]) => ({ name, value })) as ViolationByType[];
+    return Object.entries(map).map(([name, value]) => ({
+      name,
+      value,
+    })) as ViolationByType[];
   }, [employeeViolations]);
 
-  const totalSystemOverage = useMemo(() => 
-    employeeViolations.reduce((s, v) => s + v.overage, 0)
-  , [employeeViolations]);
+  const totalSystemOverage = useMemo(
+    () => employeeViolations.reduce((s, v) => s + v.overage, 0),
+    [employeeViolations],
+  );
 
   return {
     years,

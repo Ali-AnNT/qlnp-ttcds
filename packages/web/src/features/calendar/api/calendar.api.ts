@@ -4,7 +4,7 @@
 export {
   leaveRequestsApi,
   type LeaveRequestDto,
-} from "@/features/leave-requests/api/leave-requests.api";
+} from "@/features/leave-requests";
 
 export {
   departmentsApi,

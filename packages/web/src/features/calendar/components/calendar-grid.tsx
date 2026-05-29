@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardHeader } from "@/shared/ui/card";
 import { cn } from "@/shared/lib/utils";
-import type { LeaveRequestDto } from "@/features/leave-requests/api/types";
+import type { LeaveRequestDto } from "@/features/leave-requests";
 
 interface CalendarGridProps {
   requests: LeaveRequestDto[];

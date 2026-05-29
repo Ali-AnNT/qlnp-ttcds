@@ -52,7 +52,7 @@ src/
 | 9 | [Reports](./phase-09-reports.md) | ✅ Done | 30m |
 | 10 | [Violations](./phase-10-violations.md) | ✅ Done | 1h |
 | 11 | [Config](./phase-11-config.md) | ✅ Done | 1h |
-| 12 | [Cleanup & ESLint Boundaries](./phase-12-cleanup-eslint-boundaries.md) | Pending | 1h |
+| 12 | [Cleanup & ESLint Boundaries](./phase-12-cleanup-eslint-boundaries.md) | ✅ Done | 1h |
 
 ## Migration Strategy
 

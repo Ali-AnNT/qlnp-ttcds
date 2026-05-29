@@ -1,7 +1,6 @@
 // Reports API — re-exports from feature-owning modules for reports queries.
 
-export { leaveRequestsApi } from "@/features/leave-requests/api/leave-requests.api";
-export type { LeaveRequestDto } from "@/features/leave-requests/api/types";
+export { leaveRequestsApi, type LeaveRequestDto } from "@/features/leave-requests";
 
 export {
   departmentsApi,

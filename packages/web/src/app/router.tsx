@@ -9,7 +9,7 @@ import { SummaryPage } from "@/features/summary";
 import { ReportsPage } from "@/features/reports";
 import { ViolationsPage } from "@/features/violations";
 import { ConfigPage } from "@/features/config";
-import NotFound from "@/pages/NotFound";
+import NotFound from "./NotFound";
 
 export function AppRouter() {
   return (

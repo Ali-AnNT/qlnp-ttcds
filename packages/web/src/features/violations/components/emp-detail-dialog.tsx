@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/di
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/shared/ui/table";
 import { formatDate } from "@/shared/lib/date-utils";
 import { EmployeeViolation } from "../api/types";
-import { LeaveTypeDto } from "@/features/config/api/leave-types.api";
+import { LeaveTypeDto } from "@/features/config";
 
 interface EmpDetailDialogProps {
   data: EmployeeViolation | null;

@@ -3,13 +3,10 @@
 
 export {
   leaveBalancesApi,
-  type LeaveBalanceDto,
-} from "@/features/leave-requests/api/leave-balances.api";
-
-export {
   leaveRequestsApi,
+  type LeaveBalanceDto,
   type LeaveRequestDto,
-} from "@/features/leave-requests/api/leave-requests.api";
+} from "@/features/leave-requests";
 
 export { leaveTypesApi, type LeaveTypeDto } from "@/features/config";
 

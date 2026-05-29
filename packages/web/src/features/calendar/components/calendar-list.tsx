@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/shared/ui/card";
 import { cn } from "@/shared/lib/utils";
 import { formatDate } from "@/shared/lib/date-utils";
 import { getApprovalStatusLabel } from "@/features/shared-reference-data";
-import type { LeaveRequestDto } from "@/features/leave-requests/api/types";
+import type { LeaveRequestDto } from "@/features/leave-requests";
 import type { DepartmentDto } from "@/features/layout";
 import type { LeaveTypeDto } from "@/features/config";
 

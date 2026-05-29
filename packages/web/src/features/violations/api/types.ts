@@ -1,5 +1,5 @@
-import { DepartmentDto } from "@/features/layout/api/departments.api";
-import { LeaveRequestDto } from "@/features/leave-requests/api/types";
+import { DepartmentDto } from "@/features/layout";
+import { LeaveRequestDto } from "@/features/leave-requests";
 
 export type Period = "year" | "quarter" | "month";
 

@@ -1,7 +1,7 @@
 ---
 phase: 12
 title: "Cleanup & ESLint Boundaries"
-status: pending
+status: completed
 priority: P2
 effort: "1h"
 dependencies: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
@@ -110,15 +110,15 @@ src/lib/           → all moved to shared/lib/ or shared-reference-data/
 
 ## Success Criteria
 
-- [ ] All old directories deleted (pages, api, components, contexts, store, hooks, lib)
-- [ ] No Zustand store remaining
-- [ ] ESLint boundary rules active and passing
-- [ ] `bun run build` passes
-- [ ] `bun run test` passes
-- [ ] `bun run lint` passes
-- [ ] VSA verification script reports no violations
-- [ ] Project docs updated to reflect new structure
-- [ ] App renders identically in browser
+- [x] All old directories deleted (pages, api, components, contexts, store, hooks, lib)
+- [x] No Zustand store remaining
+- [x] ESLint boundary rules active and passing
+- [x] `bun run build` passes
+- [x] `bun run test` passes
+- [x] `bun run lint` passes
+- [x] VSA verification script reports no violations
+- [x] Project docs updated to reflect new structure
+- [x] App renders identically in browser
 
 ## Risk Assessment
 
