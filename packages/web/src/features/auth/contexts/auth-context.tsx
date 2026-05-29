@@ -6,7 +6,8 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import { authApi, type AuthUser } from "@/api/auth.api";
+import { authApi } from "../api/auth.api";
+import type { AuthUser } from "../api/types";
 
 interface AuthState {
   user: AuthUser | null;

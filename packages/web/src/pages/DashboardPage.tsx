@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/features/auth";
 import { useStore } from "@/store/useStore";
 import { formatDate } from "@/shared/lib/date-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";

@@ -1,4 +1,4 @@
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/features/auth";
 import { type UserRole, AppRoles } from "@/features/shared-reference-data";
 import { cn } from "@/shared/lib/utils";
 import {

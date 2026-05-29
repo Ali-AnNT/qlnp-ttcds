@@ -1,5 +1,3 @@
-import { api } from "@/shared/api/client";
-
 export interface AuthUser {
   userId: number;
   userName: string;
@@ -7,7 +5,3 @@ export interface AuthUser {
   donViId: number | null;
   role: string;
 }
-
-export const authApi = {
-  me: () => api.get<AuthUser>("/auth/me"),
-};

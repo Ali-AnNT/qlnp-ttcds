@@ -26,12 +26,13 @@
 ### Strictness
 - TypeScript 5.8, strict mode in tsconfig
 - All props, state, and function signatures typed explicitly
-- Avoid `any` - use proper types from `@/features/shared-reference-data` and `@/api/*.api.ts`
+- Avoid `any` - use proper types from `@/features/shared-reference-data`, `@/features/auth`, and `@/api/*.api.ts`
 
 ### Type Imports
-Import domain types from `@/features/shared-reference-data`, API DTOs from respective API modules:
+Import domain types from `@/features/shared-reference-data`, auth types from `@/features/auth`, API DTOs from respective API modules:
 ```typescript
 import type { UserRole, LeaveStatus } from "@/features/shared-reference-data";
+import type { AuthUser } from "@/features/auth";
 import type { DepartmentDto } from "@/api/departments.api";
 ```
 
@@ -75,7 +76,7 @@ export const roleLabels: Record<UserRole, string> = {
 ## Import Order
 
 1. React / React Router imports
-2. Context imports (`@/contexts/AuthContext`)
+2. Auth feature imports (`@/features/auth`)
 3. Store imports (`@/store/useStore`)
 4. API module imports (`@/api/...`)
 5. Shared infrastructure imports (`@/shared/...` -- lib, hooks, ui, api/client)
@@ -86,7 +87,7 @@ export const roleLabels: Record<UserRole, string> = {
 
 Use `@/` path alias for all internal imports:
 ```typescript
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/features/auth";
 import { useStore } from "@/store/useStore";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
@@ -96,12 +97,16 @@ import { CalendarDays } from "lucide-react";
 
 ## State Management
 
-### AuthContext (`src/contexts/AuthContext.tsx`)
-- Manages auth state: `user` (AuthUser | null), `loading`, `isEmbed`
+### Auth Feature (`src/features/auth/`)
+- Barrel `index.ts` exports: LoginPage, AuthProvider, useAuth, AuthGuard, authApi, AuthUser
+- `contexts/auth-context.tsx`: Manages auth state: `user` (AuthUser | null), `loading`, `isEmbed`
 - On mount: calls `GET /api/auth/me` to resolve current user
 - Embed mode: listens for `postMessage({ type: "auth", token })` from host
 - JWT stored in `localStorage` under key `"jwt"`
-- Access via `useAuth()` hook
+- `hooks/use-auth.ts`: Access auth state via `useAuth()` hook
+- `hooks/use-auth-guard.tsx`: AuthGuard component (extracted from router.tsx), redirects to /login if no user
+- `components/login-page.tsx`: SSO waiting screen + dev-only user selector
+- `api/auth.api.ts` + `api/types.ts`: AuthUser type + authApi.me()
 
 ### Zustand Store (`src/store/useStore.ts`)
 - Data-only store (no auth state)
@@ -120,7 +125,7 @@ import { CalendarDays } from "lucide-react";
 
 ```typescript
 import { useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/features/auth";
 import { useStore } from "@/store/useStore";
 import { leaveStatusLabels, type LeaveStatus } from "@/features/shared-reference-data";
 import { Badge } from "@/shared/ui/badge";

@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Auth"
-status: pending
+status: completed
 priority: P1
 effort: "30m"
 dependencies: [1]
@@ -110,13 +110,13 @@ features/auth/
 
 ## Success Criteria
 
-- [ ] Auth feature fully self-contained in `features/auth/`
-- [ ] `features/auth/index.ts` exports public API
-- [ ] All consumers import from `@/features/auth`
-- [ ] Login flow works identically
-- [ ] AuthGuard works (redirects unauthenticated users)
-- [ ] `bun run build` passes
-- [ ] No references to old auth paths
+- [x] Auth feature fully self-contained in `features/auth/`
+- [x] `features/auth/index.ts` exports public API
+- [x] All consumers import from `@/features/auth`
+- [x] Login flow works identically
+- [x] AuthGuard works (redirects unauthenticated users)
+- [x] `bun run build` passes
+- [x] No references to old auth paths
 
 ## Risk Assessment
 

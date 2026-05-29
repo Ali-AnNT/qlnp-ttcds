@@ -4,7 +4,7 @@
 
 Supabase architecture replaced by .NET API + SQL Server. All Supabase code, deps, and migrations removed.
 
-## Current Architecture (Phase 1): .NET 10 + EF Core + JWT Bearer Auth
+## Current Architecture (Phase 2): .NET 10 + EF Core + JWT Bearer Auth
 
 ### High-Level
 
@@ -17,13 +17,14 @@ Host Website (SSO Portal)
        │   ├─ lib/ (utils, date-utils)
        │   ├─ hooks/ (use-mobile, use-toast)
        │   └─ ui/ (49 shadcn/ui components)
-       ├─ features/                   ← Feature modules
+       ├─ features/                   ← Feature modules (VSA)
+       │   ├─ auth/                    ← Auth feature (api, components, contexts, hooks)
+       │   │   └─ index.ts            ← Barrel: LoginPage, AuthProvider, useAuth, AuthGuard, authApi
        │   └─ shared-reference-data/  ← Types & labels split from old lib/leave-data.ts
-       ├─ contexts/AuthContext (JWT from postMessage or localStorage)
        ├─ components/                 ← App-level shared components (sidebar, header, etc.)
        ├─ pages/                      ← Route page components
        ├─ store/useStore              ← Zustand Store (data only, no auth)
-       └─ api/                        ← Feature API modules (auth, departments, leave-*)
+       └─ api/                        ← Feature API modules (departments, leave-*)
             │
             ▼ GET/POST/PUT/DELETE /api/*
 ASP.NET 10 FastEndpoints API
@@ -111,11 +112,11 @@ graph TD
     Providers --> QCP[QueryClientProvider]
     QCP --> TP[TooltipProvider]
     TP --> Toaster
-    TP --> AP[AuthProvider - AuthContext]
+    TP --> AP[AuthProvider - features/auth]
     App --> Router[app/router.tsx]
     Router --> BR[BrowserRouter]
-    BR --> LP[LoginPage /login]
-    BR --> AG[AuthGuard /]
+    BR --> LP[LoginPage /login - features/auth]
+    BR --> AG[AuthGuard / - features/auth/hooks]
     AG --> AL[AppLayout]
     AL --> AS[AppSidebar]
     AL --> AH[AppHeader]
@@ -292,7 +293,7 @@ sequenceDiagram
 
     Note over Host,DB: User already authenticated on SSO Portal
     Host->>R: postMessage({ type: "auth", token: jwt })
-    R->>R: AuthContext stores JWT in localStorage
+    R->>R: features/auth/contexts stores JWT in localStorage
     R->>API: GET /api/auth/me (Bearer JWT)
     API->>API: JWT validation + ICurrentUserProvider reads claims
     API->>DB: Lookup USER_MASTER; roles come from JWT claims
@@ -384,7 +385,7 @@ graph TD
 | **JWT Bearer Auth** thay vì gateway headers | SSO Portal issues JWT, app nhận qua postMessage (iframe) hoặc Authorization header. API validates JWT via symmetric key. ICurrentUserProvider reads claims → CurrentUser record. Đã bỏ CurrentUserMiddleware và gateway headers |
 | **ExcludeFromMigrations** cho system tables | USER_MASTER, DM_DONVI là các bảng có sẵn của hệ thống khác. Không được phép thay đổi schema. EF Core chỉ đọc dữ liệu |
 | **Vertical Slice Architecture** thay vì N-tier | Code tổ chức theo feature, không theo layer kỹ thuật. VSA `{Action}{Role}.cs` file naming. Thêm/sửa feature = làm việc trong endpoint files, không lan sang các layer khác → giảm coupling, tăng cohesion. Property injection (`= null!;`) thay vì constructor injection; Data.cs classes eliminated |
-| Single Zustand store | Data-only state management. Auth state moved to React Context. Limited state surface area for intranet app |
+| Single Zustand store | Data-only state management. Auth state in `features/auth/contexts/`. Limited state surface area for intranet app |
 | Role-based sidebar (not route guards) | SPA UX: all routes mounted, navigation elements hidden by role. Simple and effective for intranet |
 | Business days calculation (date-fns) | Standard for government/education leave tracking |
 | shadcn/ui (Radix primitives) | Production-ready accessible components, customizable via CSS variables |

@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/shared/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/shared/ui/dialog";
 import { useStore } from "@/store/useStore";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/features/auth";
 import { roleLabels, type UserRole, AppRoles } from "@/features/shared-reference-data";
 import { leaveTypesApi, type LeaveTypeDto } from "@/api/leave-types.api";
 import { configApi, type ConfigDto } from "@/api/config.api";

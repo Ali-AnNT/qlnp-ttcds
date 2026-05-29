@@ -1,6 +1,5 @@
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import LoginPage from "@/pages/LoginPage";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { LoginPage, AuthGuard } from "@/features/auth";
 import AppLayout from "@/pages/AppLayout";
 import DashboardPage from "@/pages/DashboardPage";
 import LeaveNewPage from "@/pages/LeaveNewPage";
@@ -12,18 +11,6 @@ import ReportsPage from "@/pages/ReportsPage";
 import ViolationsPage from "@/pages/ViolationsPage";
 import ConfigPage from "@/pages/ConfigPage";
 import NotFound from "@/pages/NotFound";
-
-function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
-  if (loading)
-    return (
-      <div className="flex h-screen items-center justify-center">
-        Loading...
-      </div>
-    );
-  if (!user) return <Navigate to="/login" replace />;
-  return <>{children}</>;
-}
 
 export function AppRouter() {
   return (

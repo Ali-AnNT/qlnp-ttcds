@@ -42,7 +42,7 @@ src/
 | Phase | Name | Status | Effort |
 |-------|------|--------|--------|
 | 1 | [Shared Infrastructure & App Layer](./phase-01-shared-infrastructure-app-layer.md) | ✅ Done | 2h |
-| 2 | [Auth](./phase-02-core-features-auth.md) | Pending | 30m |
+| 2 | [Auth](./phase-02-core-features-auth.md) | ✅ Done | 30m |
 | 3 | [Layout](./phase-03-layout.md) | Pending | 30m |
 | 4 | [Dashboard](./phase-04-dashboard.md) | Pending | 30m |
 | 5 | [Leave Requests](./phase-05-leave-requests.md) | Pending | 1h |

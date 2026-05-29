@@ -5,7 +5,7 @@
 **pnpm monorepo**: `packages/api` (.NET 10 backend) + `packages/web` (React SPA frontend).
 
 ### Frontend (packages/web)
-React SPA with fetch-based API client, Zustand data store, AuthContext (JWT Bearer auth). UI built with shadcn/ui components on Tailwind CSS.
+React SPA with fetch-based API client, Zustand data store, auth in features/auth/ (JWT Bearer auth). UI built with shadcn/ui components on Tailwind CSS.
 
 ### Backend (packages/api)
 .NET 10 + FastEndpoints v8.1.0 + EF Core 9.0.0 + SQL Server. Vertical slice architecture (VSA) with `{Action}{Role}.cs` file naming. JWT Bearer authentication; ICurrentUserProvider reads claims from JWT to resolve CurrentUser. Property injection (`= null!;`) pattern for endpoints; no Data.cs classes.
@@ -39,14 +39,20 @@ User Action -> Component -> useStore action -> api module -> fetch("/api/...")
 | `src/main.tsx` | ReactDOM.createRoot, renders `<App />` from `./app/App`, imports index.css |
 | `src/app/App.tsx` | Root component. Renders `<Providers>` + `<AppRouter>` (extracted from former monolithic App.tsx) |
 | `src/app/providers.tsx` | QueryClientProvider + TooltipProvider + Toaster + Sonner + AuthProvider |
-| `src/app/router.tsx` | BrowserRouter + Routes + AuthGuard. Defines all route mappings |
+| `src/app/router.tsx` | BrowserRouter + Routes. AuthGuard and LoginPage imported from `@/features/auth` |
 | `src/index.css` | Tailwind directives, CSS custom properties for shadcn theme (HSL values: blue primary #1e3a5f, blue accent #2563eb), Be Vietnam Pro Google Font import, custom scrollbar styles |
 
-### Auth (Context)
+### Auth (Feature Module)
 
 | File | Purpose |
 |------|---------|
-| `src/contexts/AuthContext.tsx` | React Context for auth state (user, loading, isEmbed). Calls GET /api/auth/me on mount. Listens for postMessage in iframe mode. JWT stored in localStorage |
+| `src/features/auth/index.ts` | Barrel: exports LoginPage, AuthProvider, useAuth, AuthGuard, authApi, AuthUser type |
+| `src/features/auth/contexts/auth-context.tsx` | React Context for auth state (user, loading, isEmbed). Calls GET /api/auth/me on mount. Listens for postMessage in iframe mode. JWT stored in localStorage |
+| `src/features/auth/hooks/use-auth.ts` | Hook to access auth state from AuthContext |
+| `src/features/auth/hooks/use-auth-guard.tsx` | AuthGuard component (extracted from router.tsx). Redirects to /login if no user |
+| `src/features/auth/components/login-page.tsx` | SSO waiting screen + dev-only user selector |
+| `src/features/auth/api/auth.api.ts` | AuthUser type + authApi.me() |
+| `src/features/auth/api/types.ts` | AuthUser type definition |
 
 ### Store (State Management)
 
@@ -59,7 +65,6 @@ User Action -> Component -> useStore action -> api module -> fetch("/api/...")
 | File | Purpose |
 |------|---------|
 | `src/shared/api/client.ts` | Fetch wrapper: JWT from localStorage, Bearer auth header, ApiResponse<T> envelope, error handling. Re-exported via `@/shared` barrel |
-| `src/api/auth.api.ts` | AuthUser type + authApi.me() |
 | `src/api/departments.api.ts` | DepartmentDto + departmentsApi.list() |
 | `src/api/leave-types.api.ts` | LeaveTypeDto + leaveTypesApi.list/create/update/delete() |
 | `src/api/leave-requests.api.ts` | LeaveRequestDto (incl. approvedLevel), CreateLeaveRequestDto + leaveRequestsApi.list/create/update/approve/reject/cancel() |
@@ -82,6 +87,7 @@ User Action -> Component -> useStore action -> api module -> fetch("/api/...")
 
 | File | Purpose |
 |------|---------|
+| `src/features/auth/index.ts` | Barrel: exports LoginPage, AuthProvider, useAuth, AuthGuard, authApi, AuthUser |
 | `src/features/shared-reference-data/index.ts` | Barrel re-exporting: AppRoles, roleLabels, leaveStatusLabels, UserRole, LeaveStatus, getApprovalStatusLabel, getApprovalStatusColor |
 | `src/features/shared-reference-data/constants/app-roles.ts` | Core types: UserRole (union), AppRoles constant object, LeaveStatus (union). Label maps: roleLabels, leaveStatusLabels |
 | `src/features/shared-reference-data/helpers/approval-status.ts` | getApprovalStatusLabel(), getApprovalStatusColor() for N-level progress display |
@@ -99,7 +105,6 @@ User Action -> Component -> useStore action -> api module -> fetch("/api/...")
 
 | File | Route | Purpose |
 |------|-------|---------|
-| `LoginPage.tsx` | /login | SSO waiting screen plus dev-only user selector when `VITE_DEV_MODE=true`. Calls `/api/auth/dev/login` and stores JWT |
 | `DashboardPage.tsx` | / | Welcome banner + metric cards + per-type leave balance cards + quick actions + recent activity |
 | `LeaveNewPage.tsx` | /leave/new | Form: leave type select, date range picker (business days calculation), reason textarea, approver display. Overlap detection against approved requests only (status="approved"). Submit creates via store.addLeaveRequest |
 | `LeaveMyPage.tsx` | /leave/my | Table of user's requests with status filter dropdown. Edit dialog (pre-submit), cancel action |
@@ -129,11 +134,11 @@ User Action -> Component -> useStore action -> api module -> fetch("/api/...")
 2. If standalone + dev mode: JWT Bearer allows anonymous access to /api/auth/me with dev-mode fallback (userId=1, roles=["QTHT"])
 3. Production: JWT Bearer token issued by SSO Portal, attached as Authorization header
 4. `AuthProvider` calls `GET /api/auth/me` (with JWT Bearer) on mount to resolve user profile
-5. `AuthGuard` in `app/router.tsx` checks `user` from AuthContext; redirects to /login if null
+5. `AuthGuard` in `features/auth/hooks/use-auth-guard.tsx` checks `user` from auth context; redirects to /login if null
 6. LoginPage shows "waiting for SSO" (embed mode) or loading spinner (no username/password form)
 
 ### Role-Based UI
-Authorization via `CurrentUser.Role` from AuthContext:
+Authorization via `CurrentUser.Role` from `features/auth/`:
 - `AppSidebar.tsx`: filters menuItems by visible roles
 - `app/router.tsx`: routes are always mounted (no route-level guard), sidebar hides unauthorized links
 - Server-side: Endpoints check `CurrentUser.Role` in handler or PreProcessor
