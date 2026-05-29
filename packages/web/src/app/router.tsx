@@ -4,7 +4,7 @@ import { AppLayout } from "@/features/layout";
 import { DashboardPage } from "@/features/dashboard";
 import { LeaveNewPage, LeaveMyPage } from "@/features/leave-requests";
 import { ApprovalPage } from "@/features/approval";
-import CalendarPage from "@/pages/CalendarPage";
+import { CalendarPage } from "@/features/calendar";
 import SummaryPage from "@/pages/SummaryPage";
 import ReportsPage from "@/pages/ReportsPage";
 import ViolationsPage from "@/pages/ViolationsPage";

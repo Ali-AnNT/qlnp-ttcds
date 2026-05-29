@@ -1,7 +1,7 @@
 ---
 phase: 6
 title: "Approval"
-status: pending
+status: completed
 priority: P1
 effort: "45m"
 dependencies: [1, 2, 5]
@@ -81,11 +81,11 @@ features/approval/
 
 ## Success Criteria
 
-- [ ] Approval feature self-contained in `features/approval/`
-- [ ] Approve/reject flow works for Leader and Director roles
-- [ ] N-level approval logic intact
-- [ ] No Zustand store usage
-- [ ] `bun run build` passes
+- [x] Approval feature self-contained in `features/approval/`
+- [x] Approve/reject flow works for Leader and Director roles
+- [x] N-level approval logic intact
+- [x] No Zustand store usage
+- [x] `bun run build` passes
 
 ## Risk Assessment
 
