@@ -6,8 +6,9 @@
 
 | Artifact | Convention | Example |
 |----------|-----------|---------|
-| React components | PascalCase | `AppSidebar.tsx`, `LeaveNewPage.tsx` |
-| Files (components) | PascalCase | `DashboardPage.tsx`, `LeaveRequestForm.tsx` |
+| React components | PascalCase | `AppSidebar`, `LeaveNewPage` |
+| Files (components) | kebab-case | `app-sidebar.tsx`, `app-layout.tsx`, `dashboard-page.tsx` |
+| Files (pages) | PascalCase | `DashboardPage.tsx`, `LeaveNewPage.tsx` |
 | Files (utilities/hooks) | kebab-case | `use-mobile.tsx`, `date-utils.ts`, `app-roles.ts` |
 | Functions / methods | camelCase | `formatDate()`, `loadData()`, `handleLogin()` |
 | Variables / state | camelCase | `currentUser`, `leaveRequests`, `isMobile` |
@@ -29,11 +30,11 @@
 - Avoid `any` - use proper types from `@/features/shared-reference-data`, `@/features/auth`, and `@/api/*.api.ts`
 
 ### Type Imports
-Import domain types from `@/features/shared-reference-data`, auth types from `@/features/auth`, API DTOs from respective API modules:
+Import domain types from `@/features/shared-reference-data`, auth types from `@/features/auth`, layout types from `@/features/layout`, API DTOs from respective API modules:
 ```typescript
 import type { UserRole, LeaveStatus } from "@/features/shared-reference-data";
 import type { AuthUser } from "@/features/auth";
-import type { DepartmentDto } from "@/api/departments.api";
+import type { DepartmentDto } from "@/features/layout";
 ```
 
 ### Union Types
@@ -62,9 +63,15 @@ export const roleLabels: Record<UserRole, string> = {
 - Call `loadData()` on mount via `useEffect`
 - Must be wrapped in AppLayout via React Router `<Outlet />`
 
+### Feature Components (VSA)
+- Named exports for feature components
+- Located in `src/features/{feature}/components/`
+- Barrel `index.ts` re-exports public API
+- Props interface defined inline or at top
+
 ### Layout & UI Components
 - Named exports for shared components
-- Located in `src/components/`
+- Located in `src/shared/ui/` (shadcn/ui) or `src/components/` (app-level shared)
 - Props interface defined inline or at top
 - No default export (use named export pattern)
 
@@ -77,17 +84,19 @@ export const roleLabels: Record<UserRole, string> = {
 
 1. React / React Router imports
 2. Auth feature imports (`@/features/auth`)
-3. Store imports (`@/store/useStore`)
-4. API module imports (`@/api/...`)
-5. Shared infrastructure imports (`@/shared/...` -- lib, hooks, ui, api/client)
-6. Feature module imports (`@/features/...`)
-7. Shared component imports (`@/components/...`)
-8. Icon imports (lucide-react)
-9. Type imports (last)
+3. Layout feature imports (`@/features/layout`)
+4. Store imports (`@/store/useStore`)
+5. API module imports (`@/api/...`)
+6. Shared infrastructure imports (`@/shared/...` -- lib, hooks, ui, api/client)
+7. Feature module imports (`@/features/...`)
+8. Shared component imports (`@/components/...`)
+9. Icon imports (lucide-react)
+10. Type imports (last)
 
 Use `@/` path alias for all internal imports:
 ```typescript
 import { useAuth } from "@/features/auth";
+import { AppLayout } from "@/features/layout";
 import { useStore } from "@/store/useStore";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
@@ -108,11 +117,19 @@ import { CalendarDays } from "lucide-react";
 - `components/login-page.tsx`: SSO waiting screen + dev-only user selector
 - `api/auth.api.ts` + `api/types.ts`: AuthUser type + authApi.me()
 
+### Layout Feature (`src/features/layout/`)
+- Barrel `index.ts` exports: AppLayout, AppSidebar, AppHeader, departmentsApi, DepartmentDto
+- `components/app-layout.tsx`: Main layout with sidebar (collapsible, mobile responsive) + header + Outlet. Named export
+- `components/app-sidebar.tsx`: Role-based navigation with menu filtering. Uses NavLink from react-router-dom
+- `components/app-header.tsx`: Top bar with sidebar toggle, breadcrumb, user avatar + dropdown
+- `api/departments.api.ts`: DepartmentDto type + departmentsApi.list()
+
 ### Zustand Store (`src/store/useStore.ts`)
 - Data-only store (no auth state)
-- State: departments, leaveTypes, leaveRequests, approvalConfigs
+- State: departments (DepartmentDto[]), leaveTypes, leaveRequests, approvalConfigs
 - Actions: loadData, addLeaveRequest, updateLeaveRequest
 - getters: getDepartment, getLeaveType
+- Imports `departmentsApi` and `DepartmentDto` from `@/features/layout`
 - Access via selector pattern: `useStore(s => s.departments)`
 - Never mutate state directly; always use set()
 

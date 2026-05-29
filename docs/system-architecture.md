@@ -4,7 +4,7 @@
 
 Supabase architecture replaced by .NET API + SQL Server. All Supabase code, deps, and migrations removed.
 
-## Current Architecture (Phase 2): .NET 10 + EF Core + JWT Bearer Auth
+## Current Architecture (Phase 3): .NET 10 + EF Core + JWT Bearer Auth
 
 ### High-Level
 
@@ -117,9 +117,9 @@ graph TD
     Router --> BR[BrowserRouter]
     BR --> LP[LoginPage /login - features/auth]
     BR --> AG[AuthGuard / - features/auth/hooks]
-    AG --> AL[AppLayout]
-    AL --> AS[AppSidebar]
-    AL --> AH[AppHeader]
+    AG --> AL[AppLayout - features/layout]
+    AL --> AS[AppSidebar - features/layout]
+    AL --> AH[AppHeader - features/layout]
     AL --> OUT[Outlet]
     OUT --> DP[DashboardPage]
     OUT --> LNP[LeaveNewPage]
@@ -385,8 +385,8 @@ graph TD
 | **JWT Bearer Auth** thay vì gateway headers | SSO Portal issues JWT, app nhận qua postMessage (iframe) hoặc Authorization header. API validates JWT via symmetric key. ICurrentUserProvider reads claims → CurrentUser record. Đã bỏ CurrentUserMiddleware và gateway headers |
 | **ExcludeFromMigrations** cho system tables | USER_MASTER, DM_DONVI là các bảng có sẵn của hệ thống khác. Không được phép thay đổi schema. EF Core chỉ đọc dữ liệu |
 | **Vertical Slice Architecture** thay vì N-tier | Code tổ chức theo feature, không theo layer kỹ thuật. VSA `{Action}{Role}.cs` file naming. Thêm/sửa feature = làm việc trong endpoint files, không lan sang các layer khác → giảm coupling, tăng cohesion. Property injection (`= null!;`) thay vì constructor injection; Data.cs classes eliminated |
-| Single Zustand store | Data-only state management. Auth state in `features/auth/contexts/`. Limited state surface area for intranet app |
-| Role-based sidebar (not route guards) | SPA UX: all routes mounted, navigation elements hidden by role. Simple and effective for intranet |
+| Single Zustand store | Data-only state management. Auth state in `features/auth/contexts/`. Layout components in `features/layout/`. Limited state surface area for intranet app |
+| Role-based sidebar (not route guards) | SPA UX: all routes mounted, navigation elements hidden by role. `AppSidebar` in `features/layout/`. Simple and effective for intranet |
 | Business days calculation (date-fns) | Standard for government/education leave tracking |
 | shadcn/ui (Radix primitives) | Production-ready accessible components, customizable via CSS variables |
 | No SSR | Intranet app behind auth, no SEO needed. SPA is simpler to deploy and maintain |

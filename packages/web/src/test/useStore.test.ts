@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useStore } from "../store/useStore";
 
-vi.mock("@/api/departments.api", () => ({
+vi.mock("@/features/layout/api/departments.api", () => ({
   departmentsApi: {
     list: vi.fn(),
   },
@@ -34,7 +34,7 @@ vi.mock("@/api/config.api", () => ({
 }));
 
 // Re-import mocked modules so we can control them in tests
-import { departmentsApi } from "@/api/departments.api";
+import { departmentsApi } from "@/features/layout";
 import { leaveTypesApi } from "@/api/leave-types.api";
 import { leaveRequestsApi } from "@/api/leave-requests.api";
 import { leaveBalancesApi } from "@/api/leave-balances.api";

@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
-import { AppSidebar } from "@/components/AppSidebar";
-import { AppHeader } from "@/components/AppHeader";
+import { AppSidebar } from "./app-sidebar";
+import { AppHeader } from "./app-header";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 
-const AppLayout = () => {
+export const AppLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const isMobile = useIsMobile();
   const collapsed = isMobile ? !sidebarOpen : !sidebarOpen;
@@ -30,5 +30,3 @@ const AppLayout = () => {
     </div>
   );
 };
-
-export default AppLayout;

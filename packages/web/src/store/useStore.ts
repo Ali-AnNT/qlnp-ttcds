@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { departmentsApi, type DepartmentDto } from "@/api/departments.api";
+import { departmentsApi, type DepartmentDto } from "@/features/layout";
 import { leaveTypesApi, type LeaveTypeDto } from "@/api/leave-types.api";
 import { leaveRequestsApi, type LeaveRequestDto, type CreateLeaveRequestDto } from "@/api/leave-requests.api";
 import { leaveBalancesApi, type LeaveBalanceDto } from "@/api/leave-balances.api";

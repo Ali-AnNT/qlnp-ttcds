@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Layout"
-status: pending
+status: done
 priority: P1
 effort: "30m"
 dependencies: [1, 2]
@@ -92,12 +92,12 @@ features/layout/
 
 ## Success Criteria
 
-- [ ] Layout feature fully self-contained in `features/layout/`
-- [ ] Sidebar renders correctly with user info
-- [ ] Header shows breadcrumbs and user menu
-- [ ] Navigation links work
-- [ ] `bun run build` passes
-- [ ] No references to old layout paths
+- [x] Layout feature fully self-contained in `features/layout/`
+- [x] Sidebar renders correctly with user info
+- [x] Header shows breadcrumbs and user menu
+- [x] Navigation links work
+- [x] `bun run build` passes
+- [x] No references to old layout paths
 
 ## Risk Assessment
 

@@ -1,6 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { LoginPage, AuthGuard } from "@/features/auth";
-import AppLayout from "@/pages/AppLayout";
+import { AppLayout } from "@/features/layout";
 import DashboardPage from "@/pages/DashboardPage";
 import LeaveNewPage from "@/pages/LeaveNewPage";
 import LeaveMyPage from "@/pages/LeaveMyPage";

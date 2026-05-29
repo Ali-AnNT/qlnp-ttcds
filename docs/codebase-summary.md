@@ -5,7 +5,7 @@
 **pnpm monorepo**: `packages/api` (.NET 10 backend) + `packages/web` (React SPA frontend).
 
 ### Frontend (packages/web)
-React SPA with fetch-based API client, Zustand data store, auth in features/auth/ (JWT Bearer auth). UI built with shadcn/ui components on Tailwind CSS.
+React SPA with fetch-based API client, Zustand data store, auth in features/auth/ (JWT Bearer auth), layout in features/layout/ (AppLayout, AppSidebar, AppHeader, departmentsApi). UI built with shadcn/ui components on Tailwind CSS.
 
 ### Backend (packages/api)
 .NET 10 + FastEndpoints v8.1.0 + EF Core 9.0.0 + SQL Server. Vertical slice architecture (VSA) with `{Action}{Role}.cs` file naming. JWT Bearer authentication; ICurrentUserProvider reads claims from JWT to resolve CurrentUser. Property injection (`= null!;`) pattern for endpoints; no Data.cs classes.
@@ -65,7 +65,6 @@ User Action -> Component -> useStore action -> api module -> fetch("/api/...")
 | File | Purpose |
 |------|---------|
 | `src/shared/api/client.ts` | Fetch wrapper: JWT from localStorage, Bearer auth header, ApiResponse<T> envelope, error handling. Re-exported via `@/shared` barrel |
-| `src/api/departments.api.ts` | DepartmentDto + departmentsApi.list() |
 | `src/api/leave-types.api.ts` | LeaveTypeDto + leaveTypesApi.list/create/update/delete() |
 | `src/api/leave-requests.api.ts` | LeaveRequestDto (incl. approvedLevel), CreateLeaveRequestDto + leaveRequestsApi.list/create/update/approve/reject/cancel() |
 | `src/api/leave-balances.api.ts` | LeaveBalanceDto + leaveBalancesApi.list/my() |
@@ -88,18 +87,14 @@ User Action -> Component -> useStore action -> api module -> fetch("/api/...")
 | File | Purpose |
 |------|---------|
 | `src/features/auth/index.ts` | Barrel: exports LoginPage, AuthProvider, useAuth, AuthGuard, authApi, AuthUser |
+| `src/features/layout/index.ts` | Barrel: exports AppLayout, AppSidebar, AppHeader, departmentsApi, DepartmentDto |
+| `src/features/layout/components/app-layout.tsx` | Main layout: sidebar (collapsible, mobile responsive with overlay) + header + Outlet. Named export |
+| `src/features/layout/components/app-sidebar.tsx` | Role-based navigation. MenuItems filtered by user role. Expandable groups. Active state via NavLink. Logout button |
+| `src/features/layout/components/app-header.tsx` | Top bar: sidebar toggle button, breadcrumb (via location pathname), notification bell icon, user avatar + dropdown |
+| `src/features/layout/api/departments.api.ts` | DepartmentDto type + departmentsApi.list() |
 | `src/features/shared-reference-data/index.ts` | Barrel re-exporting: AppRoles, roleLabels, leaveStatusLabels, UserRole, LeaveStatus, getApprovalStatusLabel, getApprovalStatusColor |
 | `src/features/shared-reference-data/constants/app-roles.ts` | Core types: UserRole (union), AppRoles constant object, LeaveStatus (union). Label maps: roleLabels, leaveStatusLabels |
 | `src/features/shared-reference-data/helpers/approval-status.ts` | getApprovalStatusLabel(), getApprovalStatusColor() for N-level progress display |
-
-### Layout Components
-
-| File | Purpose |
-|------|---------|
-| `src/pages/AppLayout.tsx` | Main layout: sidebar (collapsible, mobile responsive with overlay) + header + Outlet. Uses useIsMobile hook |
-| `src/components/AppSidebar.tsx` | Role-based navigation. MenuItems filtered by user role. Expandable groups (Don xin nghi phep: Tao don + Danh sach don). Active state via NavLink isActive. Logout button |
-| `src/components/AppHeader.tsx` | Top bar: sidebar toggle button, breadcrumb (via location pathname), notification bell icon, user avatar + dropdown |
-| `src/components/NavLink.tsx` | Navigation link wrapper component |
 
 ### Pages
 
@@ -139,7 +134,7 @@ User Action -> Component -> useStore action -> api module -> fetch("/api/...")
 
 ### Role-Based UI
 Authorization via `CurrentUser.Role` from `features/auth/`:
-- `AppSidebar.tsx`: filters menuItems by visible roles
+- `AppSidebar` (features/layout): filters menuItems by visible roles
 - `app/router.tsx`: routes are always mounted (no route-level guard), sidebar hides unauthorized links
 - Server-side: Endpoints check `CurrentUser.Role` in handler or PreProcessor
 
