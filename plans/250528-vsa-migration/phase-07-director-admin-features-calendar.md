@@ -1,7 +1,7 @@
 ---
 phase: 7
 title: "Calendar"
-status: pending
+status: completed
 priority: P2
 effort: "30m"
 dependencies: [1, 2, 5]
@@ -71,7 +71,7 @@ features/calendar/
 
 ## Success Criteria
 
-- [ ] Calendar feature self-contained in `features/calendar/`
-- [ ] Calendar grid and list views render correctly
-- [ ] No Zustand store usage
-- [ ] `bun run build` passes
+- [x] Calendar feature self-contained in `features/calendar/`
+- [x] Calendar grid and list views render correctly
+- [x] No Zustand store usage
+- [x] `bun run build` passes

@@ -1,20 +1,16 @@
 import { useState, useMemo } from "react";
-import { useStore } from "@/store/useStore";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, type DefaultLegendContentProps } from "recharts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/dialog";
+import { Button } from "@/shared/ui/button";
 import { formatDate } from "@/shared/lib/date-utils";
 import { Eye } from "lucide-react";
-import { Button } from "@/shared/ui/button";
-
-const COLORS = ["#2563EB", "#16A34A", "#D97706", "#DC2626", "#8B5CF6", "#EC4899", "#14B8A6"];
+import { useDeptSummary } from "../hooks/use-dept-summary";
+import { DeptSummaryTable, type DeptSummaryRow } from "./dept-summary-table";
+import { TypePieChart } from "./type-pie-chart";
 
 const SummaryPage = () => {
-  const leaveRequests = useStore((s) => s.leaveRequests);
-  const departments = useStore((s) => s.departments);
-  const leaveTypes = useStore((s) => s.leaveTypes);
+  const { leaveRequests, departments, leaveTypes } = useDeptSummary();
 
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState<string>(String(currentYear));
@@ -59,16 +55,18 @@ const SummaryPage = () => {
       .filter((d) => d.value > 0);
   }, [leaveTypes, approvedRequests]);
 
-  const deptSummary = useMemo(() => {
-    return departments.map((dept) => {
-      const deptRequests = approvedRequests.filter((r) => r.donViId === dept.donViId);
-      const uniqueUsers = new Set(deptRequests.map((r) => r.userId));
-      return {
-        ...dept,
-        totalEmp: uniqueUsers.size,
-        totalLeave: deptRequests.reduce((s, r) => s + Number(r.totalDays), 0),
-      };
-    });
+  const deptSummary = useMemo((): DeptSummaryRow[] => {
+    return departments
+      .map((dept) => {
+        const deptRequests = approvedRequests.filter((r) => r.donViId === dept.donViId);
+        const uniqueUsers = new Set(deptRequests.map((r) => r.userId));
+        return {
+          ...dept,
+          totalEmp: uniqueUsers.size,
+          totalLeave: deptRequests.reduce((s, r) => s + Number(r.totalDays), 0),
+        };
+      })
+      .sort((a, b) => b.totalEmp - a.totalEmp || b.totalLeave - a.totalLeave);
   }, [departments, approvedRequests]);
 
   const empListForDept = useMemo(() => {
@@ -114,20 +112,6 @@ const SummaryPage = () => {
       }));
   }, [userDetailUserId, approvedRequests, leaveTypes]);
 
-  const renderLegend = (props: DefaultLegendContentProps) => {
-    const { payload } = props;
-    return (
-      <div className="flex flex-wrap justify-center gap-3 mt-2">
-        {payload?.map((entry, index) => (
-          <div key={index} className="flex items-center gap-1.5 text-xs">
-            <div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: entry.color }} />
-            <span className="text-muted-foreground">{entry.value}</span>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
   return (
     <div className="space-y-6">
       <h2 className="text-lg font-bold">Tổng hợp lịch nghỉ toàn trung tâm</h2>
@@ -155,68 +139,15 @@ const SummaryPage = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card className="lg:col-span-2">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Tổng hợp theo phòng ban</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead>Phòng ban</TableHead>
-                  <TableHead className="text-center">Tổng CB</TableHead>
-                  <TableHead className="text-center">Tổng ngày phép đã duyệt</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {deptSummary.map((d, i) => (
-                  <TableRow key={d.donViId} className={i % 2 === 1 ? "bg-muted/20" : ""}>
-                    <TableCell className="font-medium">{d.tenDonVi}</TableCell>
-                    <TableCell className="text-center">
-                      <button
-                        className="text-primary underline hover:text-primary/80 font-semibold"
-                        onClick={() => { setEmpDialogDeptId(d.donViId); setEmpDialogOpen(true); }}
-                      >
-                        {d.totalEmp}
-                      </button>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <button
-                        className="text-primary underline hover:text-primary/80 font-semibold"
-                        onClick={() => { setDetailDialogDeptId(d.donViId); setDetailDialogOpen(true); }}
-                      >
-                        {d.totalLeave}
-                      </button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Phân bổ theo loại phép</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {byType.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie data={byType} cx="50%" cy="45%" outerRadius={80} dataKey="value" label={({ value }) => value} labelLine={false}>
-                    {byType.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                  </Pie>
-                  <Tooltip formatter={(value: number, name: string) => [`${value} ngày`, name]} />
-                  <Legend content={renderLegend} />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-center text-muted-foreground py-8">Chưa có dữ liệu</p>
-            )}
-          </CardContent>
-        </Card>
+        <DeptSummaryTable
+          deptSummary={deptSummary}
+          onEmpClick={(donViId) => { setEmpDialogDeptId(donViId); setEmpDialogOpen(true); }}
+          onDetailClick={(donViId) => { setDetailDialogDeptId(donViId); setDetailDialogOpen(true); }}
+        />
+        <TypePieChart data={byType} />
       </div>
 
+      {/* Employee list dialog */}
       <Dialog open={empDialogOpen} onOpenChange={setEmpDialogOpen}>
         <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
           <DialogHeader>
@@ -252,6 +183,7 @@ const SummaryPage = () => {
         </DialogContent>
       </Dialog>
 
+      {/* User detail dialog */}
       <Dialog open={userDetailOpen} onOpenChange={setUserDetailOpen}>
         <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
           <DialogHeader>
@@ -285,6 +217,7 @@ const SummaryPage = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Department detail dialog */}
       <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>

@@ -5,7 +5,7 @@ import { DashboardPage } from "@/features/dashboard";
 import { LeaveNewPage, LeaveMyPage } from "@/features/leave-requests";
 import { ApprovalPage } from "@/features/approval";
 import { CalendarPage } from "@/features/calendar";
-import SummaryPage from "@/pages/SummaryPage";
+import { SummaryPage } from "@/features/summary";
 import ReportsPage from "@/pages/ReportsPage";
 import ViolationsPage from "@/pages/ViolationsPage";
 import ConfigPage from "@/pages/ConfigPage";
