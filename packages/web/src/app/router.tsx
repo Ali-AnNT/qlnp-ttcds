@@ -3,7 +3,7 @@ import { LoginPage, AuthGuard } from "@/features/auth";
 import { AppLayout } from "@/features/layout";
 import { DashboardPage } from "@/features/dashboard";
 import { LeaveNewPage, LeaveMyPage } from "@/features/leave-requests";
-import ApprovalPage from "@/pages/ApprovalPage";
+import { ApprovalPage } from "@/features/approval";
 import CalendarPage from "@/pages/CalendarPage";
 import SummaryPage from "@/pages/SummaryPage";
 import ReportsPage from "@/pages/ReportsPage";
