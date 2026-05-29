@@ -55,61 +55,52 @@ export const roleLabels: Record<UserRole, string> = {
 
 ## Component Structure
 
-### Page Components
-- Default export (no named export wrapper)
-- Located in `src/pages/` (legacy) or `src/features/{feature}/components/` (VSA-migrated)
-- One component per file
-- Legacy pages use Zustand store directly via hooks; VSA-migrated pages use TanStack Query hooks
-- Legacy pages call `loadData()` on mount via `useEffect`; VSA-migrated pages rely on TanStack Query automatic fetching
-- Must be wrapped in AppLayout via React Router `<Outlet />`
-
 ### Feature Components (VSA)
 - Named exports for feature components
 - Located in `src/features/{feature}/components/`
-- Barrel `index.ts` re-exports public API
+- Barrel `index.ts` re-exports public API (ONLY what's needed by other features)
 - Data fetching via TanStack Query hooks in `src/features/{feature}/hooks/`
 - API type re-exports in `src/features/{feature}/api/`
 - Props interface defined inline or at top
+- **Entry Points**: Each feature folder must have an `index.ts` which serves as the only public entry point. Deep imports into feature subfolders are blocked by ESLint.
 
-### Layout & UI Components
+### App Layer
+- Components that orchestrate features or provide global structure
+- Located in `src/app/` (e.g., `App.tsx`, `router.tsx`, `providers.tsx`, `NotFound.tsx`)
+
+### Shared & UI Components
 - Named exports for shared components
-- Located in `src/shared/ui/` (shadcn/ui) or `src/components/` (app-level shared)
+- Generic UI components in `src/shared/ui/` (shadcn/ui)
+- Shared app-level components in `src/shared/components/`
 - Props interface defined inline or at top
 - No default export (use named export pattern)
-
-### shadcn/ui Components
-- Auto-generated, located in `src/shared/ui/`
-- Do NOT modify generated files manually
-- Extend via wrapper components in `src/components/`
 
 ## Import Order
 
 1. React / React Router imports
-2. Auth feature imports (`@/features/auth`)
-3. Dashboard feature imports (`@/features/dashboard`)
-4. Layout feature imports (`@/features/layout`)
-5. Shared reference data imports (`@/features/shared-reference-data`)
-6. Store imports (`@/store/useStore`) -- legacy only, use TanStack Query hooks for VSA features
-7. API module imports (`@/api/...`) -- or feature-local re-exports (`@/features/{feature}/api/...`)
-8. Shared infrastructure imports (`@/shared/...` -- lib, hooks, ui, api/client)
-9. TanStack Query imports (`@tanstack/react-query`)
-10. Feature module imports (`@/features/...`)
-11. Shared component imports (`@/components/...`) -- legacy, being migrated to features
-12. Icon imports (lucide-react)
-13. Type imports (last)
+2. Feature imports via public API (`@/features/auth`, `@/features/dashboard`, etc.)
+3. Shared reference data imports (`@/features/shared-reference-data`)
+4. Shared infrastructure imports (`@/shared/...` -- lib, hooks, ui, api/client)
+5. TanStack Query imports (`@tanstack/react-query`)
+6. Icon imports (lucide-react)
+7. Type imports (last)
 
-Use `@/` path alias for all internal imports:
+Use `@/` path alias for all internal imports. Deep imports into features are disallowed:
 ```typescript
+// ✅ Correct
 import { useAuth } from "@/features/auth";
-import { AppLayout } from "@/features/layout";
-import { useStore } from "@/store/useStore";
-import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
-import { type UserRole } from "@/features/shared-reference-data";
-import { CalendarDays } from "lucide-react";
+
+// ❌ Incorrect (deep import)
+import { useAuth } from "@/features/auth/hooks/use-auth";
 ```
 
 ## State Management
+
+### Server State (TanStack Query)
+- 100% of server state is managed via TanStack Query.
+- Hooks live in `features/{feature}/hooks/`.
+- Queries and mutations are colocated with the feature they serve.
 
 ### Auth Feature (`src/features/auth/`)
 - Barrel `index.ts` exports: LoginPage, AuthProvider, useAuth, AuthGuard, authApi, AuthUser
@@ -118,30 +109,13 @@ import { CalendarDays } from "lucide-react";
 - Embed mode: listens for `postMessage({ type: "auth", token })` from host
 - JWT stored in `localStorage` under key `"jwt"`
 - `hooks/use-auth.ts`: Access auth state via `useAuth()` hook
-- `hooks/use-auth-guard.tsx`: AuthGuard component (extracted from router.tsx), redirects to /login if no user
+- `hooks/use-auth-guard.tsx`: AuthGuard component, redirects to /login if no user
 - `components/login-page.tsx`: SSO waiting screen + dev-only user selector
 - `api/auth.api.ts` + `api/types.ts`: AuthUser type + authApi.me()
 
-### Layout Feature (`src/features/layout/`)
-- Barrel `index.ts` exports: AppLayout, AppSidebar, AppHeader, departmentsApi, DepartmentDto
-- `components/app-layout.tsx`: Main layout with sidebar (collapsible, mobile responsive) + header + Outlet. Named export
-- `components/app-sidebar.tsx`: Role-based navigation with menu filtering. Uses NavLink from react-router-dom
-- `components/app-header.tsx`: Top bar with sidebar toggle, breadcrumb, user avatar + dropdown
-- `api/departments.api.ts`: DepartmentDto type + departmentsApi.list()
-
-### Zustand Store (`src/store/useStore.ts`)
-- Data-only store (no auth state)
-- State: departments (DepartmentDto[]), leaveTypes, leaveRequests, approvalConfigs
-- Actions: loadData, addLeaveRequest, updateLeaveRequest
-- getters: getDepartment, getLeaveType
-- Imports `departmentsApi` and `DepartmentDto` from `@/features/layout`
-- Access via selector pattern: `useStore(s => s.departments)`
-- Never mutate state directly; always use set()
-
-### TanStack React Query
-- QueryClient created in `app/providers.tsx`, provided via QueryClientProvider
-- Currently NOT used in pages (pages use Zustand directly)
-- Prepared for future server state caching
+### Global UI State (Context/Zustand)
+- Use React Context or scoped Zustand stores ONLY for true UI state that must be shared.
+- Avoid global data stores.
 
 ## Component Pattern Example
 

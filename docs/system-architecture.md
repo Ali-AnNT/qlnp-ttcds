@@ -4,38 +4,40 @@
 
 Supabase architecture replaced by .NET API + SQL Server. All Supabase code, deps, and migrations removed.
 
-## Current Architecture (Phase 5): .NET 10 + EF Core + JWT Bearer Auth
+## Current Architecture (Phase 12): .NET 10 + React VSA
 
-### High-Level
+### High-Level Frontend (Vertical Slice Architecture)
 
 ```
-Host Website (SSO Portal)
-  └─ iframe ─ React SPA (Vite)
-       ├─ app/                        ← App shell (App.tsx, providers, router)
-       ├─ shared/                     ← Generic infrastructure (api client, lib, hooks, ui)
-       │   ├─ api/client.ts (fetch + Bearer JWT)
-       │   ├─ lib/ (utils, date-utils)
-       │   ├─ hooks/ (use-mobile, use-toast)
-       │   └─ ui/ (49 shadcn/ui components)
-       ├─ features/                   ← Feature modules (VSA)
-       │   ├─ auth/                    ← Auth feature (api, components, contexts, hooks)
-       │   │   └─ index.ts            ← Barrel: LoginPage, AuthProvider, useAuth, AuthGuard, authApi
-       │   ├─ dashboard/               ← Dashboard feature (components, hooks, api) [Phase 4]
-       │   │   └─ index.ts            ← Barrel: DashboardPage, LeaveBalanceCard, useDashboardStats, useRecentRequests
-       │   ├─ layout/                  ← Layout feature (components, api)
-       │   │   └─ index.ts            ← Barrel: AppLayout, AppSidebar, AppHeader, departmentsApi
-       │   ├─ leave-requests/          ← Leave requests feature (api, components, hooks) [Phase 5]
-       │   │   └─ index.ts            ← Barrel: LeaveNewPage, LeaveMyPage, TanStack Query hooks
-       │   ├─ config/                 ← Config feature (api, partial) [Phase 5]
-       │   │   └─ index.ts            ← Barrel: leaveTypesApi, configApi, LeaveTypeDto, ConfigDto
-       │   └─ shared-reference-data/  ← Types & labels split from old lib/leave-data.ts
-       ├─ components/                 ← App-level shared components (sidebar, header, etc.)
-       ├─ pages/                      ← Route page components (6 pages still using Zustand)
-       ├─ store/useStore              ← Zustand Store (data only, no auth) — partially migrated
-       └─ api/                        ← Feature API modules (departments, leave-*)
-            │
-            ▼ GET/POST/PUT/DELETE /api/*
-ASP.NET 10 FastEndpoints API
+React SPA (Vite)
+  ├─ app/                        ← App shell (App.tsx, providers, router, NotFound)
+  ├─ shared/                     ← Generic infrastructure (api client, lib, hooks, ui)
+  │   ├─ api/client.ts (fetch + Bearer JWT)
+  │   ├─ lib/ (utils, date-utils)
+  │   ├─ hooks/ (use-mobile, use-toast)
+  │   └─ ui/ (49 shadcn/ui components)
+  ├─ features/                   ← Feature modules (VSA)
+  │   ├─ auth/                    ← Auth feature
+  │   ├─ layout/                  ← App shell components (Sidebar, Header)
+  │   ├─ dashboard/               ← Dashboard + stats
+  │   ├─ leave-requests/          ← Leave CRUD + balances
+  │   ├─ approval/                ← N-level approval logic
+  │   ├─ calendar/                ← Leave calendar view
+  │   ├─ summary/                 ← GD.PGD summary view
+  │   ├─ reports/                 ← GD.PGD reports + export
+  │   ├─ violations/              ← GD.PGD violation monitoring
+  │   ├─ config/                  ← QTHT system configuration
+  │   └─ shared-reference-data/   ← Cross-feature types & constants
+  └─ test/                       ← Test utilities & mock factories
+```
+
+**VSA Principles Applied:**
+- **Feature Colocation**: Components, hooks, API, and types live together in feature folders.
+- **Public API**: Each feature exports a clean interface via `index.ts`.
+- **Boundary Enforcement**: ESLint rules block deep imports and illegal cross-feature dependencies.
+- **Server State**: 100% TanStack Query. No global data store (Zustand removed).
+
+### High-Level Backend (Vertical Slice Architecture)
   ├─ JWT Bearer Authentication (Issuer, Audience, SigningKey from appsettings.json)
   ├─ ICurrentUserProvider (reads ClaimsPrincipal from JWT, returns CurrentUser record)
   ├─ Features/                     ← Vertical Slices (VSA {Action}{Role}.cs pattern)
@@ -124,7 +126,7 @@ graph TD
     App --> Router[app/router.tsx]
     Router --> BR[BrowserRouter]
     BR --> LP[LoginPage /login - features/auth]
-    BR --> AG[AuthGuard / - features/auth/hooks]
+    BR --> AG[AuthGuard / - features/auth]
     AG --> AL[AppLayout - features/layout]
     AL --> AS[AppSidebar - features/layout]
     AL --> AH[AppHeader - features/layout]
@@ -132,13 +134,13 @@ graph TD
     OUT --> DP[DashboardPage - features/dashboard]
     OUT --> LNP[LeaveNewPage - features/leave-requests]
     OUT --> LMP[LeaveMyPage - features/leave-requests]
-    OUT --> APV[ApprovalPage - pages/]
-    OUT --> CP[CalendarPage - pages/]
-    OUT --> SP[SummaryPage - pages/]
-    OUT --> RP[ReportsPage - pages/]
-    OUT --> VP[ViolationsPage - pages/]
-    OUT --> CFP[ConfigPage - pages/]
-    OUT --> NF[NotFound]
+    OUT --> APV[ApprovalPage - features/approval]
+    OUT --> CP[CalendarPage - features/calendar]
+    OUT --> SP[SummaryPage - features/summary]
+    OUT --> RP[ReportsPage - features/reports]
+    OUT --> VP[ViolationsPage - features/violations]
+    OUT --> CFP[ConfigPage - features/config]
+    OUT --> NF[NotFound - app/NotFound]
 
     DP --> DS[useDashboardStats - TanStack Query]
     DP --> DR[useRecentRequests - TanStack Query]
@@ -149,23 +151,21 @@ graph TD
     AH --> UserMenu[User Avatar + Dropdown]
 ```
 
-## Data Flow
-
-### Dashboard (TanStack Query -- migrated)
+## Data Flow (TanStack Query -- 100% Migrated)
 
 ```mermaid
 sequenceDiagram
     participant User as User (Browser)
-    participant Component as DashboardPage
-    participant Hook as useDashboardStats / useRecentRequests
+    participant Component as Feature Page
+    participant Hook as Feature Hook (TanStack Query)
     participant API as shared/api/client.ts
     participant FE as FastEndpoints Endpoint
     participant DbCtx as AppDbContext
     participant DB as SQL Server
 
-    User->>Component: Navigate to /
-    Component->>Hook: useDashboardStats() / useRecentRequests()
-    Hook->>API: fetch("/api/leave-balances/my", ...)
+    User->>Component: Interaction / Load
+    Component->>Hook: useQuery() / useMutation()
+    Hook->>API: fetch("/api/...", ...)
     Note over API: client.ts in src/shared/api/
     API->>API: Attach JWT Authorization header
     API->>FE: HTTP Request
@@ -176,42 +176,11 @@ sequenceDiagram
     DbCtx-->>FE: Entities
     FE-->>API: JSON Response
     API-->>Hook: Response data (cached by TanStack Query)
-    Hook-->>Component: Re-render with cached data
+    Hook-->>Component: Re-render with data
     Component-->>User: Updated UI
 ```
 
-### Legacy Pages (Zustand Store -- not yet migrated)
-
-```mermaid
-sequenceDiagram
-    participant User as User (Browser)
-    participant Component as React Component
-    participant Store as Zustand Store
-    participant API as shared/api/client.ts
-    participant FE as FastEndpoints Endpoint
-    participant DbCtx as AppDbContext
-    participant DB as SQL Server
-
-    User->>Component: Form submit
-    Component->>Store: action(payload)
-    Store->>API: fetch("/api/leave-requests", { method: POST, body })
-    Note over API: client.ts in src/shared/api/
-    API->>API: Attach JWT Authorization header
-    API->>FE: HTTP Request
-    FE->>FE: Resolve CurrentUser via ICurrentUserProvider (claims)
-    FE->>FE: FluentValidation (auto)
-    FE->>DbCtx: EF Core query (LINQ)
-    DbCtx->>DB: SQL
-    DB-->>DbCtx: Result rows
-    DbCtx-->>FE: Entities
-    FE-->>API: JSON Response
-    API-->>Store: Response data
-    Store->>Store: set(state => newState)
-    Store-->>Component: Re-render with new state
-    Component-->>User: Updated UI
-```
-
-Note: 6 pages still use Zustand Store (Approval, Calendar, Summary, Reports, Violations, Config). Dashboard, LeaveNew, and LeaveMy pages have been migrated to TanStack Query.
+Note: All frontend state management has been migrated to TanStack Query. Legacy Zustand store and `src/pages` structure have been removed in Phase 12.
 
 ## Database ERD
 
