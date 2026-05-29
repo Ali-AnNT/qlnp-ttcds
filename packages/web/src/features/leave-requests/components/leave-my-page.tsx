@@ -1,7 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useAuth } from "@/features/auth";
-import { useStore } from "@/store/useStore";
-import { formatDate } from "@/shared/lib/date-utils";
 import { Card, CardContent } from "@/shared/ui/card";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
@@ -15,30 +13,23 @@ import { cn } from "@/shared/lib/utils";
 import { toast } from "sonner";
 import { XCircle, Pencil } from "lucide-react";
 import { differenceInBusinessDays, parseISO, format, eachDayOfInterval } from "date-fns";
-import { leaveRequestsApi, type LeaveRequestDto } from "@/api/leave-requests.api";
-import { configApi, type ConfigDto } from "@/api/config.api";
+import { formatDate } from "@/shared/lib/date-utils";
 import { getApprovalStatusLabel, getApprovalStatusColor } from "@/features/shared-reference-data";
+import { useMyLeaveRequests, useCancelLeaveRequest, useUpdateLeaveRequest } from "../hooks/use-leave-requests";
+import { useLeaveTypes } from "../hooks/use-leave-types";
+import { useMaxLevelByType } from "../hooks/use-approval-configs";
+
+import type { LeaveRequestDto } from "../api/types";
 
 const LeaveMyPage = () => {
   const { user } = useAuth();
-  const leaveRequests = useStore((s) => s.leaveRequests);
-  const leaveTypes = useStore((s) => s.leaveTypes);
-  const loadData = useStore((s) => s.loadData);
+  const { data: leaveRequests = [], isLoading } = useMyLeaveRequests();
+  const { data: leaveTypes = [] } = useLeaveTypes();
+  const { maxLevelByType } = useMaxLevelByType();
+  const { mutateAsync: cancelRequest } = useCancelLeaveRequest();
+  const { mutateAsync: updateRequest } = useUpdateLeaveRequest();
+
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [approvalConfigs, setApprovalConfigs] = useState<ConfigDto[]>([]);
-
-  useEffect(() => {
-    configApi.get().then(({ data }) => { if (data) setApprovalConfigs(data); });
-  }, []);
-
-  const maxLevelByType = useMemo(() => {
-    const map = new Map<number, number>();
-    for (const c of approvalConfigs) {
-      const current = map.get(c.leaveTypeId) ?? 0;
-      if (c.approvalLevel > current) map.set(c.leaveTypeId, c.approvalLevel);
-    }
-    return map;
-  }, [approvalConfigs]);
 
   const statusLabels: Record<string, string> = {
     pending: "Chờ duyệt",
@@ -86,10 +77,11 @@ const LeaveMyPage = () => {
   }, [editStartDate, editEndDate, approvedDates]);
 
   const handleCancel = async (id: number) => {
-    const { error } = await leaveRequestsApi.cancel(id);
-    if (!error) {
+    try {
+      await cancelRequest(id);
       toast.success("Đã hủy đơn");
-      await loadData();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Hủy đơn thất bại");
     }
   };
 
@@ -114,19 +106,32 @@ const LeaveMyPage = () => {
     if (!editLeaveTypeId) { toast.error("Vui lòng chọn loại phép"); return; }
     if (editHasOverlap) { toast.error("Khoảng ngày nghỉ trùng với đơn đã được duyệt"); return; }
 
-    const { error } = await leaveRequestsApi.update(editRequest.id, {
-      leaveTypeId: Number(editLeaveTypeId),
-      startDate: editStartDate,
-      endDate: editEndDate,
-      totalDays: editDays,
-      reason: editReason,
-    });
-    if (!error) {
+    try {
+      await updateRequest({
+        id: editRequest.id,
+        data: {
+          leaveTypeId: Number(editLeaveTypeId),
+          startDate: editStartDate,
+          endDate: editEndDate,
+          totalDays: editDays,
+          reason: editReason,
+        },
+      });
       toast.success("Đã cập nhật và gửi lại đơn");
       setEditRequest(null);
-      await loadData();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Cập nhật đơn thất bại");
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="h-8 w-48 bg-muted animate-pulse rounded" />
+        <Card><CardContent className="p-0"><div className="h-64" /></CardContent></Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

@@ -1,7 +1,7 @@
 ---
 phase: 5
 title: "Leave Requests"
-status: pending
+status: completed
 priority: P1
 effort: "1h"
 dependencies: [1, 2, 3]
@@ -122,14 +122,14 @@ features/leave-requests/
 
 ## Success Criteria
 
-- [ ] Leave requests feature self-contained in `features/leave-requests/`
-- [ ] Create new leave request works
-- [ ] View my leave requests table works
-- [ ] Edit/cancel leave requests works
-- [ ] Leave balances display correctly
-- [ ] No Zustand store usage for leave-request data
-- [ ] Types exported from public API
-- [ ] `bun run build` passes
+- [x] Leave requests feature self-contained in `features/leave-requests/`
+- [x] Create new leave request works
+- [x] View my leave requests table works
+- [x] Edit/cancel leave requests works
+- [x] Leave balances display correctly
+- [x] No Zustand store usage for leave-request data
+- [x] Types exported from public API
+- [x] `bun run build` passes
 
 ## Risk Assessment
 

@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/auth";
-import { useStore } from "@/store/useStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
@@ -10,13 +9,15 @@ import { Textarea } from "@/shared/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import { toast } from "sonner";
 import { differenceInBusinessDays, parseISO, format, eachDayOfInterval } from "date-fns";
+import { useLeaveTypes } from "../hooks/use-leave-types";
+import { useMyLeaveRequests, useSubmitLeaveRequest } from "../hooks/use-leave-requests";
 
 const LeaveNewPage = () => {
   const { user } = useAuth();
-  const leaveTypes = useStore((s) => s.leaveTypes);
-  const leaveRequests = useStore((s) => s.leaveRequests);
-  const addLeaveRequest = useStore((s) => s.addLeaveRequest);
+  const { data: leaveTypes = [] } = useLeaveTypes();
+  const { data: leaveRequests = [] } = useMyLeaveRequests();
   const navigate = useNavigate();
+  const { mutateAsync: submitLeaveRequest } = useSubmitLeaveRequest();
 
   const [leaveTypeId, setLeaveTypeId] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -63,15 +64,19 @@ const LeaveNewPage = () => {
     if (!leaveTypeId) { toast.error("Vui lòng chọn loại phép"); return; }
     if (hasOverlap) { toast.error("Khoảng ngày nghỉ trùng với đơn đã được duyệt"); return; }
 
-    await addLeaveRequest({
-      leaveTypeId: Number(leaveTypeId),
-      startDate,
-      endDate,
-      totalDays: days,
-      reason,
-    });
-    toast.success("Đã gửi phê duyệt");
-    navigate("/leave/my");
+    try {
+      await submitLeaveRequest({
+        leaveTypeId: Number(leaveTypeId),
+        startDate,
+        endDate,
+        totalDays: days,
+        reason,
+      });
+      toast.success("Đã gửi phê duyệt");
+      navigate("/leave/my");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Gửi đơn thất bại");
+    }
   };
 
   return (

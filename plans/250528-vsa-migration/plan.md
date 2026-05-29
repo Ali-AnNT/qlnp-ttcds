@@ -45,7 +45,7 @@ src/
 | 2 | [Auth](./phase-02-core-features-auth.md) | ✅ Done | 30m |
 | 3 | [Layout](./phase-03-layout.md) | ✅ Done | 30m |
 | 4 | [Dashboard](./phase-04-dashboard.md) | ✅ Done | 30m |
-| 5 | [Leave Requests](./phase-05-leave-requests.md) | Pending | 1h |
+| 5 | [Leave Requests](./phase-05-leave-requests.md) | ✅ Done | 1h |
 | 6 | [Approval](./phase-06-approval.md) | Pending | 45m |
 | 7 | [Calendar](./phase-07-director-admin-features-calendar.md) | Pending | 30m |
 | 8 | [Summary](./phase-08-summary.md) | Pending | 45m |

@@ -5,7 +5,7 @@
 **pnpm monorepo**: `packages/api` (.NET 10 backend) + `packages/web` (React SPA frontend).
 
 ### Frontend (packages/web)
-React SPA with fetch-based API client, Zustand data store (partially migrated to TanStack Query), auth in features/auth/ (JWT Bearer auth), layout in features/layout/ (AppLayout, AppSidebar, AppHeader, departmentsApi), dashboard in features/dashboard/ (DashboardPage, LeaveBalanceCard, TanStack Query hooks). UI built with shadcn/ui components on Tailwind CSS.
+React SPA with fetch-based API client, Zustand data store (partially migrated to TanStack Query), auth in features/auth/ (JWT Bearer auth), layout in features/layout/ (AppLayout, AppSidebar, AppHeader, departmentsApi), dashboard in features/dashboard/ (DashboardPage, LeaveBalanceCard, TanStack Query hooks), leave-requests in features/leave-requests/ (LeaveNewPage, LeaveMyPage, TanStack Query hooks), config in features/config/ (leaveTypesApi, configApi). UI built with shadcn/ui components on Tailwind CSS.
 
 ### Backend (packages/api)
 .NET 10 + FastEndpoints v8.1.0 + EF Core 9.0.0 + SQL Server. Vertical slice architecture (VSA) with `{Action}{Role}.cs` file naming. JWT Bearer authentication; ICurrentUserProvider reads claims from JWT to resolve CurrentUser. Property injection (`= null!;`) pattern for endpoints; no Data.cs classes.
@@ -73,11 +73,11 @@ User Action -> Component -> useXxxQuery hook -> api module -> fetch("/api/...")
 | File | Purpose |
 |------|---------|
 | `src/shared/api/client.ts` | Fetch wrapper: JWT from localStorage, Bearer auth header, ApiResponse<T> envelope, error handling. Re-exported via `@/shared` barrel |
-| `src/api/leave-types.api.ts` | LeaveTypeDto + leaveTypesApi.list/create/update/delete() |
-| `src/api/leave-requests.api.ts` | LeaveRequestDto (incl. approvedLevel), CreateLeaveRequestDto + leaveRequestsApi.list/create/update/approve/reject/cancel() |
-| `src/api/leave-balances.api.ts` | LeaveBalanceDto + leaveBalancesApi.list/my() |
-| `src/api/config.api.ts` | ConfigDto + configApi.get/update() |
-| `src/api/system-configs.api.ts` | SystemConfigDto + systemConfigsApi.get/update() |
+| `src/api/leave-types.api.ts` | Legacy: LeaveTypeDto + leaveTypesApi CRUD. Still consumed by Zustand pages (Approval, Config, Calendar, etc.) |
+| `src/api/leave-requests.api.ts` | Legacy: LeaveRequestDto + leaveRequestsApi. Still consumed by Zustand pages (Approval) |
+| `src/api/leave-balances.api.ts` | Legacy: LeaveBalanceDto + leaveBalancesApi. Still consumed by Zustand pages (Violations) |
+| `src/api/config.api.ts` | Legacy: ConfigDto + configApi. Still consumed by Zustand pages (Approval, Calendar, Summary, Reports) |
+| `src/api/system-configs.api.ts` | Legacy: SystemConfigDto + systemConfigsApi. Still consumed by ConfigPage |
 
 ### Shared Infrastructure (`src/shared/`)
 
@@ -106,6 +106,19 @@ User Action -> Component -> useXxxQuery hook -> api module -> fetch("/api/...")
 | `src/features/layout/components/app-sidebar.tsx` | Role-based navigation. MenuItems filtered by user role. Expandable groups. Active state via NavLink. Logout button |
 | `src/features/layout/components/app-header.tsx` | Top bar: sidebar toggle button, breadcrumb (via location pathname), notification bell icon, user avatar + dropdown |
 | `src/features/layout/api/departments.api.ts` | DepartmentDto type + departmentsApi.list() |
+| `src/features/leave-requests/index.ts` | Barrel: exports LeaveNewPage, LeaveMyPage, TanStack Query hooks (useLeaveRequests, useMyLeaveRequests, useSubmitLeaveRequest, useUpdateLeaveRequest, useCancelLeaveRequest, useLeaveBalances, useLeaveTypes), types |
+| `src/features/leave-requests/components/leave-new-page.tsx` | Leave request form: leave type select, date range picker (business days calculation), reason textarea. Uses TanStack Query hooks (no Zustand) |
+| `src/features/leave-requests/components/leave-my-page.tsx` | Table of user's requests with status filter, edit dialog, cancel action. Uses TanStack Query hooks (no Zustand) |
+| `src/features/leave-requests/hooks/use-leave-requests.ts` | TanStack Query hooks: useMyLeaveRequests, useSubmitLeaveRequest, useUpdateLeaveRequest, useCancelLeaveRequest |
+| `src/features/leave-requests/hooks/use-leave-balances.ts` | TanStack Query hook: fetches current user's leave balances |
+| `src/features/leave-requests/hooks/use-leave-types.ts` | TanStack Query hook: fetches all leave types |
+| `src/features/leave-requests/hooks/use-approval-configs.ts` | TanStack Query hook: fetches approval configs |
+| `src/features/leave-requests/api/types.ts` | LeaveRequestDto, CreateLeaveRequestDto, LeaveBalanceDto types |
+| `src/features/leave-requests/api/leave-requests.api.ts` | leaveRequestsApi: list, listMy, create, update, approve, reject, cancel |
+| `src/features/leave-requests/api/leave-balances.api.ts` | leaveBalancesApi: my() |
+| `src/features/config/index.ts` | Barrel: exports leaveTypesApi, configApi, LeaveTypeDto, ConfigDto |
+| `src/features/config/api/leave-types.api.ts` | LeaveTypeDto + leaveTypesApi CRUD |
+| `src/features/config/api/config.api.ts` | ConfigDto + configApi.get/update() |
 | `src/features/shared-reference-data/index.ts` | Barrel re-exporting: AppRoles, roleLabels, leaveStatusLabels, UserRole, LeaveStatus, getApprovalStatusLabel, getApprovalStatusColor |
 | `src/features/shared-reference-data/constants/app-roles.ts` | Core types: UserRole (union), AppRoles constant object, LeaveStatus (union). Label maps: roleLabels, leaveStatusLabels |
 | `src/features/shared-reference-data/helpers/approval-status.ts` | getApprovalStatusLabel(), getApprovalStatusColor() for N-level progress display |
@@ -115,8 +128,8 @@ User Action -> Component -> useXxxQuery hook -> api module -> fetch("/api/...")
 | File | Route | Purpose |
 |------|-------|---------|
 | `features/dashboard/components/dashboard-page.tsx` | / | Welcome banner + metric cards + per-type leave balance cards + quick actions + recent activity. **Migrated to VSA** -- uses TanStack Query hooks instead of Zustand |
-| `LeaveNewPage.tsx` | /leave/new | Form: leave type select, date range picker (business days calculation), reason textarea, approver display. Overlap detection against approved requests only (status="approved"). Submit creates via store.addLeaveRequest |
-| `LeaveMyPage.tsx` | /leave/my | Table of user's requests with status filter dropdown. Edit dialog (pre-submit), cancel action |
+| `features/leave-requests/components/leave-new-page.tsx` | /leave/new | Form: leave type select, date range picker (business days calculation), reason textarea, approver display. Overlap detection against approved requests only (status="approved"). Submit via TanStack Query mutation |
+| `features/leave-requests/components/leave-my-page.tsx` | /leave/my | Table of user's requests with status filter dropdown. Edit dialog (pre-submit), cancel action. Uses TanStack Query hooks |
 | `ApprovalPage.tsx` | /approval | Pending requests table. Config-driven N-level approval filtering. Approve/reject actions with detail view dialog. Shows approval level progress (e.g., "TP da duyet (cap 1/2)") |
 | `CalendarPage.tsx` | /calendar | Month grid with leave indicators + list view toggle. Department filter. date-fns month navigation |
 | `SummaryPage.tsx` | /summary | Year/type filter. Per-department table (clickable -> employee detail sub-table). Pie chart by leave type |
@@ -133,6 +146,10 @@ User Action -> Component -> useXxxQuery hook -> api module -> fetch("/api/...")
 | `src/shared/hooks/use-toast.ts` | shadcn/ui toast hook (auto-generated) |
 | `src/features/dashboard/hooks/use-dashboard-stats.ts` | TanStack Query hook: leave balances + leave types + approval configs for dashboard metrics |
 | `src/features/dashboard/hooks/use-recent-requests.ts` | TanStack Query hook: recent leave requests for dashboard activity feed |
+| `src/features/leave-requests/hooks/use-leave-requests.ts` | TanStack Query hooks: useMyLeaveRequests, useSubmitLeaveRequest, useUpdateLeaveRequest, useCancelLeaveRequest |
+| `src/features/leave-requests/hooks/use-leave-balances.ts` | TanStack Query hook: fetches current user's leave balances |
+| `src/features/leave-requests/hooks/use-leave-types.ts` | TanStack Query hook: fetches all leave types |
+| `src/features/leave-requests/hooks/use-approval-configs.ts` | TanStack Query hook: fetches approval configs |
 
 ### shadcn/ui Components (`src/shared/ui/`)
 
@@ -168,7 +185,7 @@ Authorization via `CurrentUser.Role` from `features/auth/`:
 - `loadData()` fetches all reference data in parallel (Promise.all) via API modules (legacy Zustand pattern)
 - Individual pages call loadData() on mount (useEffect) to refresh (legacy Zustand pattern)
 - **Migrated (dashboard)**: TanStack Query hooks (`useDashboardStats`, `useRecentRequests`) with automatic caching and invalidation
-- **Legacy (7 pages remaining)**: Zustand store still consumed by LeaveNewPage, LeaveMyPage, ApprovalPage, CalendarPage, SummaryPage, ReportsPage, ViolationsPage, ConfigPage
+- **Legacy (6 pages remaining)**: Zustand store still consumed by ApprovalPage, CalendarPage, SummaryPage, ReportsPage, ViolationsPage, ConfigPage
 - Data scoping: API endpoint returns role-appropriate data based on CurrentUser
 
 ## Database (SQL Server - VI_NGHIPHEP)

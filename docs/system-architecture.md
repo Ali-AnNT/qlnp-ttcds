@@ -4,7 +4,7 @@
 
 Supabase architecture replaced by .NET API + SQL Server. All Supabase code, deps, and migrations removed.
 
-## Current Architecture (Phase 4): .NET 10 + EF Core + JWT Bearer Auth
+## Current Architecture (Phase 5): .NET 10 + EF Core + JWT Bearer Auth
 
 ### High-Level
 
@@ -24,9 +24,13 @@ Host Website (SSO Portal)
        │   │   └─ index.ts            ← Barrel: DashboardPage, LeaveBalanceCard, useDashboardStats, useRecentRequests
        │   ├─ layout/                  ← Layout feature (components, api)
        │   │   └─ index.ts            ← Barrel: AppLayout, AppSidebar, AppHeader, departmentsApi
+       │   ├─ leave-requests/          ← Leave requests feature (api, components, hooks) [Phase 5]
+       │   │   └─ index.ts            ← Barrel: LeaveNewPage, LeaveMyPage, TanStack Query hooks
+       │   ├─ config/                 ← Config feature (api, partial) [Phase 5]
+       │   │   └─ index.ts            ← Barrel: leaveTypesApi, configApi, LeaveTypeDto, ConfigDto
        │   └─ shared-reference-data/  ← Types & labels split from old lib/leave-data.ts
        ├─ components/                 ← App-level shared components (sidebar, header, etc.)
-       ├─ pages/                      ← Route page components (7 pages still using Zustand)
+       ├─ pages/                      ← Route page components (6 pages still using Zustand)
        ├─ store/useStore              ← Zustand Store (data only, no auth) — partially migrated
        └─ api/                        ← Feature API modules (departments, leave-*)
             │
@@ -126,14 +130,14 @@ graph TD
     AL --> AH[AppHeader - features/layout]
     AL --> OUT[Outlet]
     OUT --> DP[DashboardPage - features/dashboard]
-    OUT --> LNP[LeaveNewPage]
-    OUT --> LMP[LeaveMyPage]
-    OUT --> APV[ApprovalPage]
-    OUT --> CP[CalendarPage]
-    OUT --> SP[SummaryPage]
-    OUT --> RP[ReportsPage]
-    OUT --> VP[ViolationsPage]
-    OUT --> CFP[ConfigPage]
+    OUT --> LNP[LeaveNewPage - features/leave-requests]
+    OUT --> LMP[LeaveMyPage - features/leave-requests]
+    OUT --> APV[ApprovalPage - pages/]
+    OUT --> CP[CalendarPage - pages/]
+    OUT --> SP[SummaryPage - pages/]
+    OUT --> RP[ReportsPage - pages/]
+    OUT --> VP[ViolationsPage - pages/]
+    OUT --> CFP[ConfigPage - pages/]
     OUT --> NF[NotFound]
 
     DP --> DS[useDashboardStats - TanStack Query]
@@ -207,7 +211,7 @@ sequenceDiagram
     Component-->>User: Updated UI
 ```
 
-Note: 7 pages still use Zustand Store (LeaveNew, LeaveMy, Approval, Calendar, Summary, Reports, Violations, Config). Dashboard is the first page migrated to TanStack Query.
+Note: 6 pages still use Zustand Store (Approval, Calendar, Summary, Reports, Violations, Config). Dashboard, LeaveNew, and LeaveMy pages have been migrated to TanStack Query.
 
 ## Database ERD
 
@@ -424,7 +428,7 @@ graph TD
 | **JWT Bearer Auth** thay vì gateway headers | SSO Portal issues JWT, app nhận qua postMessage (iframe) hoặc Authorization header. API validates JWT via symmetric key. ICurrentUserProvider reads claims → CurrentUser record. Đã bỏ CurrentUserMiddleware và gateway headers |
 | **ExcludeFromMigrations** cho system tables | USER_MASTER, DM_DONVI là các bảng có sẵn của hệ thống khác. Không được phép thay đổi schema. EF Core chỉ đọc dữ liệu |
 | **Vertical Slice Architecture** thay vì N-tier | Code tổ chức theo feature, không theo layer kỹ thuật. VSA `{Action}{Role}.cs` file naming. Thêm/sửa feature = làm việc trong endpoint files, không lan sang các layer khác → giảm coupling, tăng cohesion. Property injection (`= null!;`) thay vì constructor injection; Data.cs classes eliminated |
-| Zustand store (partial migration) | Data-only state management for legacy pages. Auth state in `features/auth/contexts/`. Dashboard migrated to TanStack Query hooks (`useDashboardStats`, `useRecentRequests`). 7 pages still consume Zustand store. Full migration planned (Phases 5-12) |
+| Zustand store (partial migration) | Data-only state management for legacy pages. Auth state in `features/auth/contexts/`. Dashboard migrated in Phase 4; LeaveNewPage and LeaveMyPage migrated in Phase 5. 6 pages still consume Zustand store (Approval, Calendar, Summary, Reports, Violations, Config). Full migration planned (Phases 6-12) |
 | TanStack Query for server state | Dashboard uses TanStack Query hooks for data fetching with automatic caching. Will replace Zustand store for all remaining pages in subsequent VSA migration phases |
 | Role-based sidebar (not route guards) | SPA UX: all routes mounted, navigation elements hidden by role. `AppSidebar` in `features/layout/`. Simple and effective for intranet |
 | Business days calculation (date-fns) | Standard for government/education leave tracking |
