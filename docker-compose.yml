@@ -1,6 +1,8 @@
 services:
   api:
-    image: qlnp-api:latest
+    build:
+      context: ./packages/api
+      dockerfile: Dockerfile
     container_name: qlnp-api
     ports:
       - "8003:8080"
