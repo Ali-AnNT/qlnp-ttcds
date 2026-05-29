@@ -1,18 +1,18 @@
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStore } from "@/store/useStore";
-import { formatDate } from "@/lib/date-utils";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { formatDate } from "@/shared/lib/date-utils";
+import { Card, CardContent } from "@/shared/ui/card";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
+import { Textarea } from "@/shared/ui/textarea";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/shared/ui/dialog";
 import { toast } from "sonner";
 import { CheckCircle, XCircle, Eye } from "lucide-react";
 import { leaveRequestsApi, type LeaveRequestDto } from "@/api/leave-requests.api";
 import { configApi, type ConfigDto } from "@/api/config.api";
-import { getApprovalStatusLabel, AppRoles } from "@/lib/leave-data";
+import { getApprovalStatusLabel, AppRoles } from "@/features/shared-reference-data";
 
 const ApprovalPage = () => {
   const { user } = useAuth();

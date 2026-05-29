@@ -1,6 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { type UserRole, AppRoles } from "@/lib/leave-data";
-import { cn } from "@/lib/utils";
+import { type UserRole, AppRoles } from "@/features/shared-reference-data";
+import { cn } from "@/shared/lib/utils";
 import {
   AlertTriangle,
   BarChart3,

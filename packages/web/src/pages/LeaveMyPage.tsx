@@ -1,23 +1,23 @@
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStore } from "@/store/useStore";
-import { formatDate } from "@/lib/date-utils";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
+import { formatDate } from "@/shared/lib/date-utils";
+import { Card, CardContent } from "@/shared/ui/card";
+import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
+import { Label } from "@/shared/ui/label";
+import { Textarea } from "@/shared/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/shared/ui/dialog";
+import { cn } from "@/shared/lib/utils";
 import { toast } from "sonner";
 import { XCircle, Pencil } from "lucide-react";
 import { differenceInBusinessDays, parseISO, format, eachDayOfInterval } from "date-fns";
 import { leaveRequestsApi, type LeaveRequestDto } from "@/api/leave-requests.api";
 import { configApi, type ConfigDto } from "@/api/config.api";
-import { getApprovalStatusLabel, getApprovalStatusColor } from "@/lib/leave-data";
+import { getApprovalStatusLabel, getApprovalStatusColor } from "@/features/shared-reference-data";
 
 const LeaveMyPage = () => {
   const { user } = useAuth();

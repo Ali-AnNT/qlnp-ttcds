@@ -1,19 +1,19 @@
 import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStore } from "@/store/useStore";
-import { formatDate } from "@/lib/date-utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { formatDate } from "@/shared/lib/date-utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Badge } from "@/shared/ui/badge";
 import { CalendarDays, Clock, CheckCircle, FileText } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/utils";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import { LeaveBalanceCard } from "@/components/LeaveBalanceCard";
 import {
   getApprovalStatusLabel,
   getApprovalStatusColor,
   AppRoles,
-} from "@/lib/leave-data";
+} from "@/features/shared-reference-data";
 import { configApi, type ConfigDto } from "@/api/config.api";
 
 const statusLabels: Record<string, string> = {

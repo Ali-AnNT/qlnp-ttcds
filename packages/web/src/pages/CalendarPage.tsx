@@ -1,17 +1,17 @@
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStore } from "@/store/useStore";
-import { formatDate } from "@/lib/date-utils";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
+import { formatDate } from "@/shared/lib/date-utils";
+import { Card, CardContent, CardHeader } from "@/shared/ui/card";
+import { Badge } from "@/shared/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
+import { cn } from "@/shared/lib/utils";
 import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, isWithinInterval } from "date-fns";
-import { getApprovalStatusLabel, AppRoles } from "@/lib/leave-data";
+import { getApprovalStatusLabel, AppRoles } from "@/features/shared-reference-data";
 import { configApi, type ConfigDto } from "@/api/config.api";
 import { vi } from "date-fns/locale";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import { ChevronLeft, ChevronRight, CalendarDays, List } from "lucide-react";
 
 const statusLabels: Record<string, string> = {

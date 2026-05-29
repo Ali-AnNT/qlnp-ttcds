@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { api } from "@/api/client";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { api } from "@/shared/api/client";
+import { Card } from "@/shared/ui/card";
+import { Button } from "@/shared/ui/button";
 import { CalendarDays, Loader2, LogIn } from "lucide-react";
 
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === "true";

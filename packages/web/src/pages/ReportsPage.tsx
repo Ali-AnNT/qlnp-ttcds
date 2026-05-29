@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { useStore } from "@/store/useStore";
-import { formatDate } from "@/lib/date-utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { formatDate } from "@/shared/lib/date-utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Button } from "@/shared/ui/button";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
