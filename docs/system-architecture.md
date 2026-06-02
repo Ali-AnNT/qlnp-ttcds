@@ -4,36 +4,71 @@
 
 Supabase architecture replaced by .NET API + SQL Server. All Supabase code, deps, and migrations removed.
 
-## Current Architecture (Phase 1): .NET 10 + EF Core + JWT Bearer Auth
+## Current Architecture (Phase 12): .NET 10 + React VSA
 
-### High-Level
+### High-Level Frontend (Vertical Slice Architecture)
 
 ```
-Host Website (SSO Portal)
-  └─ iframe ─ React SPA (Vite)
-       ├─ AuthContext (JWT from postMessage or localStorage)
-       ├─ Zustand Store (data only, no auth)
-       └─ api/client.ts (fetch + Bearer JWT)
-            │
-            ▼ GET/POST/PUT/DELETE /api/*
-ASP.NET 10 FastEndpoints API
+React SPA (Vite)
+  ├─ app/                        ← App shell (App.tsx, providers, router, NotFound)
+  ├─ shared/                     ← Generic infrastructure (api client, lib, hooks, ui)
+  │   ├─ api/client.ts (fetch + Bearer JWT)
+  │   ├─ lib/ (utils, date-utils)
+  │   ├─ hooks/ (use-mobile, use-toast)
+  │   └─ ui/ (49 shadcn/ui components)
+  ├─ features/                   ← Feature modules (VSA)
+  │   ├─ auth/                    ← Auth feature
+  │   ├─ layout/                  ← App shell components (Sidebar, Header)
+  │   ├─ dashboard/               ← Dashboard + stats
+  │   ├─ leave-requests/          ← Leave CRUD + balances
+  │   ├─ approval/                ← N-level approval logic
+  │   ├─ calendar/                ← Leave calendar view
+  │   ├─ summary/                 ← GD.PGD summary view
+  │   ├─ reports/                 ← GD.PGD reports + export
+  │   ├─ violations/              ← GD.PGD violation monitoring
+  │   ├─ config/                  ← QTHT system configuration
+  │   └─ shared-reference-data/   ← Cross-feature types & constants
+  └─ test/                       ← Test utilities & mock factories
+```
+
+**VSA Principles Applied:**
+- **Feature Colocation**: Components, hooks, API, and types live together in feature folders.
+- **Public API**: Each feature exports a clean interface via `index.ts`.
+- **Boundary Enforcement**: ESLint rules block deep imports and illegal cross-feature dependencies.
+- **Server State**: 100% TanStack Query. No global data store (Zustand removed).
+
+### High-Level Backend (Vertical Slice Architecture)
   ├─ JWT Bearer Authentication (Issuer, Audience, SigningKey from appsettings.json)
   ├─ ICurrentUserProvider (reads ClaimsPrincipal from JWT, returns CurrentUser record)
-  ├─ Features/                     ← Vertical Slices
-  │   ├─ Auth/Me/                  MeEndpoint (implemented)
-  │   ├─ Config/Get, Update/       config endpoints implemented
-  │   ├─ Departments/List, Get/    department reference endpoints
-  │   ├─ LeaveBalances/List, My, Seed/  lazy/startup balance seeding
-  │   ├─ SystemConfigs/Get, Update/     key-value system settings (QTHT-only write)
-  │   ├─ LeaveRequests/List, Create, Update, Approve, Reject, Cancel/  ← config-driven N-level approval
-  │   │   ├─ ApprovalHelper.cs (shared logic: GetApprovalFlow, CanApproveAtLevel, GetMaxLevel, GetNextLevelRoles)
-	  │   │   ├─ LeaveRequestMapping.cs (shared DRY DTO mapping, includes ApprovedLevel)
-  │   │   └─ BusinessDayCalculator.cs (T2-T6 inclusive)
-  │   ├─ Reports/Export/           ClosedXML .xlsx export
-  │   └─ LeaveTypes/List, Create, Update, Delete/  ← Roles("QTHT")
+  ├─ Features/                     ← Vertical Slices (VSA {Action}{Role}.cs pattern)
+  │   ├─ Auth/Me/, DevLogin/       Auth endpoints
+  │   ├─ Departments/List/, Get/   department reference endpoints
+  │   ├─ LeaveBalances/List/, My/  balance endpoints + seed helpers
+  │   ├─ LeaveRequests/List, Create, Update, Approve, Reject, Cancel, My/  ← config-driven N-level approval
+  │   │   ├─ LeaveRequestMapping.cs (shared DRY DTO mapping, includes ApprovedLevel)
+  │   │   └─ LeaveRequestDto.cs (shared DTO)
+  │   ├─ LeaveTypes/List, Create, Update, Delete/  ← Roles(AppRoles.Admin)
+  │   ├─ SystemConfigs/Get, Update, GetLeaveConfigs, ReplaceLeaveConfigs/  ← system settings + approval config
+  │   └─ Reports/Export/           ClosedXML .xlsx export
+  ├─ Shared/                        ← Cross-cutting shared code
+  │   ├─ Domain/                    ← Entities, domain services, helpers
+  │   │   ├─ LeaveRequest.cs, LeaveType.cs, LeaveBalance.cs, ... (all domain entities)
+  │   │   ├─ ApprovalHelper.cs, BusinessDayCalculator.cs       (domain logic)
+  │   │   ├─ LeaveBalanceService.cs, ILeaveBalanceService.cs    (domain service)
+  │   │   └─ LeaveBalanceSeeding.cs                              (seeding logic)
+  │   ├─ Contracts/                 ← Shared response envelopes
+  │   │   ├─ Result<T>             (success/error envelope)
+  │   │   └─ PagedData<T>          (paginated list envelope)
+  │   ├─ Groups/                    ← FastEndpoints route groups
+  │   │   └─ AuthGroup, LeaveRequestGroup, LeaveTypeGroup, LeaveBalanceGroup, DepartmentGroup, SystemConfigGroup
+  │   └─ Middleware/
+  │       └─ CurrentUser.cs         (CurrentUser record)
+  ├─ Infrastructure/
+  │   └─ Auth/                      ← Auth infrastructure
+  │       ├─ ICurrentUserProvider.cs, CurrentUserProvider.cs, Roles.cs (AppRoles constants)
   ├─ Data/AppDbContext              (EF Core 9 + SQL Server)
   │   ├─ System tables: USER_MASTER, DM_DONVI (ExcludeFromMigrations)
-	  │   └─ App tables: LeaveTypes, LeaveBalances, LeaveRequests (incl. ApprovedLevel), LeaveConfigs, SystemConfigs, LeaveRequestAudits
+  │   └─ App tables: LeaveTypes, LeaveBalances, LeaveRequests (incl. ApprovedLevel), LeaveConfigs, SystemConfigs, LeaveRequestAudits
   └─ SQL Server (existing `VI_NGHIPHEP` database)
 ```
 
@@ -68,73 +103,84 @@ ASP.NET 10 FastEndpoints API
 ```
 
 **Nguyên tắc chính**:
-- Mỗi feature là một vertical slice khép kín: Endpoint + Request DTO + Response DTO + Validator + Handler logic
-- Data access qua EF Core DbContext (DI inject), không có repository layer riêng
-- Cross-cutting concerns (current user resolution, DB connection, logging) nằm trong middleware hoặc shared utilities
-- Thêm feature mới = thêm 1 folder trong Features/, không đụng đến code hiện có
+- Mỗi feature là một vertical slice khép kín: Endpoint + Request DTO + Response DTO + Validator + Mapper + Handler logic
+- VSA file naming: `{Action}{Role}.cs` pattern (e.g., `CreateLeaveRequestEndpoint.cs`, `ListLeaveRequestsEndpoint.cs`)
+- Data access qua EF Core DbContext (property injection `= null!;`), không có repository layer riêng, không có Data.cs classes
+- Domain entities in `Shared/Domain/` (namespace: `QLNP.Api.Shared.Domain`), not in `Entities/`
+- Auth infrastructure in `Infrastructure/Auth/` (namespace: `QLNP.Api.Infrastructure.Auth`), not in `Auth/`
+- Cross-cutting concerns (current user resolution, response envelopes, route groups) nằm trong `Shared/` (Contracts, Groups, Middleware)
+- Route groups in `Shared/Groups/` define URL prefixes per feature area
+- Response envelopes: `Result<T>` (success/error) and `PagedData<T>` (paginated lists) in `Shared/Contracts/`
+- Thêm feature mới = thêm endpoint files trong Features/, thêm route group trong Shared/Groups/, không đụng đến code hiện có
 
 ## Component Tree
 
 ```mermaid
 graph TD
-    App[App.tsx]
-    App --> QCP[QueryClientProvider]
+    App[app/App.tsx]
+    App --> Providers[app/providers.tsx]
+    Providers --> QCP[QueryClientProvider]
     QCP --> TP[TooltipProvider]
-    TP --> AP[AuthProvider - AuthContext]
-    AP --> BR[BrowserRouter]
-    BR --> LP[LoginPage /login]
-    BR --> AG[AuthGuard /]
-    AG --> AL[AppLayout]
-    AL --> AS[AppSidebar]
-    AL --> AH[AppHeader]
+    TP --> Toaster
+    TP --> AP[AuthProvider - features/auth]
+    App --> Router[app/router.tsx]
+    Router --> BR[BrowserRouter]
+    BR --> LP[LoginPage /login - features/auth]
+    BR --> AG[AuthGuard / - features/auth]
+    AG --> AL[AppLayout - features/layout]
+    AL --> AS[AppSidebar - features/layout]
+    AL --> AH[AppHeader - features/layout]
     AL --> OUT[Outlet]
-    OUT --> DP[DashboardPage]
-    OUT --> LNP[LeaveNewPage]
-    OUT --> LMP[LeaveMyPage]
-    OUT --> APV[ApprovalPage]
-    OUT --> CP[CalendarPage]
-    OUT --> SP[SummaryPage]
-    OUT --> RP[ReportsPage]
-    OUT --> VP[ViolationsPage]
-    OUT --> CFP[ConfigPage]
-    OUT --> NF[NotFound]
+    OUT --> DP[DashboardPage - features/dashboard]
+    OUT --> LNP[LeaveNewPage - features/leave-requests]
+    OUT --> LMP[LeaveMyPage - features/leave-requests]
+    OUT --> APV[ApprovalPage - features/approval]
+    OUT --> CP[CalendarPage - features/calendar]
+    OUT --> SP[SummaryPage - features/summary]
+    OUT --> RP[ReportsPage - features/reports]
+    OUT --> VP[ViolationsPage - features/violations]
+    OUT --> CFP[ConfigPage - features/config]
+    OUT --> NF[NotFound - app/NotFound]
+
+    DP --> DS[useDashboardStats - TanStack Query]
+    DP --> DR[useRecentRequests - TanStack Query]
+    DP --> LBC[LeaveBalanceCard]
 
     AS --> MenuItems[MenuItems filtered by user.role]
     AH --> BC[Breadcrumb]
     AH --> UserMenu[User Avatar + Dropdown]
 ```
 
-## Data Flow
+## Data Flow (TanStack Query -- 100% Migrated)
 
 ```mermaid
 sequenceDiagram
     participant User as User (Browser)
-    participant Component as React Component
-    participant Store as Zustand Store
-    participant API as api/client.ts
+    participant Component as Feature Page
+    participant Hook as Feature Hook (TanStack Query)
+    participant API as shared/api/client.ts
     participant FE as FastEndpoints Endpoint
     participant DbCtx as AppDbContext
     participant DB as SQL Server
 
-    User->>Component: Form submit
-    Component->>Store: action(payload)
-    Store->>API: fetch("/api/leave-requests", { method: POST, body })
+    User->>Component: Interaction / Load
+    Component->>Hook: useQuery() / useMutation()
+    Hook->>API: fetch("/api/...", ...)
+    Note over API: client.ts in src/shared/api/
     API->>API: Attach JWT Authorization header
     API->>FE: HTTP Request
-    FE->>FE: Resolve CurrentUser via ICurrentUserProvider (claims)
-    FE->>FE: FluentValidation (auto)
+    FE->>FE: Resolve CurrentUser via ICurrentUserProvider
     FE->>DbCtx: EF Core query (LINQ)
     DbCtx->>DB: SQL
     DB-->>DbCtx: Result rows
     DbCtx-->>FE: Entities
     FE-->>API: JSON Response
-    API-->>Store: Response data
-    Store->>Store: set(state => newState)
-    Store-->>Component: Re-render with new state
+    API-->>Hook: Response data (cached by TanStack Query)
+    Hook-->>Component: Re-render with data
     Component-->>User: Updated UI
-
-    Note over FE,DB: Mỗi endpoint handler dùng AppDbContext + ICurrentUserProvider qua DI injection
 ```
+
+Note: All frontend state management has been migrated to TanStack Query. Legacy Zustand store and `src/pages` structure have been removed in Phase 12.
 
 ## Database ERD
 
@@ -216,7 +262,7 @@ erDiagram
 
 ### Seed Data
 - LeaveTypes: NPN (12 days), NO (30 days), NVR (3 days), NKL (0 days), NTS (180 days) -- seeded via `HasData` in `AppDbContext.OnModelCreating`
-- LeaveConfigs: 9 rows seeded via `HasData` establishing the initial approval-level baseline per LeaveType. This baseline is required so `MigrateLegacyStatusesAsync` can correctly calculate max approval levels per LeaveType at startup. The `Config/Update` endpoint (`ReplaceAllAsync`) can overwrite these rows at runtime.
+- LeaveConfigs: 9 rows seeded via `HasData` establishing the initial approval-level baseline per LeaveType. This baseline is required so `MigrateLegacyStatusesAsync` can correctly calculate max approval levels per LeaveType at startup. The `SystemConfigs/ReplaceLeaveConfigs` endpoint can overwrite these rows at runtime.
 
   | LeaveTypeId (Code) | ApprovalLevel | ApproverRole |
   |---------------------|---------------|--------------|
@@ -259,7 +305,7 @@ sequenceDiagram
 
     Note over Host,DB: User already authenticated on SSO Portal
     Host->>R: postMessage({ type: "auth", token: jwt })
-    R->>R: AuthContext stores JWT in localStorage
+    R->>R: features/auth/contexts stores JWT in localStorage
     R->>API: GET /api/auth/me (Bearer JWT)
     API->>API: JWT validation + ICurrentUserProvider reads claims
     API->>DB: Lookup USER_MASTER; roles come from JWT claims
@@ -310,7 +356,7 @@ stateDiagram-v2
 - OR logic per level: any configured approver role can advance the request
 - Scope: LD.PCM can only approve requests from same department (not own); GD.PGD has no scope restriction
 - Balance deduction only on final approval (ApprovedLevel == maxLevel)
-- `ApprovalHelper.cs` provides shared logic: GetApprovalFlow, CanApproveAtLevel, GetMaxLevel, GetNextLevelRoles
+- `ApprovalHelper.cs` (in `Shared/Domain/`) provides shared logic: GetApprovalFlow, CanApproveAtLevel, GetMaxLevel, GetNextLevelRoles
 
 ## Deployment Architecture
 
@@ -350,9 +396,10 @@ graph TD
 | **EF Core** thay vì Dapper | Type-safe LINQ queries, migrations built-in, change tracking. Phù hợp khi làm việc với DB có sẵn (scaffold system tables + Code First app tables) |
 | **JWT Bearer Auth** thay vì gateway headers | SSO Portal issues JWT, app nhận qua postMessage (iframe) hoặc Authorization header. API validates JWT via symmetric key. ICurrentUserProvider reads claims → CurrentUser record. Đã bỏ CurrentUserMiddleware và gateway headers |
 | **ExcludeFromMigrations** cho system tables | USER_MASTER, DM_DONVI là các bảng có sẵn của hệ thống khác. Không được phép thay đổi schema. EF Core chỉ đọc dữ liệu |
-| **Vertical Slice Architecture** thay vì N-tier | Code tổ chức theo feature, không theo layer kỹ thuật. Thêm/sửa feature = làm việc trong 1 folder, không lan sang các layer khác → giảm coupling, tăng cohesion |
-| Single Zustand store | Data-only state management. Auth state moved to React Context. Limited state surface area for intranet app |
-| Role-based sidebar (not route guards) | SPA UX: all routes mounted, navigation elements hidden by role. Simple and effective for intranet |
+| **Vertical Slice Architecture** thay vì N-tier | Code tổ chức theo feature, không theo layer kỹ thuật. VSA `{Action}{Role}.cs` file naming. Thêm/sửa feature = làm việc trong endpoint files, không lan sang các layer khác → giảm coupling, tăng cohesion. Property injection (`= null!;`) thay vì constructor injection; Data.cs classes eliminated |
+| Zustand store (partial migration) | Data-only state management for legacy pages. Auth state in `features/auth/contexts/`. Dashboard migrated in Phase 4; LeaveNewPage and LeaveMyPage migrated in Phase 5. 6 pages still consume Zustand store (Approval, Calendar, Summary, Reports, Violations, Config). Full migration planned (Phases 6-12) |
+| TanStack Query for server state | Dashboard uses TanStack Query hooks for data fetching with automatic caching. Will replace Zustand store for all remaining pages in subsequent VSA migration phases |
+| Role-based sidebar (not route guards) | SPA UX: all routes mounted, navigation elements hidden by role. `AppSidebar` in `features/layout/`. Simple and effective for intranet |
 | Business days calculation (date-fns) | Standard for government/education leave tracking |
 | shadcn/ui (Radix primitives) | Production-ready accessible components, customizable via CSS variables |
 | No SSR | Intranet app behind auth, no SEO needed. SPA is simpler to deploy and maintain |

@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
-import { leaveTypesApi } from "../api/leave-types.api";
-import { api } from "../api/client";
+import { leaveTypesApi } from "@/features/config";
+import { api } from "@/shared/api/client";
 
-vi.mock("../api/client", () => ({
+vi.mock("@/shared/api/client", () => ({
   api: {
     get: vi.fn(),
     post: vi.fn(),

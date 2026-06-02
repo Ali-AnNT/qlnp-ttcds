@@ -1,5 +1,45 @@
 # Project Changelog - QLNP-TTCDS
 
+## v0.6.0 -- 2026-05-29 -- VSA Phases 4-5: Dashboard + Leave Requests + Config Migration
+
+### Added
+- `src/features/dashboard/` feature module (VSA slice) with components, hooks, api, and barrel export
+- `src/features/dashboard/components/dashboard-page.tsx` -- DashboardPage moved from `src/pages/DashboardPage.tsx`
+- `src/features/dashboard/components/leave-balance-card.tsx` -- LeaveBalanceCard moved from `src/components/LeaveBalanceCard.tsx`
+- `src/features/dashboard/hooks/use-dashboard-stats.ts` -- TanStack Query hook combining leave balances, leave types, and approval configs queries
+- `src/features/dashboard/hooks/use-recent-requests.ts` -- TanStack Query hook with role-based query key (staff: own requests, managers: all)
+- `src/features/dashboard/api/dashboard.api.ts` -- Re-exports API types and modules needed by dashboard hooks
+- `src/features/dashboard/index.ts` -- Barrel export: DashboardPage, LeaveBalanceCard, LeaveBalanceInfo, useDashboardStats, useRecentRequests
+- `src/features/leave-requests/` feature module (VSA slice) with api, components, hooks, and barrel export
+- `src/features/leave-requests/components/leave-new-page.tsx` -- LeaveNewPage moved from `src/pages/LeaveNewPage.tsx`
+- `src/features/leave-requests/components/leave-my-page.tsx` -- LeaveMyPage moved from `src/pages/LeaveMyPage.tsx`
+- `src/features/leave-requests/hooks/use-leave-requests.ts` -- TanStack Query hooks: useMyLeaveRequests, useSubmitLeaveRequest, useUpdateLeaveRequest, useCancelLeaveRequest
+- `src/features/leave-requests/hooks/use-leave-balances.ts` -- TanStack Query hook for current user's leave balances
+- `src/features/leave-requests/hooks/use-leave-types.ts` -- TanStack Query hook for all leave types
+- `src/features/leave-requests/hooks/use-approval-configs.ts` -- TanStack Query hook for approval configs
+- `src/features/leave-requests/api/types.ts` -- LeaveRequestDto, CreateLeaveRequestDto, LeaveBalanceDto types
+- `src/features/leave-requests/api/leave-requests.api.ts` -- leaveRequestsApi with CRUD + approve/reject/cancel
+- `src/features/leave-requests/api/leave-balances.api.ts` -- leaveBalancesApi.my()
+- `src/features/leave-requests/index.ts` -- Barrel export: LeaveNewPage, LeaveMyPage, TanStack Query hooks, types
+- `src/features/config/index.ts` -- Barrel export: leaveTypesApi, configApi, LeaveTypeDto, ConfigDto
+- `src/features/config/api/leave-types.api.ts` -- LeaveTypeDto + leaveTypesApi CRUD
+- `src/features/config/api/config.api.ts` -- ConfigDto + configApi.get/update()
+
+### Changed
+- `app/router.tsx`: DashboardPage import changed from `@/pages/DashboardPage` to `@/features/dashboard`; LeaveNewPage/LeaveMyPage imports changed from `@/pages/*` to `@/features/leave-requests`
+- Dashboard data fetching: Zustand `useStore` replaced with TanStack Query hooks (`useDashboardStats`, `useRecentRequests`)
+- LeaveNewPage/LeaveMyPage data fetching: Zustand `useStore` replaced with TanStack Query hooks
+- Dashboard imports: `@/components/ui/*` replaced with `@/shared/ui/*`, `@/lib/*` replaced with `@/shared/lib/*`
+
+### Removed
+- `src/pages/DashboardPage.tsx` (moved to features/dashboard/components/)
+- `src/pages/LeaveNewPage.tsx` (moved to features/leave-requests/components/)
+- `src/pages/LeaveMyPage.tsx` (moved to features/leave-requests/components/)
+- `src/components/LeaveBalanceCard.tsx` (moved to features/dashboard/components/)
+- `src/components/LeaveHistory.tsx` (unused stub, deleted)
+- `src/components/LeaveRequestForm.tsx` (unused, deleted)
+- Zustand store references removed from dashboard, leave-requests, and config features
+
 ## v0.5.0 -- 2026-05-28 -- SystemConfigs Key-Value Settings
 
 ### Added

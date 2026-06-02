@@ -1,4 +1,4 @@
-using QLNP.Api.Entities;
+using QLNP.Api.Shared.Domain;
 
 namespace QLNP.Api.Features.LeaveRequests;
 

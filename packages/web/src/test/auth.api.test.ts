@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
-import { authApi } from "../api/auth.api";
-import { api } from "../api/client";
+import { authApi } from "@/features/auth";
+import { api } from "@/shared/api/client";
 
-vi.mock("../api/client", () => ({
+vi.mock("@/shared/api/client", () => ({
   api: {
     get: vi.fn(),
   },

@@ -8,7 +8,7 @@
 | **Organization** | Trung Tam Chuyen Doi So (TTCDS) |
 | **Domain** | Quan ly nghi phep noi bo |
 | **Platform** | Web application (SPA) |
-| **Current Version** | 0.5.0 (SystemConfigs key-value settings) |
+| **Current Version** | 0.6.0 (VSA Phases 4-5: Dashboard + Leave Requests migration) |
 
 ## 2. Purpose
 
@@ -114,8 +114,8 @@ Xay dung he thong noi bo thay the quy trinh xin nghi phep thu cong (giay to, ema
 |------------|---------|---------|
 | React | ^18.3.1 | UI framework |
 | Vite | ^5.4.19 | Build tool |
-| Zustand | ^5.0.12 | Client state management |
-| TanStack React Query | ^5.83.0 | Server state caching |
+| Zustand | ^5.0.12 | Client state management (partially migrated to TanStack Query) |
+| TanStack React Query | ^5.83.0 | Server state caching (3 pages migrated, 6 pages remaining) |
 | React Router DOM | ^6.30.1 | SPA routing |
 | Recharts | ^3.8.1 | Charts |
 | React Hook Form | ^7.72.1 | Form handling |

@@ -73,6 +73,52 @@ All Supabase-related issues resolved by architecture migration:
 | README/deployment/docs sync | In progress | 2026-05-25 |
 | Final build/test/manual validation | Planned | TBD |
 
+## Phase 1.5: VSA Migration (IN PROGRESS)
+
+**Priority:** P1 -- Migrate frontend from layered architecture to Vertical Slice Architecture.
+**Branch:** `refactor/adjust-api-arch-follow-vsa-and-fastendpoint`
+**Plan:** `plans/250528-vsa-migration/plan.md`
+
+| Phase | Name | Status | Effort |
+|-------|------|--------|--------|
+| 1 | Shared Infrastructure & App Layer | Done | 2h |
+| 2 | Auth | Done | 30m |
+| 3 | Layout | Done | 30m |
+| 4 | Dashboard | Done | 30m |
+| 5 | Leave Requests | Done | 1h |
+| 6 | Approval | Pending | 45m |
+| 7 | Calendar | Pending | 30m |
+| 8 | Summary | Pending | 45m |
+| 9 | Reports | Pending | 30m |
+| 10 | Violations | Pending | 1h |
+| 11 | Config | Pending | 1h |
+| 12 | Cleanup & ESLint Boundaries | Pending | 1h |
+
+### Phase 4 (Dashboard) -- Completed 2026-05-29
+
+- DashboardPage migrated from `src/pages/DashboardPage.tsx` to `src/features/dashboard/components/dashboard-page.tsx`
+- LeaveBalanceCard migrated from `src/components/LeaveBalanceCard.tsx` to `src/features/dashboard/components/leave-balance-card.tsx`
+- LeaveHistory.tsx deleted (was unused stub)
+- Zustand store usage replaced with TanStack Query hooks: `useDashboardStats` and `useRecentRequests`
+- Created `features/dashboard/api/dashboard.api.ts` re-exporting API types
+- Created `features/dashboard/hooks/` with two TanStack Query hooks
+- Created `features/dashboard/index.ts` barrel export
+- Updated `app/router.tsx` to import from `@/features/dashboard`
+- Build passes, no Zustand references remain in dashboard feature
+
+### Phase 5 (Leave Requests + Config) -- Completed 2026-05-29
+
+- Created `features/leave-requests/` with full VSA structure: `api/`, `components/`, `hooks/`, `index.ts`
+- Created `features/config/` (partial, owns leave-types and config API types)
+- Moved LeaveNewPage from `src/pages/LeaveNewPage.tsx` to `src/features/leave-requests/components/leave-new-page.tsx`
+- Moved LeaveMyPage from `src/pages/LeaveMyPage.tsx` to `src/features/leave-requests/components/leave-my-page.tsx`
+- Deleted unused `src/components/LeaveRequestForm.tsx`
+- Zustand store usage replaced with TanStack Query hooks: `useLeaveRequests`, `useMyLeaveRequests`, `useSubmitLeaveRequest`, `useUpdateLeaveRequest`, `useCancelLeaveRequest`, `useLeaveBalances`, `useLeaveTypes`, `useApprovalConfigs`
+- Created `features/config/index.ts` barrel exporting `leaveTypesApi`, `configApi`, `LeaveTypeDto`, `ConfigDto`
+- Updated `app/router.tsx` to import LeaveNewPage/LeaveMyPage from `@/features/leave-requests`
+- Build passes, no Zustand references remain in leave-requests or config features
+- 6 pages still consuming Zustand store (Approval, Calendar, Summary, Reports, Violations, Config)
+
 ## Phase 2: Feature Enhancements (Planned)
 
 | Feature | Priority | Description |
@@ -116,6 +162,12 @@ May 14-28 2026 (IN PROGRESS): Phase 1.1 - Endpoint Implementation & Release Read
     - Remaining: UpdateByApprover, History, audit write wiring, embed host sample, integration testing
     - Integration testing
     - Documentation/deployment sync
+
+May 28-29 2026 (IN PROGRESS): Phase 1.5 - VSA Migration
+    - Done: Phases 1-5 (Shared Infrastructure, Auth, Layout, Dashboard, Leave Requests, Config API)
+    - Dashboard, LeaveNew, LeaveMy fully migrated to TanStack Query hooks (no Zustand)
+    - 6 pages still using Zustand store (Approval, Calendar, Summary, Reports, Violations, Config)
+    - Remaining: Phases 6-12 (Approval, Calendar, Summary, Reports, Violations, Config, Cleanup)
 
 Q3 2026: Phase 2 - Feature Enhancements
     - Email notifications

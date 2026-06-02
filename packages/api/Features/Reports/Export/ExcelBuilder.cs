@@ -1,5 +1,5 @@
 using ClosedXML.Excel;
-using QLNP.Api.Entities;
+using QLNP.Api.Shared.Domain;
 
 namespace QLNP.Api.Features.Reports.Export;
 

@@ -40,18 +40,16 @@ pnpm api:watch
 ```
 packages/
   api/                      # ASP.NET 10 FastEndpoints API
-    Auth/                   # ICurrentUserProvider + claims-based current user
     Data/                   # AppDbContext, EF Core migrations, startup seed
-    Entities/               # SQL Server entities
-    Features/               # Vertical slices by use case
+    Features/               # Vertical slices by use case (N-level approval)
+    Infrastructure/         # Auth, Role constants
+    Shared/                 # Domain entities, Contracts, Groups, Middleware
   web/
     src/
-      api/                  # Fetch API modules
-      components/           # App layout + shadcn/ui components
-      contexts/             # AuthContext with JWT/postMessage support
-      lib/                  # Shared types and date/utils helpers
-      pages/                # Feature pages
-      store/useStore.ts     # Zustand data store
+      app/                  # App shell, routing, providers
+      features/             # 10 self-contained VSA features
+      shared/               # Generic UI kit, hooks, lib, api client
+      test/                 # Vitest utilities & mock factories
 ```
 
 ## User Roles
