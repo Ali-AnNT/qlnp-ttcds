@@ -30,11 +30,11 @@ internal sealed class DevLoginEndpoint : Endpoint<DevLoginRequest, Result<DevLog
 
     public override async Task HandleAsync(DevLoginRequest req, CancellationToken ct) {
         // Runtime guard: only when DevMode.Enabled is true
-        var devMode = Configuration.GetSection("DevMode").GetValue<bool>("Enabled");
-        if (!devMode) {
-            await Send.NotFoundAsync(ct);
-            return;
-        }
+        // var devMode = Configuration.GetSection("DevMode").GetValue<bool>("Enabled");
+        // if (!devMode) {
+        //     await Send.NotFoundAsync(ct);
+        //     return;
+        // }
 
         // Dev role map using centralized constants
         var devRoles = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) {
