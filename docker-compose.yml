@@ -6,7 +6,24 @@ services:
     container_name: qlnp-api
     ports:
       - "8003:8080"
+    env_file:
+      - .env
     environment:
-      ASPNETCORE_ENVIRONMENT: "Development"
-      ConnectionStrings__DefaultConnection: "Server=192.168.1.13,1439;Database=VI_NGHIPHEP;User Id=vietinfo;Password=Vietinfo@#@!;TrustServerCertificate=True"
-      Jwt__SigningKey: "CHANGE_ME_AT_LEAST_32_CHARACTERS_LONG!"
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      ConnectionStrings__DefaultConnection: ${CONNECTION_STRING}
+      Jwt__SigningKey: ${JWT_SIGNING_KEY}
+
+  web:
+    build:
+      context: .
+      dockerfile: packages/web/Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+        VITE_DEV_MODE: ${VITE_DEV_MODE}
+    container_name: qlnp-web
+    ports:
+      - "8001:80"
+    env_file:
+      - .env
+    depends_on:
+      - api
