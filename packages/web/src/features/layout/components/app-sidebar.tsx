@@ -89,7 +89,7 @@ interface Props {
 }
 
 export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const location = useLocation();
   const [expandedItems, setExpandedItems] = useState<string[]>([
     "Đơn xin nghỉ phép",
@@ -97,11 +97,6 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
 
   const role = user?.role as UserRole | undefined;
   const visibleItems = menuItems.filter((m) => role && m.roles.includes(role));
-
-  const handleLogout = () => {
-    localStorage.removeItem("jwt");
-    window.location.href = "/login";
-  };
 
   const toggleExpand = (label: string) => {
     setExpandedItems((p) =>
@@ -217,7 +212,7 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
 
       <div className="border-t border-sidebar-border p-2">
         <button
-          onClick={handleLogout}
+          onClick={logout}
           className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-sidebar-accent rounded-md transition-colors"
         >
           <LogOut className="h-4 w-4 shrink-0" />

@@ -1,3 +1,6 @@
+import { getAccessToken } from "../lib/token-store";
+import { tryRenewToken } from "../lib/token-refresh";
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8003/api";
 
 interface ApiResponse<T> {
@@ -5,51 +8,77 @@ interface ApiResponse<T> {
   error: string | null;
 }
 
-interface ResultEnvelope<T> {
-  success: boolean;
-  data: T | null;
-  message?: string | null;
-  errors?: string[] | null;
-}
-
-function getJwt(): string | null {
-  return localStorage.getItem("jwt");
-}
-
 async function request<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
-  const jwt = getJwt();
+  const token = getAccessToken();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
-  if (jwt) headers["Authorization"] = `Bearer ${jwt}`;
+  if (token) headers["Authorization"] = `Bearer ${token}`;
 
   try {
     const res = await fetch(`${API_URL}${path}`, {
       ...options,
       headers,
     });
+
+    // On 401: try to renew token and retry once
+    if (res.status === 401) {
+      const renewed = await tryRenewToken();
+      if (renewed) {
+        const newToken = getAccessToken();
+        const retryHeaders: Record<string, string> = {
+          "Content-Type": "application/json",
+          ...(options.headers as Record<string, string>),
+        };
+        if (newToken) retryHeaders["Authorization"] = `Bearer ${newToken}`;
+
+        const retryRes = await fetch(`${API_URL}${path}`, {
+          ...options,
+          headers: retryHeaders,
+        });
+
+        if (!retryRes.ok) {
+          const errBody = await retryRes.text();
+          return { data: null, error: errBody || `HTTP ${retryRes.status}` };
+        }
+        const raw = await retryRes.json();
+        return unwrapEnvelope<T>(raw);
+      }
+      // Renewal failed — return unauthorized error
+      return { data: null, error: "Unauthorized" };
+    }
+
     if (!res.ok) {
       const errBody = await res.text();
       return { data: null, error: errBody || `HTTP ${res.status}` };
     }
+
     const raw = await res.json();
-    // Unwrap Result<T> envelope from backend
-    if (typeof raw.success === "boolean") {
-      if (raw.success) {
-        return { data: raw.data as T, error: null };
-      }
-      const msg = raw.message || "Request failed";
-      const errs = raw.errors?.length ? raw.errors.join("; ") : "";
-      return { data: null, error: errs ? `${msg}: ${errs}` : msg };
-    }
-    return { data: raw as T, error: null };
+    return unwrapEnvelope<T>(raw);
   } catch (e: unknown) {
-    return { data: null, error: e instanceof Error ? e.message : "Network error" };
+    return {
+      data: null,
+      error: e instanceof Error ? e.message : "Network error",
+    };
   }
+}
+
+/** Unwrap backend Result<T> envelope if present */
+function unwrapEnvelope<T>(raw: unknown): ApiResponse<T> {
+  if (typeof raw === "object" && raw !== null && "success" in raw) {
+    const envelope = raw as { success: boolean; data?: unknown; message?: string; errors?: string[] };
+    if (envelope.success) {
+      return { data: envelope.data as T, error: null };
+    }
+    const msg = envelope.message || "Request failed";
+    const errs = envelope.errors?.length ? envelope.errors.join("; ") : "";
+    return { data: null, error: errs ? `${msg}: ${errs}` : msg };
+  }
+  return { data: raw as T, error: null };
 }
 
 export const api = {

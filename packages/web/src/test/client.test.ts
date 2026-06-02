@@ -1,14 +1,34 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+
+// Mock token-refresh before importing client
+vi.mock("@/shared/lib/token-refresh", () => ({
+  tryRenewToken: vi.fn().mockResolvedValue(false),
+}));
+
+// Mock token-store before importing client
+vi.mock("@/shared/lib/token-store", () => ({
+  getAccessToken: vi.fn(),
+  hasAccessToken: vi.fn().mockReturnValue(true),
+}));
+
 import { api } from "@/shared/api/client";
+import { tryRenewToken } from "@/shared/lib/token-refresh";
+import { getAccessToken } from "@/shared/lib/token-store";
+
+const mockedTryRenewToken = vi.mocked(tryRenewToken);
+const mockedGetAccessToken = vi.mocked(getAccessToken);
 
 describe("api client", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn());
     localStorage.clear();
+    mockedGetAccessToken.mockReturnValue("my-token");
+    mockedTryRenewToken.mockResolvedValue(false);
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it("get returns data on 200", async () => {
@@ -52,8 +72,8 @@ describe("api client", () => {
     expect(res.error).toBe("Not Found");
   });
 
-  it("includes Authorization header when jwt is in localStorage", async () => {
-    localStorage.setItem("jwt", "my-token");
+  it("includes Authorization header when accessToken is available", async () => {
+    mockedGetAccessToken.mockReturnValue("my-token");
     (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
       new Response(JSON.stringify({}), { status: 200 })
     );
@@ -63,11 +83,59 @@ describe("api client", () => {
     expect(call[1].headers["Authorization"]).toBe("Bearer my-token");
   });
 
+  it("does not call tryRenewToken proactively before requests", async () => {
+    (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      new Response(JSON.stringify({ id: 1 }), { status: 200 })
+    );
+
+    await api.get("/test");
+    // tryRenewToken should NOT be called for a successful request
+    expect(mockedTryRenewToken).not.toHaveBeenCalled();
+  });
+
   it("returns network error on fetch exception", async () => {
     (fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error("offline"));
 
     const res = await api.get("/test");
     expect(res.data).toBeNull();
     expect(res.error).toBe("offline");
+  });
+
+  it("on 401, attempts tryRenewToken and retries once with new token", async () => {
+    mockedGetAccessToken
+      .mockReturnValueOnce("expired-token")  // first call (original request)
+      .mockReturnValueOnce("new-token");       // second call (retry after refresh)
+
+    mockedTryRenewToken.mockResolvedValueOnce(true);
+
+    // First call returns 401
+    (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      new Response("Unauthorized", { status: 401 })
+    );
+    // Retry call returns success
+    (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      new Response(JSON.stringify({ id: 1 }), { status: 200 })
+    );
+
+    const res = await api.get<{ id: number }>("/test");
+    expect(res.data).toEqual({ id: 1 });
+    expect(res.error).toBeNull();
+    expect(fetch).toHaveBeenCalledTimes(2); // original + retry
+    expect(mockedTryRenewToken).toHaveBeenCalledTimes(1); // reactive only
+  });
+
+  it("on 401 when tryRenewToken fails, returns unauthorized error", async () => {
+    mockedGetAccessToken.mockReturnValue("expired-token");
+    // Renewal failed
+    mockedTryRenewToken.mockResolvedValueOnce(false);
+
+    (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      new Response("Unauthorized", { status: 401 })
+    );
+
+    const res = await api.get("/test");
+    expect(res.data).toBeNull();
+    expect(res.error).toBe("Unauthorized");
+    expect(fetch).toHaveBeenCalledTimes(1); // no retry
   });
 });
