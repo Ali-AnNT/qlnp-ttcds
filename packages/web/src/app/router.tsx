@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { LoginPage, AuthGuard } from "@/features/auth";
 import { AppLayout } from "@/features/layout";
 import { DashboardPage } from "@/features/dashboard";
@@ -20,16 +20,24 @@ export function AppRouter() {
         <Route path="/login" element={<LoginPage />} />
         <Route
           path="/"
+          element={<Navigate to="/quan-ly-nghi-phep" replace />}
+        />
+        <Route
+          path="quan-ly-nghi-phep"
           element={
             <AuthGuard>
               <AppLayout />
             </AuthGuard>
           }
         >
-          <Route index element={<DashboardPage />} />
+          <Route
+            index
+            element={<Navigate to="/quan-ly-nghi-phep/tong-quan" replace />}
+          />
+          <Route path="tong-quan" element={<DashboardPage />} />
           <Route path="leave/new" element={<LeaveNewPage />} />
           <Route path="leave/my" element={<LeaveMyPage />} />
-          <Route path="approval" element={<ApprovalPage />} />
+          <Route path="phe-duyet-đon" element={<ApprovalPage />} />
           <Route path="calendar" element={<CalendarPage />} />
           <Route path="summary" element={<SummaryPage />} />
           <Route path="reports" element={<ReportsPage />} />

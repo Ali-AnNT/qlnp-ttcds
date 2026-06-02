@@ -3,8 +3,10 @@ import { AppRouter } from "./router";
 
 export default function App() {
   return (
-    <Providers>
-      <AppRouter />
-    </Providers>
+    <div className="qlnp-app">
+      <Providers>
+        <AppRouter />
+      </Providers>
+    </div>
   );
 }
