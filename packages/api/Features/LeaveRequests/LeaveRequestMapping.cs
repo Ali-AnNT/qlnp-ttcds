@@ -3,10 +3,17 @@ using QLNP.Api.Shared.Domain;
 namespace QLNP.Api.Features.LeaveRequests;
 
 internal static class LeaveRequestMapping {
-    internal static LeaveRequestDto MapToDto(this LeaveRequest e) => new(
-        e.Id, e.UserId, e.User?.HoTen ?? "",
-        e.User?.DonViId,
-        e.User?.DonVi?.TenDonVi ?? "",
+    /// <summary>
+    /// Maps LeaveRequest entity to DTO with user info loaded separately via UserPortalId lookup.
+    /// </summary>
+    internal static LeaveRequestDto MapToDto(
+        this LeaveRequest e,
+        string hoTen = "",
+        long? donViId = null,
+        string tenDonVi = "") => new(
+        e.Id, e.UserId, hoTen,
+        donViId,
+        tenDonVi,
         e.LeaveTypeId, e.LeaveType?.Name ?? "",
         e.StartDate, e.EndDate, e.TotalDays,
         e.Reason, e.Status, e.ApprovedLevel, e.RequestedApproverId,

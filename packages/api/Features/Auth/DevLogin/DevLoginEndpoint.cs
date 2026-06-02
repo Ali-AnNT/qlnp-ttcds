@@ -55,13 +55,13 @@ internal sealed class DevLoginEndpoint : Endpoint<DevLoginRequest, Result<DevLog
             ThrowError("User not found in USER_MASTER");
 
         // Upsert role and recalculate balance if changed
-        await BalanceService.UpsertRoleAndRecalculateAsync(user.UserMasterId, role, ct);
+        await BalanceService.UpsertRoleAndRecalculateAsync((long)user.UserPortalId!, role, ct);
 
         // Build JWT claims matching what external SSO provides
         var jwtConfig = Configuration.GetSection("Jwt");
         var claims = new List<Claim>
         {
-            new("UserId", user.UserMasterId.ToString()),
+            new("UserId", user.UserPortalId.ToString()),
             new("DisplayName", user.HoTen ?? user.UserName ?? ""),
             new("UnitId", user.DonViId?.ToString() ?? "0"),
             new("PhongBanId", user.PhongBanId?.ToString() ?? "0"),

@@ -93,37 +93,20 @@ public partial class AppDbContext : DbContext {
 
         modelBuilder.Entity<LeaveBalance>(entity => {
             entity.HasIndex(e => new { e.UserId, e.Year }).IsUnique();
-            entity.HasOne(e => e.User)
-                .WithMany()
-                .HasForeignKey(e => e.UserId);
         });
 
         modelBuilder.Entity<UserRole>(entity => {
             entity.HasKey(e => e.UserId);
-            entity.HasOne(e => e.User)
-                .WithMany()
-                .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
+            entity.Property(e => e.UserId).ValueGeneratedNever();
             entity.Property(e => e.UpdatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
         });
 
         modelBuilder.Entity<LeaveRequest>(entity => {
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.UserId);
-            entity.HasOne(e => e.User)
-                .WithMany()
-                .HasForeignKey(e => e.UserId);
             entity.HasOne(e => e.LeaveType)
                 .WithMany(lt => lt.Requests)
                 .HasForeignKey(e => e.LeaveTypeId);
-            entity.HasOne(e => e.Approver)
-                .WithMany()
-                .HasForeignKey(e => e.ApprovedBy)
-                .IsRequired(false);
-            entity.HasOne(e => e.RequestedApprover)
-                .WithMany()
-                .HasForeignKey(e => e.RequestedApproverId)
-                .OnDelete(DeleteBehavior.Restrict);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
             entity.Property(e => e.ApprovedLevel).HasDefaultValue(0);
         });
@@ -141,10 +124,6 @@ public partial class AppDbContext : DbContext {
                 .WithMany(lr => lr.Audits)
                 .HasForeignKey(e => e.LeaveRequestId)
                 .OnDelete(DeleteBehavior.Cascade);
-            entity.HasOne(e => e.ChangedByUser)
-                .WithMany()
-                .HasForeignKey(e => e.ChangedBy)
-                .OnDelete(DeleteBehavior.Restrict);
             entity.Property(e => e.ChangedAt).HasDefaultValueSql("SYSUTCDATETIME()");
         });
 

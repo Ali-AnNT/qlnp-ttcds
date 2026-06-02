@@ -4,22 +4,25 @@ using QLNP.Api.Shared.Domain;
 namespace QLNP.Api.Features.Reports.Export;
 
 internal static class ExcelBuilder {
-    public static XLWorkbook BuildWorkbook(List<LeaveRequest> requests, string period) {
+    public static XLWorkbook BuildWorkbook(
+        List<LeaveRequest> requests,
+        Dictionary<long, (string hoTen, string? tenDonVi)> userLookup,
+        string period) {
         var wb = new XLWorkbook();
 
-        AddDetailSheet(wb, requests);
+        AddDetailSheet(wb, requests, userLookup);
 
         if (period != "none") {
             var grouped = GroupByPeriod(requests, period);
-            AddEmployeeLeaveTypeSheet(wb, grouped);
-            AddDepartmentSheet(wb, grouped);
+            AddEmployeeLeaveTypeSheet(wb, grouped, userLookup);
+            AddDepartmentSheet(wb, grouped, userLookup);
             AddSummarySheet(wb, grouped);
         }
 
         return wb;
     }
 
-    private static void AddDetailSheet(XLWorkbook wb, List<LeaveRequest> requests) {
+    private static void AddDetailSheet(XLWorkbook wb, List<LeaveRequest> requests, Dictionary<long, (string hoTen, string? tenDonVi)> userLookup) {
         var ws = wb.Worksheets.Add("Chi tiết");
         var headers = new[] { "STT", "Họ tên", "Phòng ban", "Loại phép", "Từ ngày", "Đến ngày", "Số ngày", "Trạng thái" };
 
@@ -29,9 +32,10 @@ internal static class ExcelBuilder {
         for (int i = 0; i < requests.Count; i++) {
             var r = requests[i];
             var row = i + 2;
+            var info = userLookup.GetValueOrDefault(r.UserId);
             ws.Cell(row, 1).Value = i + 1;
-            ws.Cell(row, 2).Value = r.User?.HoTen ?? "";
-            ws.Cell(row, 3).Value = r.User?.DonVi?.TenDonVi ?? "";
+            ws.Cell(row, 2).Value = info.hoTen;
+            ws.Cell(row, 3).Value = info.tenDonVi ?? "";
             ws.Cell(row, 4).Value = r.LeaveType?.Name ?? "";
             ws.Cell(row, 5).Value = r.StartDate.ToString("dd/MM/yyyy");
             ws.Cell(row, 6).Value = r.EndDate.ToString("dd/MM/yyyy");
@@ -43,7 +47,7 @@ internal static class ExcelBuilder {
         FormatSheet(ws, requests.Count + 1);
     }
 
-    private static void AddEmployeeLeaveTypeSheet(XLWorkbook wb, IEnumerable<PeriodGroup> groups) {
+    private static void AddEmployeeLeaveTypeSheet(XLWorkbook wb, IEnumerable<PeriodGroup> groups, Dictionary<long, (string hoTen, string? tenDonVi)> userLookup) {
         var ws = wb.Worksheets.Add("Nhân viên - Loại phép");
         var headers = new[] { "Kỳ", "Họ tên", "Loại phép", "Tổng số ngày" };
 
@@ -51,7 +55,7 @@ internal static class ExcelBuilder {
             ws.Cell(1, i + 1).Value = headers[i];
 
         var rows = groups
-            .SelectMany(g => g.Items.GroupBy(it => new { HoTen = it.User?.HoTen ?? "", LeaveType = it.LeaveType?.Name ?? "" })
+            .SelectMany(g => g.Items.GroupBy(it => new { HoTen = userLookup.GetValueOrDefault(it.UserId).hoTen, LeaveType = it.LeaveType?.Name ?? "" })
                 .Select(ig => new {
                     Period = g.Key,
                     HoTen = ig.Key.HoTen,
@@ -74,7 +78,7 @@ internal static class ExcelBuilder {
         FormatSheet(ws, rows.Count + 1);
     }
 
-    private static void AddDepartmentSheet(XLWorkbook wb, IEnumerable<PeriodGroup> groups) {
+    private static void AddDepartmentSheet(XLWorkbook wb, IEnumerable<PeriodGroup> groups, Dictionary<long, (string hoTen, string? tenDonVi)> userLookup) {
         var ws = wb.Worksheets.Add("Theo phòng ban");
         var headers = new[] { "Kỳ", "Phòng ban", "Số NV nghỉ", "Tổng số ngày" };
 
@@ -82,7 +86,7 @@ internal static class ExcelBuilder {
             ws.Cell(1, i + 1).Value = headers[i];
 
         var rows = groups
-            .SelectMany(g => g.Items.GroupBy(it => it.User?.DonVi?.TenDonVi ?? "")
+            .SelectMany(g => g.Items.GroupBy(it => userLookup.GetValueOrDefault(it.UserId).tenDonVi ?? "")
                 .Select(dg => new {
                     Period = g.Key,
                     Department = dg.Key,

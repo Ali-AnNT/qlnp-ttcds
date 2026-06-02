@@ -17,5 +17,4 @@ public class UserRole {
 
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-    public UserMaster User { get; set; } = null!;
 }

@@ -23,5 +23,4 @@ public class LeaveRequestAudit {
     public string? NewValue { get; set; }
 
     public LeaveRequest LeaveRequest { get; set; } = null!;
-    public UserMaster? ChangedByUser { get; set; }
 }

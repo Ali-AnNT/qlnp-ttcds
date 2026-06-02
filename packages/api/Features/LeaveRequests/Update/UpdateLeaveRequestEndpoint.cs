@@ -5,6 +5,7 @@ using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 using QLNP.Api.Data;
 using QLNP.Api.Infrastructure.Auth;
+using QLNP.Api.Features.LeaveRequests;
 
 namespace QLNP.Api.Features.LeaveRequests.Update;
 
@@ -28,8 +29,6 @@ internal sealed class UpdateLeaveRequestEndpoint : Endpoint<Request, Result<Leav
         ThrowIfAnyErrors();
 
         var entity = await Db.LeaveRequests
-            .Include(lr => lr.User)
-                .ThenInclude(u => u!.DonVi)
             .Include(lr => lr.LeaveType)
             .FirstOrDefaultAsync(lr => lr.Id == id, ct);
         if (entity is null) { await Send.NotFoundAsync(ct); return; }
@@ -78,6 +77,7 @@ internal sealed class UpdateLeaveRequestEndpoint : Endpoint<Request, Result<Leav
             return;
         }
 
-        await Send.OkAsync(Result<LeaveRequestDto>.Ok(Map.FromEntity(entity)), ct);
+        var (hoTen, donViId, tenDonVi, _) = await LeaveRequestUserLookup.LoadUserInfoAsync(Db, entity.UserId, ct);
+        await Send.OkAsync(Result<LeaveRequestDto>.Ok(entity.MapToDto(hoTen, donViId, tenDonVi)), ct);
     }
 }
