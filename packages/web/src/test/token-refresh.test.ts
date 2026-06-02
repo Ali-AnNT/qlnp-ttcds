@@ -10,6 +10,8 @@ vi.mock("@/shared/lib/token-store", () => ({
   getAccessToken: vi.fn(),
   getTokenRenew: vi.fn(),
   getDeviceId: vi.fn(),
+  getDnnTabId: vi.fn().mockReturnValue(""),
+  getDnnModuleId: vi.fn().mockReturnValue(""),
   setTokens: vi.fn(),
   clearTokens: vi.fn(),
   hasAccessToken: vi.fn(),
@@ -17,7 +19,7 @@ vi.mock("@/shared/lib/token-store", () => ({
 
 import { tryRenewToken } from "@/shared/lib/token-refresh";
 import { renewTokenViaApi } from "@/shared/lib/auth-renew.api";
-import { getAccessToken, getTokenRenew, getDeviceId, setTokens } from "@/shared/lib/token-store";
+import { getAccessToken, getTokenRenew, getDeviceId, getDnnTabId, getDnnModuleId, setTokens } from "@/shared/lib/token-store";
 
 const mockedApi = vi.mocked(renewTokenViaApi);
 const mockedGetAccessToken = vi.mocked(getAccessToken);
@@ -82,6 +84,8 @@ describe("token-refresh", () => {
         refreshToken: "refresh-token-123",
         accessToken: "current-access-token",
         deviceId: "device-xyz",
+        tabId: "",
+        moduleId: "",
       });
       expect(mockedSetTokens).toHaveBeenCalledWith("new-access", null, "new-refresh");
     });

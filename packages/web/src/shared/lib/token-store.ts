@@ -47,3 +47,15 @@ export function hasAccessToken(): boolean {
 export function getDeviceId(): string | null {
   return localStorage.getItem(MACHINE_ID_KEY);
 }
+
+/** Read DNN TabID from hidden input on the host page */
+export function getDnnTabId(): string {
+  if (typeof document === "undefined") return "";
+  return (document.getElementById("hdTabID") as HTMLInputElement | null)?.value?.trim() ?? "";
+}
+
+/** Read DNN ModuleID from hidden input on the host page */
+export function getDnnModuleId(): string {
+  if (typeof document === "undefined") return "";
+  return (document.getElementById("hdModuleID") as HTMLInputElement | null)?.value?.trim() ?? "";
+}

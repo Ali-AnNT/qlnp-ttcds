@@ -8,6 +8,8 @@ export interface RenewRequest {
   refreshToken: string;
   accessToken: string;
   deviceId: string;
+  tabId: string;
+  moduleId: string;
 }
 
 export interface RenewResponse {
@@ -26,9 +28,14 @@ export async function renewTokenViaApi(
   }
 
   try {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      ...(req.tabId ? { tabid: req.tabId } : {}),
+      ...(req.moduleId ? { moduleid: req.moduleId } : {}),
+    };
     const res = await fetch(RENEW_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({
         refreshToken: req.refreshToken,
         accessToken: req.accessToken,

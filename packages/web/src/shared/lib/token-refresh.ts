@@ -9,6 +9,8 @@ import {
   getAccessToken,
   getTokenRenew,
   getDeviceId,
+  getDnnTabId,
+  getDnnModuleId,
   setTokens,
 } from "./token-store";
 import { renewTokenViaApi } from "./auth-renew.api";
@@ -26,7 +28,9 @@ export async function renewToken(): Promise<boolean> {
   // Both accessToken and deviceId are required by the renew API
   if (!accessToken || !deviceId) return false;
 
-  const response = await renewTokenViaApi({ refreshToken, accessToken, deviceId });
+  const tabId = getDnnTabId();
+  const moduleId = getDnnModuleId();
+  const response = await renewTokenViaApi({ refreshToken, accessToken, deviceId, tabId, moduleId });
   if (response) {
     setTokens(response.accessToken, null, response.tokenRenew);
     return true;
