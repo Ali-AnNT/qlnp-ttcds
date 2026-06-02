@@ -39,6 +39,15 @@ all: build-prod push-prod
 
 dev: api-dev
 
+# ---------- Web build ----------
+build-web:
+	@echo "==> Building web (production)..."
+	cd ./packages/web && pnpm build
+
+build-web-dev:
+	@echo "==> Building web (development)..."
+	cd ./packages/web && pnpm build:dev
+
 # ---------- Tests ----------
 test: test-web test-api
 	@echo "All tests passed."

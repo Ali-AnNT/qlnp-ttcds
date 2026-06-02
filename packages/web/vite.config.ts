@@ -29,4 +29,17 @@ export default defineConfig(({ mode }) => ({
       "@tanstack/query-core",
     ],
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Fixed output names instead of content-hashed
+        entryFileNames: "qlnp.js",
+        chunkFileNames: "qlnp-[name].js",
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name?.endsWith(".css")) return "qlnp.css";
+          return "qlnp-[name][extname]";
+        },
+      },
+    },
+  },
 }));
