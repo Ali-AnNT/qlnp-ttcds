@@ -1,10 +1,10 @@
 ---
 phase: 2
 title: "Auth Renew API & Refresh Logic"
-status: pending
+status: completed
 priority: P1
 effort: "1h"
-dependencies: [1]
+dependencies: [1, 6]
 ---
 
 # Phase 2: Auth Renew API & Refresh Logic

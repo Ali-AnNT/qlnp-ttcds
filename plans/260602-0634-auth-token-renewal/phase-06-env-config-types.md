@@ -1,7 +1,7 @@
 ---
 phase: 6
 title: "Env Config & Types"
-status: pending
+status: completed
 priority: P2
 effort: "15m"
 dependencies: []
@@ -11,7 +11,7 @@ dependencies: []
 
 ## Overview
 
-Thêm `VITE_AUTH_RENEW_URL` vào env config và Vite type declarations. Phase này độc lập, có thể implement song song với các phase khác.
+Thêm `VITE_AUTH_RENEW_URL` vào env config và Vite type declarations. Phase này phải hoàn thành trước Phase 2 (Auth Renew API) vì Phase 2 sử dụng `import.meta.env.VITE_AUTH_RENEW_URL`.
 
 ## Requirements
 

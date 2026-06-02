@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Token Store Module"
-status: pending
+status: completed
 priority: P1
 effort: "30m"
 dependencies: []

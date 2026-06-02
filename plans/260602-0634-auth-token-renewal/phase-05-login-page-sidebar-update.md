@@ -1,7 +1,7 @@
 ---
 phase: 5
 title: "Login Page & Sidebar Update"
-status: pending
+status: completed
 priority: P2
 effort: "45m"
 dependencies: [4]
@@ -18,6 +18,7 @@ Cập nhật LoginPage: dev login dùng `setTokens()` thay vì `localStorage.set
 - Functional: Dev login store token qua `setTokens()` với key mới
 - Functional: Xóa postMessage waiting UI ("Đang chờ xác thực")
 - Functional: Embed mode (no token) → hiện message "Không tìm thấy phiên làm việc hợp lệ"
+- Functional: Embed mode session expired → hiện interstitial "Phiên làm việc đã hết hạn. Đang chuyển hướng..." rồi redirect
 - Functional: Sidebar ẩn logout button khi `isEmbed === true`
 - Non-functional: Giữ nguyên UI layout, chỉ thay đổi logic
 
@@ -26,6 +27,7 @@ Cập nhật LoginPage: dev login dùng `setTokens()` thay vì `localStorage.set
 ### Login Page Flow (sau refactor)
 ```
 loading + !user → spinner
+isEmbed + sessionExpired → interstitial "Phiên làm việc đã hết hạn. Đang chuyển hướng..." (3s redirect)
 isEmbed → "Không tìm thấy phiên làm việc hợp lệ. Vui lòng truy cập từ ứng dụng chính."
 !isEmbed + !user → SSO message + DEV_MODE dropdown (nếu dev)
 ```
@@ -47,13 +49,14 @@ isEmbed → ẩn logout button hoàn toàn
 
 1. **login-page.tsx**:
    - Import `setTokens` from `token-store.ts`
-   - Import `useAuth` to get `isEmbed` and `logout`
+   - Import `useAuth` to get `isEmbed`, `sessionExpired`, and `logout`
    - Dev login handler: thay `localStorage.setItem("jwt", data.token)` bằng:
      ```ts
      setTokens(data.token, Date.now() + 8 * 3600 * 1000, "");
      ```
    - Xóa branch `isEmbed` hiển thị "Đang chờ xác thực" + postMessage listener
    - Thay bằng: embed mode (không có token) → hiện "Không tìm thấy phiên làm việc hợp lệ. Vui lòng truy cập từ ứng dụng chính."
+   - Thêm: embed mode + sessionExpired → hiện interstitial "Phiên làm việc đã hết hạn. Đang chuyển hướng..." với auto-redirect sau 3s
    - Xóa `localStorage.setItem("jwt", ...)` hoàn toàn
 
 2. **app-sidebar.tsx**:
@@ -67,6 +70,7 @@ isEmbed → ẩn logout button hoàn toàn
 - [ ] Dev login store token qua `setTokens()` với 3 keys
 - [ ] `localStorage.setItem("jwt", ...)` không còn trong login-page.tsx
 - [ ] PostMessage waiting UI đã được xóa
+- [ ] Embed mode session expired hiển thị interstitial trước khi redirect
 - [ ] Embed mode hiện message phù hợp thay vì "Đang chờ xác thực"
 - [ ] Sidebar ẩn logout button khi `isEmbed`
 - [ ] Sidebar logout gọi `logout()` từ context, không gọi `localStorage.removeItem` trực tiếp
