@@ -1,7 +1,7 @@
 ---
 title: "Fix Auth Renew API Layer"
 description: "Sửa auth-renew.api.ts để match API thực tế: request body (refreshToken, accessToken, deviceId), response shape (loginStatus, token, renewalToken), bỏ accessTokenExp"
-status: in-progress
+status: completed
 priority: P1
 branch: "dev"
 tags: [auth, frontend, token-renewal, fix]

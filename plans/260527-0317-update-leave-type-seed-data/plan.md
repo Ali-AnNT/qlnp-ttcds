@@ -1,7 +1,7 @@
 ---
 title: "Update LeaveType & LeaveConfig Seed Data"
 description: "Replace 3 English-code LeaveTypes with 5 Vietnamese-code types + add LeaveConfig (approval config) seed data via EF HasData + single migration"
-status: pending
+status: completed
 priority: P2
 branch: "feat/configurable-approval-levels"
 tags: [seed-data, migration, leave-type, approval-config]
