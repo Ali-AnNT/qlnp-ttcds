@@ -61,7 +61,7 @@ internal sealed class DevLoginEndpoint : Endpoint<DevLoginRequest, Result<DevLog
         var jwtConfig = Configuration.GetSection("Jwt");
         var claims = new List<Claim>
         {
-            new("UserId", user.UserPortalId.ToString()),
+            new("UserId", user.UserPortalId.Value.ToString()),
             new("DisplayName", user.HoTen ?? user.UserName ?? ""),
             new("UnitId", user.DonViId?.ToString() ?? "0"),
             new("PhongBanId", user.PhongBanId?.ToString() ?? "0"),
@@ -70,9 +70,8 @@ internal sealed class DevLoginEndpoint : Endpoint<DevLoginRequest, Result<DevLog
             new("PhongBanIdUBTP", "0"),
             new("DonViIdUBTP", "-1"),
         };
-        // Role claims for both FastEndpoints auth (Roles claim type) and CurrentUserProvider (ClaimTypes.Role)
+        // "Roles" claim for FastEndpoints auth and CurrentUserProvider (both use "Roles" key, not ClaimTypes.Role URI)
         claims.Add(new("Roles", role));
-        claims.Add(new(ClaimTypes.Role, role));
 
         var key = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(jwtConfig["SigningKey"]!));

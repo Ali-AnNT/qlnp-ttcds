@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using QLNP.Api.Shared.Middleware;
 
@@ -22,7 +21,7 @@ public class CurrentUserProvider : ICurrentUserProvider {
             UnitId: long.Parse(user.FindFirst("UnitId")?.Value ?? "0"),
             PhongBanId: long.Parse(user.FindFirst("PhongBanId")?.Value ?? "0"),
             DeviceId: user.FindFirst("DeviceId")?.Value ?? "",
-            Roles: user.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList(),
+            Roles: user.FindAll("Roles").Select(c => c.Value).ToList(),
             UserIdUBTP: int.Parse(user.FindFirst("UserIdUBTP")?.Value ?? "0"),
             PhongBanIdUBTP: int.Parse(user.FindFirst("PhongBanIdUBTP")?.Value ?? "0"),
             DonViIdUBTP: int.Parse(user.FindFirst("DonViIdUBTP")?.Value ?? "-1")
