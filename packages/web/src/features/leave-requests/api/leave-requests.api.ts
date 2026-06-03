@@ -9,6 +9,7 @@ export const leaveRequestsApi = {
       ).toString()}`
     ),
   listMy: () => api.get<LeaveRequestDto[]>("/leave-requests/my"),
+  approvable: () => api.get<LeaveRequestDto[]>("/leave-requests/approvable"),
   create: (data: CreateLeaveRequestDto) =>
     api.post<LeaveRequestDto>("/leave-requests", data),
   update: (id: number, data: Partial<CreateLeaveRequestDto>) =>

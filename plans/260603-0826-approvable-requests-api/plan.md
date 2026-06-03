@@ -3,7 +3,7 @@ title: "Approvable Requests API — Move approval filtering from FE to BE"
 description: >
   Tạo endpoint GET /api/leave-requests/approvable — BE filter requests theo approval config + role + dept.
   FE chỉ gọi 1 API, bỏ useApprovalConfigs + visibleRequests useMemo. Dọn dẹp code thừa.
-status: pending
+status: in-progress
 priority: P2
 branch: "dev"
 tags: [backend, frontend, approval, refactor]

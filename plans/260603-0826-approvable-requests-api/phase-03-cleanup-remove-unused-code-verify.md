@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Cleanup: Remove unused code + verify"
-status: pending
+status: completed
 priority: P2
 effort: "30m"
 dependencies: [2]
