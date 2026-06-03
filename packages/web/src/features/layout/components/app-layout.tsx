@@ -15,7 +15,7 @@ export const AppLayout = () => {
   if (!DEV_MODE) {
     return (
       <div className="min-h-screen flex w-full bg-background">
-        <main className="flex-1 p-4 md:p-6 overflow-auto">
+        <main className="flex-1 overflow-auto">
           <Card className="px-3 py-2">
             <Outlet />
           </Card>
