@@ -20,7 +20,7 @@ export function DeptDetailDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Chi tiết phòng ban - {data?.dept.tenDonVi}</DialogTitle>
+          <DialogTitle>Chi tiết phòng ban - {data?.dept?.tenDonVi || ""}</DialogTitle>
         </DialogHeader>
         {data && (
           <div className="space-y-4">
