@@ -1,13 +1,25 @@
 import { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet } from "react-router";
 import { AppSidebar } from "./app-sidebar";
 import { AppHeader } from "./app-header";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 
+const DEV_MODE = import.meta.env.VITE_DEV_MODE === "true";
+
 export const AppLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const isMobile = useIsMobile();
-  const collapsed = isMobile ? !sidebarOpen : !sidebarOpen;
+  const collapsed = !sidebarOpen;
+
+  if (!DEV_MODE) {
+    return (
+      <div className="min-h-screen flex w-full bg-background">
+        <main className="flex-1 p-4 md:p-6 overflow-auto">
+          <Outlet />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex w-full bg-background">

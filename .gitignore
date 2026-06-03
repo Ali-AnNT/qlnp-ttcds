@@ -35,3 +35,8 @@ _ReSharper.Caches/
 *.sw?
 .gitnexus
 .claude/worktrees/
+# Gemini CLI settings (contains user-specific config)
+.gemini/
+.claude/
+.agent/
+.agents/

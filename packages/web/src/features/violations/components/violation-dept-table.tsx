@@ -39,7 +39,7 @@ export function ViolationDeptTable({ violations, onDetail }: ViolationDeptTableP
             ) : (
               violations.map((d, i) => (
                 <TableRow key={d.dept.donViId} className={cn(i % 2 === 1 ? "bg-muted/20" : "")}>
-                  <TableCell className="font-medium">{d.dept.tenDonVi}</TableCell>
+                  <TableCell className="font-medium">{d.dept.tenDonVi ?? ""}</TableCell>
                   <TableCell className="text-center">{d.empCount}</TableCell>
                   <TableCell className="text-center font-bold text-warning">{d.violatingCount}</TableCell>
                   <TableCell className="text-center">{d.totalUsed}</TableCell>

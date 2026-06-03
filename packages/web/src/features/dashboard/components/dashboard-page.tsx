@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Badge } from "@/shared/ui/badge";
 import { CalendarDays, Clock, CheckCircle, FileText } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
+import { ROUTES } from "@/app/routes";
 import { Button } from "@/shared/ui/button";
 import {
   getApprovalStatusLabel,
@@ -87,7 +88,7 @@ const DashboardPage = () => {
 
       <div className="flex flex-wrap gap-2">
         {(user?.role === AppRoles.Staff || user?.role === AppRoles.Leader) && (
-          <Link to="/leave/new">
+          <Link to={ROUTES.leaveNew}>
             <Button className="bg-accent hover:bg-accent/90 text-accent-foreground">
               Tạo đơn nghỉ phép
             </Button>
@@ -96,13 +97,13 @@ const DashboardPage = () => {
         {(user?.role === AppRoles.Leader ||
           user?.role === AppRoles.Director ||
           user?.role === AppRoles.Admin) && (
-          <Link to="/approval">
+          <Link to={ROUTES.approval}>
             <Button variant="outline">
               Phê duyệt đơn ({pendingApproval.length})
             </Button>
           </Link>
         )}
-        <Link to="/calendar">
+        <Link to={ROUTES.calendar}>
           <Button variant="outline">Xem lịch nghỉ phép</Button>
         </Link>
       </div>

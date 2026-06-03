@@ -20,20 +20,26 @@ internal sealed class MyLeaveRequestsEndpoint : EndpointWithoutRequest<Result<Li
 
     public override async Task HandleAsync(CancellationToken ct) {
         var user = CurrentUser.GetCurrentUser();
-        var items = await Db.LeaveRequests
-            .Include(lr => lr.User).ThenInclude(u => u!.DonVi)
+        var requests = await Db.LeaveRequests
             .Include(lr => lr.LeaveType)
             .Where(lr => lr.UserId == user.UserId)
             .OrderByDescending(lr => lr.CreatedAt)
-            .Select(lr => new LeaveRequestDto(
-                lr.Id, lr.UserId, lr.User.HoTen ?? "",
-                lr.User.DonViId,
-                lr.User.DonVi != null ? lr.User.DonVi.TenDonVi ?? "" : "",
-                lr.LeaveTypeId, lr.LeaveType.Name,
+            .ToListAsync(ct);
+
+        // Load user info batch for DTO mapping
+        var userInfos = await LeaveRequestUserLookup.LoadUserInfoBatchAsync(
+            Db, requests.Select(lr => lr.UserId), ct);
+
+        var items = requests.Select(lr => {
+            var info = userInfos.GetValueOrDefault(lr.UserId);
+            return new LeaveRequestDto(
+                lr.Id, lr.UserId, info.hoTen ?? "",
+                info.donViId, info.tenDonVi ?? "",
+                lr.LeaveTypeId, lr.LeaveType?.Name ?? "",
                 lr.StartDate, lr.EndDate, lr.TotalDays,
                 lr.Reason, lr.Status, lr.ApprovedLevel, lr.RequestedApproverId,
-                lr.ApprovedBy, lr.ApprovedAt, lr.RejectedReason, lr.CreatedAt, lr.UpdatedAt))
-            .ToListAsync(ct);
+                lr.ApprovedBy, lr.ApprovedAt, lr.RejectedReason, lr.CreatedAt, lr.UpdatedAt);
+        }).ToList();
 
         await Send.OkAsync(Result<List<LeaveRequestDto>>.Ok(items), ct);
     }

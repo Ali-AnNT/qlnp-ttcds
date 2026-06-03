@@ -22,7 +22,7 @@ namespace QLNP.Api.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("QLNP.Api.Entities.DmDonvi", b =>
+            modelBuilder.Entity("QLNP.Api.Shared.Domain.DmDonvi", b =>
                 {
                     b.Property<long>("DonViId")
                         .ValueGeneratedOnAdd()
@@ -126,7 +126,7 @@ namespace QLNP.Api.Data.Migrations
                         });
                 });
 
-            modelBuilder.Entity("QLNP.Api.Entities.LeaveBalance", b =>
+            modelBuilder.Entity("QLNP.Api.Shared.Domain.LeaveBalance", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -158,7 +158,7 @@ namespace QLNP.Api.Data.Migrations
                     b.ToTable("LeaveBalances");
                 });
 
-            modelBuilder.Entity("QLNP.Api.Entities.LeaveConfig", b =>
+            modelBuilder.Entity("QLNP.Api.Shared.Domain.LeaveConfig", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -252,7 +252,7 @@ namespace QLNP.Api.Data.Migrations
                         });
                 });
 
-            modelBuilder.Entity("QLNP.Api.Entities.LeaveRequest", b =>
+            modelBuilder.Entity("QLNP.Api.Shared.Domain.LeaveRequest", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -310,11 +310,7 @@ namespace QLNP.Api.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ApprovedBy");
-
                     b.HasIndex("LeaveTypeId");
-
-                    b.HasIndex("RequestedApproverId");
 
                     b.HasIndex("Status");
 
@@ -323,7 +319,7 @@ namespace QLNP.Api.Data.Migrations
                     b.ToTable("LeaveRequests");
                 });
 
-            modelBuilder.Entity("QLNP.Api.Entities.LeaveRequestAudit", b =>
+            modelBuilder.Entity("QLNP.Api.Shared.Domain.LeaveRequestAudit", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -355,14 +351,12 @@ namespace QLNP.Api.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ChangedBy");
-
                     b.HasIndex("LeaveRequestId");
 
                     b.ToTable("LeaveRequestAudits");
                 });
 
-            modelBuilder.Entity("QLNP.Api.Entities.LeaveType", b =>
+            modelBuilder.Entity("QLNP.Api.Shared.Domain.LeaveType", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -444,7 +438,7 @@ namespace QLNP.Api.Data.Migrations
                         });
                 });
 
-            modelBuilder.Entity("QLNP.Api.Entities.SystemConfig", b =>
+            modelBuilder.Entity("QLNP.Api.Shared.Domain.SystemConfig", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -545,7 +539,7 @@ namespace QLNP.Api.Data.Migrations
                         });
                 });
 
-            modelBuilder.Entity("QLNP.Api.Entities.UserMaster", b =>
+            modelBuilder.Entity("QLNP.Api.Shared.Domain.UserMaster", b =>
                 {
                     b.Property<long>("UserMasterId")
                         .ValueGeneratedOnAdd()
@@ -607,7 +601,7 @@ namespace QLNP.Api.Data.Migrations
                         });
                 });
 
-            modelBuilder.Entity("QLNP.Api.Entities.UserRole", b =>
+            modelBuilder.Entity("QLNP.Api.Shared.Domain.UserRole", b =>
                 {
                     b.Property<long>("UserId")
                         .HasColumnType("bigint")
@@ -628,20 +622,9 @@ namespace QLNP.Api.Data.Migrations
                     b.ToTable("UserRoles");
                 });
 
-            modelBuilder.Entity("QLNP.Api.Entities.LeaveBalance", b =>
+            modelBuilder.Entity("QLNP.Api.Shared.Domain.LeaveConfig", b =>
                 {
-                    b.HasOne("QLNP.Api.Entities.UserMaster", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("QLNP.Api.Entities.LeaveConfig", b =>
-                {
-                    b.HasOne("QLNP.Api.Entities.LeaveType", "LeaveType")
+                    b.HasOne("QLNP.Api.Shared.Domain.LeaveType", "LeaveType")
                         .WithMany("Configs")
                         .HasForeignKey("LeaveTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -650,60 +633,31 @@ namespace QLNP.Api.Data.Migrations
                     b.Navigation("LeaveType");
                 });
 
-            modelBuilder.Entity("QLNP.Api.Entities.LeaveRequest", b =>
+            modelBuilder.Entity("QLNP.Api.Shared.Domain.LeaveRequest", b =>
                 {
-                    b.HasOne("QLNP.Api.Entities.UserMaster", "Approver")
-                        .WithMany()
-                        .HasForeignKey("ApprovedBy");
-
-                    b.HasOne("QLNP.Api.Entities.LeaveType", "LeaveType")
+                    b.HasOne("QLNP.Api.Shared.Domain.LeaveType", "LeaveType")
                         .WithMany("Requests")
                         .HasForeignKey("LeaveTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("QLNP.Api.Entities.UserMaster", "RequestedApprover")
-                        .WithMany()
-                        .HasForeignKey("RequestedApproverId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("QLNP.Api.Entities.UserMaster", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Approver");
-
                     b.Navigation("LeaveType");
-
-                    b.Navigation("RequestedApprover");
-
-                    b.Navigation("User");
                 });
 
-            modelBuilder.Entity("QLNP.Api.Entities.LeaveRequestAudit", b =>
+            modelBuilder.Entity("QLNP.Api.Shared.Domain.LeaveRequestAudit", b =>
                 {
-                    b.HasOne("QLNP.Api.Entities.UserMaster", "ChangedByUser")
-                        .WithMany()
-                        .HasForeignKey("ChangedBy")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("QLNP.Api.Entities.LeaveRequest", "LeaveRequest")
+                    b.HasOne("QLNP.Api.Shared.Domain.LeaveRequest", "LeaveRequest")
                         .WithMany("Audits")
                         .HasForeignKey("LeaveRequestId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("ChangedByUser");
-
                     b.Navigation("LeaveRequest");
                 });
 
-            modelBuilder.Entity("QLNP.Api.Entities.UserMaster", b =>
+            modelBuilder.Entity("QLNP.Api.Shared.Domain.UserMaster", b =>
                 {
-                    b.HasOne("QLNP.Api.Entities.DmDonvi", "DonVi")
+                    b.HasOne("QLNP.Api.Shared.Domain.DmDonvi", "DonVi")
                         .WithMany()
                         .HasForeignKey("DonViId")
                         .OnDelete(DeleteBehavior.Restrict);
@@ -711,23 +665,12 @@ namespace QLNP.Api.Data.Migrations
                     b.Navigation("DonVi");
                 });
 
-            modelBuilder.Entity("QLNP.Api.Entities.UserRole", b =>
-                {
-                    b.HasOne("QLNP.Api.Entities.UserMaster", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("QLNP.Api.Entities.LeaveRequest", b =>
+            modelBuilder.Entity("QLNP.Api.Shared.Domain.LeaveRequest", b =>
                 {
                     b.Navigation("Audits");
                 });
 
-            modelBuilder.Entity("QLNP.Api.Entities.LeaveType", b =>
+            modelBuilder.Entity("QLNP.Api.Shared.Domain.LeaveType", b =>
                 {
                     b.Navigation("Configs");
 

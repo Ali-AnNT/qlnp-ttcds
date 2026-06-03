@@ -22,7 +22,7 @@ internal sealed class MeEndpoint : EndpointWithoutRequest<Result<Response>> {
     public override async Task HandleAsync(CancellationToken ct) {
         var currentUser = CurrentUser.GetCurrentUser();
 
-        var user = await Db.UserMaster.FirstOrDefaultAsync(u => u.UserMasterId == currentUser.UserId, ct);
+        var user = await Db.UserMaster.FirstOrDefaultAsync(u => u.UserPortalId == currentUser.UserId, ct);
         if (user is null) {
             await Send.NotFoundAsync(ct);
             return;
@@ -34,7 +34,7 @@ internal sealed class MeEndpoint : EndpointWithoutRequest<Result<Response>> {
         await BalanceService.UpsertRoleAndRecalculateAsync(currentUser.UserId, role, ct);
 
         var response = new Response(
-            UserId: user.UserMasterId,
+            UserId: user.UserPortalId ?? currentUser.UserId,
             UserName: user.UserName,
             FullName: user.HoTen ?? currentUser.DisplayName,
             DonViId: user.DonViId ?? currentUser.UnitId,

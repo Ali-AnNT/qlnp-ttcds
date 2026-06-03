@@ -33,7 +33,7 @@ public static class ApprovalHelper {
     /// Returns (canApprove, errorMessage).
     /// </summary>
     public static (bool canApprove, string? errorMessage) CanApproveAtLevel(
-        CurrentUser user, LeaveRequest request, Dictionary<int, List<string>> flow, int targetLevel) {
+        CurrentUser user, LeaveRequest request, long? requesterPhongBanId, Dictionary<int, List<string>> flow, int targetLevel) {
         if (!flow.TryGetValue(targetLevel, out var roles))
             return (false, "Không tìm thấy cấu hình phê duyệt cho cấp này");
 
@@ -47,7 +47,7 @@ public static class ApprovalHelper {
             if (request.UserId == user.UserId)
                 return (false, "Không thể phê duyệt đơn của chính mình");
 
-            if (request.User?.PhongBanId == null || request.User.PhongBanId != user.PhongBanId)
+            if (requesterPhongBanId == null || requesterPhongBanId != user.PhongBanId)
                 return (false, "Bạn chỉ có thể phê duyệt đơn trong phòng ban của mình");
         }
 

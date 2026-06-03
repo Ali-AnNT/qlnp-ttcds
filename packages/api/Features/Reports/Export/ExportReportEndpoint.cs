@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using QLNP.Api.Data;
 using QLNP.Api.Infrastructure.Auth;
 using QLNP.Api.Shared.Domain;
+using QLNP.Api.Features.LeaveRequests;
 
 namespace QLNP.Api.Features.Reports.Export;
 
@@ -17,8 +18,6 @@ internal sealed class ExportReportEndpoint : Endpoint<Request> {
 
     public override async Task HandleAsync(Request req, CancellationToken ct) {
         var q = Db.LeaveRequests
-            .Include(r => r.User)
-                .ThenInclude(u => u!.DonVi)
             .Include(r => r.LeaveType)
             .AsQueryable();
 
@@ -31,7 +30,14 @@ internal sealed class ExportReportEndpoint : Endpoint<Request> {
 
         var requests = await q.OrderBy(r => r.StartDate).ToListAsync(ct);
 
-        using var workbook = ExcelBuilder.BuildWorkbook(requests, req.Period);
+        // Load user info for Excel export
+        var userInfos = await LeaveRequestUserLookup.LoadUserInfoBatchAsync(
+            Db, requests.Select(r => r.UserId), ct);
+        var userLookup = userInfos.ToDictionary(
+            kvp => kvp.Key,
+            kvp => (kvp.Value.hoTen, (string?)kvp.Value.tenDonVi));
+
+        using var workbook = ExcelBuilder.BuildWorkbook(requests, userLookup, req.Period);
 
         using var stream = new MemoryStream();
         workbook.SaveAs(stream);

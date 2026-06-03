@@ -1,5 +1,5 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { LoginPage, AuthGuard } from "@/features/auth";
+import { createBrowserRouter, redirect } from "react-router";
+import { LoginPage } from "@/features/auth";
 import { AppLayout } from "@/features/layout";
 import { DashboardPage } from "@/features/dashboard";
 import { LeaveNewPage, LeaveMyPage } from "@/features/leave-requests";
@@ -9,43 +9,47 @@ import { SummaryPage } from "@/features/summary";
 import { ReportsPage } from "@/features/reports";
 import { ViolationsPage } from "@/features/violations";
 import { ConfigPage } from "@/features/config";
+import { RouteErrorBoundary } from "@/shared/ui/route-error-boundary";
+import { authLoader } from "./auth-loader";
+import { ROUTES } from "./routes";
 import NotFound from "./NotFound";
 
-export function AppRouter() {
-  return (
-    <BrowserRouter
-      future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-    >
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route
-          path="/"
-          element={<Navigate to="/quan-ly-nghi-phep" replace />}
-        />
-        <Route
-          path="quan-ly-nghi-phep"
-          element={
-            <AuthGuard>
-              <AppLayout />
-            </AuthGuard>
-          }
-        >
-          <Route
-            index
-            element={<Navigate to="/quan-ly-nghi-phep/tong-quan" replace />}
-          />
-          <Route path="tong-quan" element={<DashboardPage />} />
-          <Route path="leave/new" element={<LeaveNewPage />} />
-          <Route path="leave/my" element={<LeaveMyPage />} />
-          <Route path="phe-duyet-đon" element={<ApprovalPage />} />
-          <Route path="calendar" element={<CalendarPage />} />
-          <Route path="summary" element={<SummaryPage />} />
-          <Route path="reports" element={<ReportsPage />} />
-          <Route path="violations" element={<ViolationsPage />} />
-          <Route path="config" element={<ConfigPage />} />
-        </Route>
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
-  );
-}
+/**
+ * Data-router definition. Note: child paths are RELATIVE to the parent
+ * route, not absolute — absolute paths in nested routes would double-up
+ * the URL. Use the `ROUTES` constants for navigation (`Link to`, `Navigate to`,
+ * `navigate()`, `redirect()`) only.
+ */
+export const router = createBrowserRouter([
+  { path: ROUTES.login, Component: LoginPage },
+  {
+    path: "/",
+    loader: () => {
+      throw redirect(ROUTES.layout);
+    },
+  },
+  {
+    path: ROUTES.layout,
+    loader: authLoader,
+    Component: AppLayout,
+    errorElement: <RouteErrorBoundary />,
+    children: [
+      {
+        index: true,
+        loader: () => {
+          throw redirect(ROUTES.dashboard);
+        },
+      },
+      { path: "tong-quan", Component: DashboardPage },
+      { path: "xin-nghi-phep/tao-đon-xin-nghi-phep", Component: LeaveNewPage },
+      { path: "xin-nghi-phep/danh-sach-đon-cua-toi", Component: LeaveMyPage },
+      { path: "phe-duyet-đon", Component: ApprovalPage },
+      { path: "theo-doi-lich-nghi-phep", Component: CalendarPage },
+      { path: "tong-hop-lich-nghi-toan-trung-tam", Component: SummaryPage },
+      { path: "thong-ke-bao-cao", Component: ReportsPage },
+      { path: "theo-doi-vuot-muc-quy-đinh", Component: ViolationsPage },
+      { path: "cau-hinh-quy-đinh-nghi-phep", Component: ConfigPage },
+    ],
+  },
+  { path: "*", Component: NotFound },
+]);

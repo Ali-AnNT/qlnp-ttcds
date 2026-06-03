@@ -247,6 +247,7 @@ const SidebarRail = React.forwardRef<HTMLButtonElement, React.ComponentProps<"bu
 
     return (
       <button
+        type="button"
         ref={ref}
         data-sidebar="rail"
         aria-label="Toggle Sidebar"
@@ -373,12 +374,13 @@ const SidebarGroupLabel = React.forwardRef<HTMLDivElement, React.ComponentProps<
 SidebarGroupLabel.displayName = "SidebarGroupLabel";
 
 const SidebarGroupAction = React.forwardRef<HTMLButtonElement, React.ComponentProps<"button"> & { asChild?: boolean }>(
-  ({ className, asChild = false, ...props }, ref) => {
+  ({ className, asChild = false, type = "button", ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
 
     return (
       <Comp
         ref={ref}
+        type={type}
         data-sidebar="group-action"
         className={cn(
           "absolute right-3 top-3.5 flex aspect-square w-5 items-center justify-center rounded-md p-0 text-sidebar-foreground outline-none ring-sidebar-ring transition-transform hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
@@ -440,13 +442,14 @@ const SidebarMenuButton = React.forwardRef<
     isActive?: boolean;
     tooltip?: string | React.ComponentProps<typeof TooltipContent>;
   } & VariantProps<typeof sidebarMenuButtonVariants>
->(({ asChild = false, isActive = false, variant = "default", size = "default", tooltip, className, ...props }, ref) => {
+>(({ asChild = false, isActive = false, variant = "default", size = "default", tooltip, className, type = "button", ...props }, ref) => {
   const Comp = asChild ? Slot : "button";
   const { isMobile, state } = useSidebar();
 
   const button = (
     <Comp
       ref={ref}
+      type={type}
       data-sidebar="menu-button"
       data-size={size}
       data-active={isActive}
@@ -480,12 +483,13 @@ const SidebarMenuAction = React.forwardRef<
     asChild?: boolean;
     showOnHover?: boolean;
   }
->(({ className, asChild = false, showOnHover = false, ...props }, ref) => {
+>(({ className, asChild = false, showOnHover = false, type = "button", ...props }, ref) => {
   const Comp = asChild ? Slot : "button";
 
   return (
     <Comp
       ref={ref}
+      type={type}
       data-sidebar="menu-action"
       className={cn(
         "absolute right-1 top-1.5 flex aspect-square w-5 items-center justify-center rounded-md p-0 text-sidebar-foreground outline-none ring-sidebar-ring transition-transform peer-hover/menu-button:text-sidebar-accent-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",

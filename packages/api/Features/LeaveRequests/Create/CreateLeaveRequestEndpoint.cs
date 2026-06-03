@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using QLNP.Api.Data;
 using QLNP.Api.Infrastructure.Auth;
 using QLNP.Api.Shared.Groups;
+using QLNP.Api.Features.LeaveRequests;
 
 namespace QLNP.Api.Features.LeaveRequests.Create;
 
@@ -52,13 +53,12 @@ internal sealed class CreateLeaveRequestEndpoint : Endpoint<Request, Result<Leav
             return;
         }
 
-        // Load nav props for DTO mapping
+        // Load LeaveType + user info for DTO mapping
         var loaded = await Db.LeaveRequests
-            .Include(lr => lr.User)
-                .ThenInclude(u => u!.DonVi)
             .Include(lr => lr.LeaveType)
             .FirstOrDefaultAsync(lr => lr.Id == entity.Id, ct);
-        var dto = Map.FromEntity(loaded!);
+        var (hoTen, donViId, tenDonVi, _) = await LeaveRequestUserLookup.LoadUserInfoAsync(Db, entity.UserId, ct);
+        var dto = loaded!.MapToDto(hoTen, donViId, tenDonVi);
         await Send.CreatedAtAsync($"/api/leave-requests/{entity.Id}", Result<LeaveRequestDto>.Ok(dto), cancellation: ct);
     }
 }

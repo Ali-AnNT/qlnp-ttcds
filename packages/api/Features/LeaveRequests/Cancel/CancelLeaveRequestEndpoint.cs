@@ -24,7 +24,6 @@ internal sealed class CancelLeaveRequestEndpoint : EndpointWithoutRequest<Result
         var currentUser = CurrentUser.GetCurrentUser();
 
         var entity = await Db.LeaveRequests
-            .Include(lr => lr.User).ThenInclude(u => u!.DonVi)
             .Include(lr => lr.LeaveType)
             .FirstOrDefaultAsync(lr => lr.Id == id, ct);
         if (entity is null) { await Send.NotFoundAsync(ct); return; }
@@ -35,7 +34,6 @@ internal sealed class CancelLeaveRequestEndpoint : EndpointWithoutRequest<Result
         }
 
         // Can only cancel pending requests (including partially approved)
-        // Cannot cancel approved or rejected requests
         if (entity.Status != "pending") {
             AddError("Chỉ có thể hủy đơn đang chờ duyệt");
             await Send.ErrorsAsync(409, ct); return;
@@ -52,6 +50,7 @@ internal sealed class CancelLeaveRequestEndpoint : EndpointWithoutRequest<Result
             await Send.ErrorsAsync(409, ct); return;
         }
 
-        await Send.OkAsync(Result<LeaveRequestDto>.Ok(entity.MapToDto()), ct);
+        var (hoTen, donViId, tenDonVi, _) = await LeaveRequestUserLookup.LoadUserInfoAsync(Db, entity.UserId, ct);
+        await Send.OkAsync(Result<LeaveRequestDto>.Ok(entity.MapToDto(hoTen, donViId, tenDonVi)), ct);
     }
 }

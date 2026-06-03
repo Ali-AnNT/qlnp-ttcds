@@ -24,10 +24,12 @@ internal sealed class ApproveLeaveRequestEndpoint : EndpointWithoutRequest<Resul
         var currentUser = CurrentUser.GetCurrentUser();
 
         var entity = await Db.LeaveRequests
-            .Include(lr => lr.User).ThenInclude(u => u!.DonVi)
             .Include(lr => lr.LeaveType)
             .FirstOrDefaultAsync(lr => lr.Id == id, ct);
         if (entity is null) { await Send.NotFoundAsync(ct); return; }
+
+        // Load requester info for approval scope check + DTO mapping
+        var (hoTen, donViId, tenDonVi, requesterPhongBanId) = await LeaveRequestUserLookup.LoadUserInfoAsync(Db, entity.UserId, ct);
 
         // Get approval config for this leave type
         var configs = await Db.LeaveConfigs
@@ -56,7 +58,7 @@ internal sealed class ApproveLeaveRequestEndpoint : EndpointWithoutRequest<Resul
         }
 
         // Check if user can approve at this level
-        var (canApprove, errorMessage) = ApprovalHelper.CanApproveAtLevel(currentUser, entity, flow, targetLevel);
+        var (canApprove, errorMessage) = ApprovalHelper.CanApproveAtLevel(currentUser, entity, requesterPhongBanId, flow, targetLevel);
         if (!canApprove) {
             AddError(errorMessage ?? "Bạn không có quyền phê duyệt đơn này");
             await Send.ErrorsAsync(403, ct); return;
@@ -83,7 +85,7 @@ internal sealed class ApproveLeaveRequestEndpoint : EndpointWithoutRequest<Resul
             await Send.ErrorsAsync(409, ct); return;
         }
 
-        await Send.OkAsync(Result<LeaveRequestDto>.Ok(entity.MapToDto()), ct);
+        await Send.OkAsync(Result<LeaveRequestDto>.Ok(entity.MapToDto(hoTen, donViId, tenDonVi)), ct);
     }
 
     private async Task UpsertBalanceForApprovalAsync(LeaveRequest entity, CancellationToken ct) {

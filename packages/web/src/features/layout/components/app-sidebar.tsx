@@ -1,5 +1,6 @@
 import { useAuth } from "@/features/auth";
 import { type UserRole, AppRoles } from "@/features/shared-reference-data";
+import { Button } from "@/shared/ui/button";
 import { cn } from "@/shared/lib/utils";
 import {
   AlertTriangle,
@@ -15,7 +16,8 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation } from "react-router";
+import { ROUTES } from "@/app/routes";
 
 interface MenuItem {
   label: string;
@@ -30,7 +32,7 @@ const { Staff, Leader, Director, Admin } = AppRoles;
 const menuItems: MenuItem[] = [
   {
     label: "Tổng quan",
-    path: "/",
+    path: ROUTES.dashboard,
     icon: LayoutDashboard,
     roles: [Staff, Leader, Director, Admin],
   },
@@ -39,43 +41,43 @@ const menuItems: MenuItem[] = [
     icon: FileText,
     roles: [Staff, Leader],
     children: [
-      { label: "Tạo đơn mới", path: "/leave/new" },
-      { label: "Danh sách đơn của tôi", path: "/leave/my" },
+      { label: "Tạo đơn mới", path: ROUTES.leaveNew },
+      { label: "Danh sách đơn của tôi", path: ROUTES.leaveMy },
     ],
   },
   {
     label: "Phê duyệt đơn",
-    path: "/approval",
+    path: ROUTES.approval,
     icon: CheckSquare,
     roles: [Leader, Director],
   },
   {
     label: "Theo dõi lịch nghỉ phép",
-    path: "/calendar",
+    path: ROUTES.calendar,
     icon: CalendarDays,
     roles: [Staff, Leader, Director, Admin],
   },
   {
     label: "Tổng hợp lịch nghỉ",
-    path: "/summary",
+    path: ROUTES.summary,
     icon: PieChart,
     roles: [Director],
   },
   {
     label: "Thống kê báo cáo",
-    path: "/reports",
+    path: ROUTES.reports,
     icon: BarChart3,
     roles: [Director],
   },
   {
     label: "Vượt mức quy định",
-    path: "/violations",
+    path: ROUTES.violations,
     icon: AlertTriangle,
     roles: [Director],
   },
   {
     label: "Cấu hình quy định",
-    path: "/config",
+    path: ROUTES.config,
     icon: Settings,
     roles: [Admin],
   },
@@ -89,7 +91,7 @@ interface Props {
 }
 
 export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const location = useLocation();
   const [expandedItems, setExpandedItems] = useState<string[]>([
     "Đơn xin nghỉ phép",
@@ -97,11 +99,6 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
 
   const role = user?.role as UserRole | undefined;
   const visibleItems = menuItems.filter((m) => role && m.roles.includes(role));
-
-  const handleLogout = () => {
-    localStorage.removeItem("jwt");
-    window.location.href = "/login";
-  };
 
   const toggleExpand = (label: string) => {
     setExpandedItems((p) =>
@@ -126,12 +123,15 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
           <span className="font-bold text-sm truncate">QUẢN LÝ NGHỈ PHÉP</span>
         )}
         {isMobile && (
-          <button
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
             onClick={onClose}
-            className="ml-auto p-1 rounded hover:bg-sidebar-accent"
+            className="ml-auto h-7 w-7"
           >
             <X className="h-4 w-4" />
-          </button>
+          </Button>
         )}
       </div>
 
@@ -146,10 +146,12 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
           if (item.children) {
             return (
               <div key={item.label}>
-                <button
+                <Button
+                  type="button"
+                  variant="ghost"
                   onClick={() => toggleExpand(item.label)}
                   className={cn(
-                    "w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-sidebar-accent transition-colors",
+                    "w-full h-auto justify-start gap-3 px-4 py-2.5 text-sm font-normal rounded-none hover:bg-sidebar-accent transition-colors",
                     isChildActive && "bg-sidebar-accent",
                   )}
                 >
@@ -167,7 +169,7 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
                       />
                     </>
                   )}
-                </button>
+                </Button>
                 {!collapsed && isExpanded && (
                   <div className="ml-4 border-l border-sidebar-border">
                     {item.children.map((child) => (
@@ -197,7 +199,7 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
             <NavLink
               key={item.path}
               to={item.path!}
-              end={item.path === "/"}
+              end
               onClick={isMobile ? onClose : undefined}
               className={({ isActive }) =>
                 cn(
@@ -216,13 +218,15 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
       </nav>
 
       <div className="border-t border-sidebar-border p-2">
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-sidebar-accent rounded-md transition-colors"
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={logout}
+          className="w-full h-auto justify-start gap-3 px-4 py-2.5 text-sm font-normal hover:bg-sidebar-accent rounded-md transition-colors"
         >
           <LogOut className="h-4 w-4 shrink-0" />
           {!collapsed && <span>Đăng xuất</span>}
-        </button>
+        </Button>
       </div>
     </aside>
   );

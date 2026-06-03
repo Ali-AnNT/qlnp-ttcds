@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "Auth Context Refactor"
-status: pending
+status: completed
 priority: P1
 effort: "1h"
 dependencies: [1, 2, 3]
@@ -21,6 +21,7 @@ Refactor AuthProvider: xóa postMessage flow, thêm `ensureValidToken()` trướ
 - Functional: `logout` trong embed mode là no-op (không xóa token, không redirect)
 - Functional: `logout` trong dev mode gọi clearTokens() + redirect `/login`
 - Functional: `storage` event listener refetch user khi parent site thay đổi accessToken/accessTokenExp/tokenRenew
+- Functional: Khi token renew thất bại trong embed mode, set `sessionExpired` state → hiển thị interstitial
 - Non-functional: AuthState interface mở rộng, không breaking change cho consumers
 
 ## Architecture
@@ -42,6 +43,7 @@ AuthState {
   user: AuthUser | null
   loading: boolean
   isEmbed: boolean
+  sessionExpired: boolean  ← NEW (embed mode interstitial trigger)
   logout: () => void       ← NEW
 }
 
@@ -62,8 +64,8 @@ logout():
 1. Remove entire postMessage event listener and its handler
 2. Remove `localStorage.setItem("jwt", event.data.token)`
 3. Add import: `ensureValidToken` from `token-refresh.ts`, `clearTokens` from `token-store.ts`
-4. Update `AuthState` interface to include `logout: () => void`
-5. Update `AuthContext` default value to include `logout: () => {}`
+4. Update `AuthState` interface to include `logout: () => void` and `sessionExpired: boolean`
+5. Update `AuthContext` default value to include `logout: () => {}` and `sessionExpired: false`
 6. Implement `logout` callback:
    ```ts
    const logout = useCallback(() => {
@@ -80,7 +82,7 @@ logout():
        if (valid) {
          await fetchUser();
        } else {
-         setState({ user: null, loading: false, isEmbed: window.self !== window.top, logout });
+         setState({ user: null, loading: false, isEmbed: window.self !== window.top, sessionExpired: isEmbed, logout });
        }
      };
      init();
@@ -88,8 +90,9 @@ logout():
    ```
 8. Remove `fetchUser` from useEffect dependency array (it's now called inside async init)
 9. Keep `isEmbed` detection via `window.self !== window.top`
-10. Update `setState` calls to always include `logout` in state
-11. **Add `storage` event listener** — khi parent site thay đổi token (renew/logout):
+10. Update `setState` calls to always include `logout` and `sessionExpired` in state
+11. When `ensureValidToken()` fails in embed mode: set `sessionExpired: true` to trigger interstitial
+12. **Add `storage` event listener** — khi parent site thay đổi token (renew/logout):
     ```ts
     useEffect(() => {
       const handler = (e: StorageEvent) => {
@@ -104,7 +107,11 @@ logout():
     ```
     - `StorageEvent` chỉ fire khi thay đổi từ **context khác** (tab/iframe khác) — OK cho embed use case
     - Khi parent renew → app refetch user với token mới
-    - Khi parent logout (clear token) → fetchUser fail → AuthGuard redirect
+    - Khi parent logout (clear token) → fetchUser fail → `sessionExpired: true` → interstitial
+13. **Add interstitial handling** for embed session expiry:
+    - When `sessionExpired && isEmbed`: render interstitial message "Phiên làm việc đã hết hạn. Đang chuyển hướng..."
+    - Interstitial auto-redirects after 3 seconds via `setTimeout`
+    - Non-embed session expiry: AuthGuard redirects to /login as before
 
 ## Success Criteria
 
@@ -115,4 +122,7 @@ logout():
 - [ ] `logout` trong embed mode là no-op
 - [ ] `logout` trong dev mode clearTokens + redirect
 - [ ] `storage` event listener refetch user khi parent thay đổi token
+- [ ] `sessionExpired` state có trong AuthState context
+- [ ] Embed mode: session expired hiển thị interstitial "Phiên làm việc đã hết hạn"
+- [ ] Non-embed mode: session expired redirect /login như cũ
 - [ ] `useAuth()` hook vẫn hoạt động bình thường

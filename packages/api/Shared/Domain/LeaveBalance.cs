@@ -20,5 +20,4 @@ public class LeaveBalance {
     [Column(TypeName = "decimal(5,1)")]
     public decimal UsedDays { get; set; }
 
-    public UserMaster User { get; set; } = null!;
 }

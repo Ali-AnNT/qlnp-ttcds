@@ -37,10 +37,8 @@ const ReportsPage = () => {
         const days = approved
           .filter((r) => r.donViId === d.donViId)
           .reduce((s, r) => s + Number(r.totalDays), 0);
-        const label =
-          d.tenDonVi.length > 15
-            ? d.tenDonVi.substring(0, 15) + "..."
-            : d.tenDonVi;
+        const name = d.tenDonVi ?? "";
+        const label = name.length > 15 ? name.substring(0, 15) + "..." : name;
         return { name: label, days };
       }),
     [departments, approved],

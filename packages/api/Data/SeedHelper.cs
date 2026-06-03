@@ -13,8 +13,8 @@ public static class SeedHelper {
         var year = DateTime.UtcNow.Year;
 
         var userIds = await db.UserMaster
-            .Where(u => u.Used == true)
-            .Select(u => (long)u.UserMasterId)
+            .Where(u => u.Used == true && u.UserPortalId != null)
+            .Select(u => (long)u.UserPortalId!)
             .ToListAsync();
 
         if (userIds.Count == 0) return;

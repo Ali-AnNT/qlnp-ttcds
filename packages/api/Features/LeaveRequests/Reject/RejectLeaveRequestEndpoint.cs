@@ -24,10 +24,12 @@ internal sealed class RejectLeaveRequestEndpoint : Endpoint<Request, Result<Leav
         var currentUser = CurrentUser.GetCurrentUser();
 
         var entity = await Db.LeaveRequests
-            .Include(lr => lr.User).ThenInclude(u => u!.DonVi)
             .Include(lr => lr.LeaveType)
             .FirstOrDefaultAsync(lr => lr.Id == id, ct);
         if (entity is null) { await Send.NotFoundAsync(ct); return; }
+
+        // Load requester info for approval scope check + DTO mapping
+        var (hoTen, donViId, tenDonVi, requesterPhongBanId) = await LeaveRequestUserLookup.LoadUserInfoAsync(Db, entity.UserId, ct);
 
         // Only pending requests can be rejected
         if (entity.Status != "pending") {
@@ -49,7 +51,7 @@ internal sealed class RejectLeaveRequestEndpoint : Endpoint<Request, Result<Leav
         var targetLevel = entity.ApprovedLevel + 1;
 
         // Check if user can reject at this level
-        var (canApprove, errorMessage) = ApprovalHelper.CanApproveAtLevel(currentUser, entity, flow, targetLevel);
+        var (canApprove, errorMessage) = ApprovalHelper.CanApproveAtLevel(currentUser, entity, requesterPhongBanId, flow, targetLevel);
         if (!canApprove) {
             AddError(errorMessage ?? "Bạn không có quyền từ chối đơn này");
             await Send.ErrorsAsync(403, ct); return;
@@ -67,6 +69,6 @@ internal sealed class RejectLeaveRequestEndpoint : Endpoint<Request, Result<Leav
             await Send.ErrorsAsync(409, ct); return;
         }
 
-        await Send.OkAsync(Result<LeaveRequestDto>.Ok(entity.MapToDto()), ct);
+        await Send.OkAsync(Result<LeaveRequestDto>.Ok(entity.MapToDto(hoTen, donViId, tenDonVi)), ct);
     }
 }

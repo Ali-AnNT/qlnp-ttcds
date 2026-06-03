@@ -1,7 +1,7 @@
 ---
 phase: 7
 title: "Tests"
-status: pending
+status: completed
 priority: P2
 effort: "1h"
 dependencies: [1, 2, 3]
@@ -77,6 +77,11 @@ client.test.ts (updated)
    - Simulate `StorageEvent` with `key: "accessToken"` → verify `fetchUser()` called
    - Simulate `StorageEvent` with `key: "accessTokenExp"` → verify `fetchUser()` called
    - Simulate `StorageEvent` with irrelevant key → verify `fetchUser()` NOT called
+
+6. **Add embed session expired interstitial test** (in auth context or login page test):
+   - Verify `sessionExpired: true` set when `ensureValidToken()` fails in embed mode
+   - Verify interstitial renders "Phiên làm việc đã hết hạn" message
+   - Verify auto-redirect after timeout
 
 ## Success Criteria
 

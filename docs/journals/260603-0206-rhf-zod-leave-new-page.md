@@ -1,0 +1,22 @@
+# Journal: Refactor LeaveNewPage Validation to React Hook Form & Zod
+
+- **Date**: 2026-06-03
+- **Topic**: Refactoring manual useState validation inside `LeaveNewPage` to RHF + Zod resolver.
+- **Decision & Brainstorming Summary**:
+  - Investigated using React Hook Form combined with `class-validator`. Since `class-validator` requires complex decorator configuration in Vite/SWC and isn't currently installed in `@qlnp/web`, decided to challenge this and switch to **Zod** (`zodResolver`) which is already installed and is the React Hook Form standard.
+  - Aligned on Approach 1: Defining a dynamic Zod Schema that checks both static fields and performs the dynamic date overlap validation (using `approvedDates` and `today` as schema arguments inside `.superRefine()`).
+  - Lỗi trùng lịch (overlap check) sẽ hiển thị trực quan dưới trường nhập liệu tương ứng (thay vì dùng `toast.error` chung chung).
+- **Implementation**:
+  - File modified: `packages/web/src/features/leave-requests/components/leave-new-page.tsx`
+  - Replaced 4× `useState` field tracking + manual submit guard chain with `useForm<LeaveRequestForm>` + `zodResolver(createLeaveRequestSchema(approvedDates, today))`.
+  - `createLeaveRequestSchema` uses `.superRefine` with early-return ordering: (1) end ≥ start, (2) start ≥ today, (3) range ∉ approvedDates. Each rule attaches the issue to the most informative field (`endDate`, `startDate`, `startDate` respectively) so errors render under the right input.
+  - `Select` is wired via `<Controller name="leaveTypeId">`; native `Input` and `Textarea` use `register`. The `hasOverlap` `useMemo` is removed since the Zod schema covers it. The global `toast.error` calls for field-level errors are gone; only the API-error toast survives.
+  - Day-count calculation now watches `startDate`/`endDate` and guards against incomplete/invalid ranges.
+- **Verification**:
+  - `pnpm exec tsc --noEmit -p tsconfig.app.json` → clean for `leave-new-page.tsx` and the `leave-requests/components` directory. (Pre-existing `src/test/token-refresh.test.ts(110,37)` error is out of scope.)
+  - `pnpm exec eslint src/features/leave-requests/components/leave-new-page.tsx` → clean.
+  - `pnpm exec vite build` → success (3436 modules, 12.28s).
+  - `pnpm test` → 35/35 passed, no regressions.
+  - Code review: APPROVED_WITH_CONCERNS (3 low-severity). The 3 concerns verified non-regressions against HEAD baseline: (a) `navigate("/leave/my")` was already commented out in the original committed code; (b) `mode: "onTouched"` is an optional UX tweak not in the plan; (c) per-render schema allocation is acknowledged as a non-issue at this scale.
+  - Reports: [code-reviewer report](file:///home/vif/qlnp-ttcds/plans/reports/code-reviewer-260603-0219-leave-new-page-validation-report.md), [tester report](file:///home/vif/qlnp-ttcds/plans/reports/tester-260603-0219-leave-new-page-validation-report.md), [brainstorm](file:///home/vif/qlnp-ttcds/docs/reports/leave-new-page-validation-brainstorm.md).
+  - Plan status updated: all 3 phases complete.
