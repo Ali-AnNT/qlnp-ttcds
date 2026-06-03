@@ -19,5 +19,6 @@ internal sealed record LeaveRequestDto(
     DateTime? ApprovedAt,
     string? RejectedReason,
     DateTime CreatedAt,
-    DateTime? UpdatedAt
+    DateTime? UpdatedAt,
+    bool CanCurrentUserApprove
 );

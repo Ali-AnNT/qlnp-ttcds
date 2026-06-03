@@ -38,7 +38,8 @@ internal sealed class MyLeaveRequestsEndpoint : EndpointWithoutRequest<Result<Li
                 lr.LeaveTypeId, lr.LeaveType?.Name ?? "",
                 lr.StartDate, lr.EndDate, lr.TotalDays,
                 lr.Reason, lr.Status, lr.ApprovedLevel, lr.RequestedApproverId,
-                lr.ApprovedBy, lr.ApprovedAt, lr.RejectedReason, lr.CreatedAt, lr.UpdatedAt);
+                lr.ApprovedBy, lr.ApprovedAt, lr.RejectedReason, lr.CreatedAt, lr.UpdatedAt,
+                CanCurrentUserApprove: false);
         }).ToList();
 
         await Send.OkAsync(Result<List<LeaveRequestDto>>.Ok(items), ct);

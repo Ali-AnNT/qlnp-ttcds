@@ -125,16 +125,20 @@ export function ApprovalTable({
                 <div className="flex gap-1">
                   <Button
                     size="sm"
-                    className="h-7 px-2 bg-success hover:bg-success/90 text-success-foreground"
+                    className="h-7 px-2 bg-success hover:bg-success/90 text-success-foreground disabled:opacity-40 disabled:cursor-not-allowed"
                     onClick={() => onApprove(r.id)}
+                    disabled={!r.canCurrentUserApprove}
+                    title={r.canCurrentUserApprove ? "Phê duyệt" : "Đơn đang chờ cấp khác duyệt"}
                   >
                     <CheckCircle className="h-3 w-3 mr-1" />
                   </Button>
                   <Button
                     size="sm"
                     variant="destructive"
-                    className="h-7 px-2"
+                    className="h-7 px-2 disabled:opacity-40 disabled:cursor-not-allowed"
                     onClick={() => onReject(r.id)}
+                    disabled={!r.canCurrentUserApprove}
+                    title={r.canCurrentUserApprove ? "Từ chối" : "Đơn đang chờ cấp khác duyệt"}
                   >
                     <XCircle className="h-3 w-3 mr-1" />
                   </Button>
@@ -143,6 +147,7 @@ export function ApprovalTable({
                     variant="ghost"
                     className="h-7 px-2"
                     onClick={() => onDetail(r)}
+                    title="Xem chi tiết"
                   >
                     <Eye className="h-3 w-3" />
                   </Button>

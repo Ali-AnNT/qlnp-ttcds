@@ -1,5 +1,23 @@
 # Project Changelog - QLNP-TTCDS
 
+## v0.8.0 -- 2026-06-03 -- Auto-Approve Levels by Requester Role
+
+### Added
+- `ApprovalHelper.GetAutoApproveLevel()` -- determines auto-approve level for requester based on their roles vs configured approval flow. Returns: `> 0` = highest matching level; `AutoApproveAll (-1)` = no match but has approver role; `0` = no auto-approve (Staff).
+- `ApprovalHelper.HasApproverRole()` -- checks if user holds Leader, Director, or Admin role.
+- `ApprovalBalanceService` -- shared static service for leave balance deduction on approval. Extracted from Approve endpoint to support both manual and auto-approve flows. `UpsertBalanceForApprovalAsync()` creates or updates LeaveBalance, resolves role-based default days from SystemConfigs.
+
+### Changed
+- `CreateLeaveRequestEndpoint`: added auto-approve logic after entity creation. Leader/Director/Admin requests auto-approve levels <= their role; if no config match but has approver role -> auto-approve all -> status=approved + balance deducted. Staff -> pending (unchanged). Zero LeaveConfig for leave type now returns 403 (blocks creation). Allowed roles expanded: `Staff, Leader, Director, Admin` (was `Staff, Leader`).
+- `ApproveLeaveRequestEndpoint`: balance deduction now uses shared `ApprovalBalanceService.UpsertBalanceForApprovalAsync()` instead of inline private method. Removed `UpsertBalanceForApprovalAsync()` and `ResolveTotalDaysAsync()` private methods from endpoint.
+
+### Business Rules
+- **BR-33**: matchLevel = highest level where requester.Roles intersects flow[level].roles. matchLevel > 0 -> auto-approve 1..matchLevel; matchLevel == maxLevel -> approved + deduct balance.
+- **BR-34**: matchLevel == 0 + requester has approver role (Leader/Director/Admin) -> auto-approve ALL -> approved + deduct balance.
+- **BR-35**: matchLevel == 0 + requester is Staff -> pending (no auto-approve).
+- **BR-36**: Zero LeaveConfig for LeaveType -> block creation (403).
+- **BR-37**: Auto-approved levels set ApprovedBy = requester.UserId, ApprovedAt = creation time.
+
 ## v0.7.0 -- 2026-06-03 -- Configurable Work Days, MyStats, Docker, Auth Token Renewal
 
 ### Added

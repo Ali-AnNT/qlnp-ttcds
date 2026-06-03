@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { useApprovalConfigs } from "../hooks/use-approval-configs";
 import { useApprovableRequests } from "../hooks/use-approvable-requests";
-import { useApproveLeaveRequest, useRejectLeaveRequest } from "../hooks/use-approval-actions";
+import {
+  useApproveLeaveRequest,
+  useRejectLeaveRequest,
+} from "../hooks/use-approval-actions";
 import { useQuery } from "@tanstack/react-query";
 import { departmentsApi, type DepartmentDto } from "@/features/layout";
 import { ApprovalTable } from "./approval-table";
@@ -17,7 +20,9 @@ export function ApprovalPage() {
   const approveMutation = useApproveLeaveRequest();
   const rejectMutation = useRejectLeaveRequest();
   const [filterName, setFilterName] = useState("");
-  const [detailRequest, setDetailRequest] = useState<LeaveRequestDto | null>(null);
+  const [detailRequest, setDetailRequest] = useState<LeaveRequestDto | null>(
+    null,
+  );
   const [rejectId, setRejectId] = useState<number | null>(null);
 
   // Departments used for display in table/detail (BE returns donViName, but
