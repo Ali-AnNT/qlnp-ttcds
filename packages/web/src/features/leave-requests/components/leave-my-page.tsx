@@ -6,16 +6,47 @@ import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Textarea } from "@/shared/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/shared/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/shared/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/shared/ui/dialog";
 import { cn } from "@/shared/lib/utils";
 import { toast } from "sonner";
 import { XCircle, Pencil } from "lucide-react";
-import { differenceInBusinessDays, parseISO, format, eachDayOfInterval } from "date-fns";
+import {
+  differenceInBusinessDays,
+  parseISO,
+  format,
+  eachDayOfInterval,
+} from "date-fns";
 import { formatDate } from "@/shared/lib/date-utils";
-import { getApprovalStatusLabel, getApprovalStatusColor } from "@/features/shared-reference-data";
-import { useMyLeaveRequests, useCancelLeaveRequest, useUpdateLeaveRequest } from "../hooks/use-leave-requests";
+import {
+  getApprovalStatusLabel,
+  getApprovalStatusColor,
+} from "@/features/shared-reference-data";
+import {
+  useMyLeaveRequests,
+  useCancelLeaveRequest,
+  useUpdateLeaveRequest,
+} from "../hooks/use-leave-requests";
 import { useLeaveTypes } from "../hooks/use-leave-types";
 import { useMaxLevelByType } from "../hooks/use-approval-configs";
 
@@ -54,11 +85,21 @@ const LeaveMyPage = () => {
     if (!user) return new Set<string>();
     const dates = new Set<string>();
     leaveRequests
-      .filter((r) => r.userId === user.userId && r.status === "approved" && r.id !== editRequest?.id)
+      .filter(
+        (r) =>
+          r.userId === user.userId &&
+          r.status === "approved" &&
+          r.id !== editRequest?.id,
+      )
       .forEach((r) => {
         try {
-          const interval = { start: parseISO(r.startDate), end: parseISO(r.endDate) };
-          eachDayOfInterval(interval).forEach((d) => dates.add(format(d, "yyyy-MM-dd")));
+          const interval = {
+            start: parseISO(r.startDate),
+            end: parseISO(r.endDate),
+          };
+          eachDayOfInterval(interval).forEach((d) =>
+            dates.add(format(d, "yyyy-MM-dd")),
+          );
         } catch {
           // Ignore malformed historical dates; validation below covers the edited range.
         }
@@ -69,8 +110,13 @@ const LeaveMyPage = () => {
   const editHasOverlap = useMemo(() => {
     if (!editStartDate || !editEndDate) return false;
     try {
-      const interval = { start: parseISO(editStartDate), end: parseISO(editEndDate) };
-      return eachDayOfInterval(interval).some((d) => approvedDates.has(format(d, "yyyy-MM-dd")));
+      const interval = {
+        start: parseISO(editStartDate),
+        end: parseISO(editEndDate),
+      };
+      return eachDayOfInterval(interval).some((d) =>
+        approvedDates.has(format(d, "yyyy-MM-dd")),
+      );
     } catch {
       return false;
     }
@@ -93,18 +139,43 @@ const LeaveMyPage = () => {
     setEditReason(r.reason || "");
   };
 
-  const editDays = editStartDate && editEndDate
-    ? Math.max(1, differenceInBusinessDays(parseISO(editEndDate), parseISO(editStartDate)) + 1)
-    : 0;
+  const editDays =
+    editStartDate && editEndDate
+      ? Math.max(
+          1,
+          differenceInBusinessDays(
+            parseISO(editEndDate),
+            parseISO(editStartDate),
+          ) + 1,
+        )
+      : 0;
 
   const handleSaveEdit = async () => {
     if (!editRequest) return;
-    if (!editStartDate || !editEndDate) { toast.error("Vui lòng chọn ngày"); return; }
-    if (editStartDate > editEndDate) { toast.error("Ngày bắt đầu phải trước ngày kết thúc"); return; }
-    if (editStartDate < today) { toast.error("Không được chọn ngày trong quá khứ"); return; }
-    if (!editReason.trim()) { toast.error("Vui lòng nhập lý do"); return; }
-    if (!editLeaveTypeId) { toast.error("Vui lòng chọn loại phép"); return; }
-    if (editHasOverlap) { toast.error("Khoảng ngày nghỉ trùng với đơn đã được duyệt"); return; }
+    if (!editStartDate || !editEndDate) {
+      toast.error("Vui lòng chọn ngày");
+      return;
+    }
+    if (editStartDate > editEndDate) {
+      toast.error("Ngày bắt đầu phải trước ngày kết thúc");
+      return;
+    }
+    if (editStartDate < today) {
+      toast.error("Không được chọn ngày trong quá khứ");
+      return;
+    }
+    if (!editReason.trim()) {
+      toast.error("Vui lòng nhập lý do");
+      return;
+    }
+    if (!editLeaveTypeId) {
+      toast.error("Vui lòng chọn loại phép");
+      return;
+    }
+    if (editHasOverlap) {
+      toast.error("Khoảng ngày nghỉ trùng với đơn đã được duyệt");
+      return;
+    }
 
     try {
       await updateRequest({
@@ -128,7 +199,11 @@ const LeaveMyPage = () => {
     return (
       <div className="space-y-4">
         <div className="h-8 w-48 bg-muted animate-pulse rounded" />
-        <Card><CardContent className="p-0"><div className="h-64" /></CardContent></Card>
+        <Card>
+          <CardContent className="p-0">
+            <div className="h-64" />
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -138,11 +213,15 @@ const LeaveMyPage = () => {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h2 className="text-lg font-bold">Danh sách đơn của tôi</h2>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-40"><SelectValue placeholder="Trạng thái" /></SelectTrigger>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="Trạng thái" />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tất cả</SelectItem>
             {Object.entries(statusLabels).map(([k, v]) => (
-              <SelectItem key={k} value={k}>{v}</SelectItem>
+              <SelectItem key={k} value={k}>
+                {v}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -166,38 +245,79 @@ const LeaveMyPage = () => {
             </TableHeader>
             <TableBody>
               {myRequests.length === 0 ? (
-                <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">Không có đơn nào</TableCell></TableRow>
-              ) : myRequests.map((r, i) => {
-                const lt = leaveTypes.find((t) => t.id === r.leaveTypeId);
-                return (
-                  <TableRow key={r.id} className={i % 2 === 1 ? "bg-muted/20" : ""}>
-                    <TableCell className="text-center">{i + 1}</TableCell>
-                    <TableCell>{lt?.name}</TableCell>
-                    <TableCell>{formatDate(r.startDate)}</TableCell>
-                    <TableCell>{formatDate(r.endDate)}</TableCell>
-                    <TableCell className="text-center">{r.totalDays}</TableCell>
-                    <TableCell className="max-w-[200px] truncate">{r.reason}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={cn("text-[11px]", getApprovalStatusColor(r.status, r.approvedLevel, maxLevelByType.get(r.leaveTypeId) ?? 1))}>
-                        {getApprovalStatusLabel(r.status, r.approvedLevel, maxLevelByType.get(r.leaveTypeId) ?? 1)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{formatDate(r.createdAt)}</TableCell>
-                    <TableCell>
-                      {r.status === "pending" && (
-                        <div className="flex gap-1">
-                          <Button size="sm" variant="ghost" className="h-7 px-2 text-primary" onClick={() => openEdit(r)}>
-                            <Pencil className="h-3 w-3" />
-                          </Button>
-                          <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive" onClick={() => handleCancel(r.id)}>
-                            <XCircle className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+                <TableRow>
+                  <TableCell
+                    colSpan={9}
+                    className="text-center text-muted-foreground py-8"
+                  >
+                    Không có đơn nào
+                  </TableCell>
+                </TableRow>
+              ) : (
+                myRequests.map((r, i) => {
+                  const lt = leaveTypes.find((t) => t.id === r.leaveTypeId);
+                  return (
+                    <TableRow
+                      key={r.id}
+                      className={i % 2 === 1 ? "bg-muted/20" : ""}
+                    >
+                      <TableCell className="text-center">{i + 1}</TableCell>
+                      <TableCell>{lt?.name}</TableCell>
+                      <TableCell>{formatDate(r.startDate)}</TableCell>
+                      <TableCell>{formatDate(r.endDate)}</TableCell>
+                      <TableCell className="text-center">
+                        {r.totalDays}
+                      </TableCell>
+                      <TableCell className="max-w-[200px] truncate">
+                        {r.reason}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-[11px]",
+                            getApprovalStatusColor(
+                              r.status,
+                              r.approvedLevel,
+                              maxLevelByType.get(r.leaveTypeId) ?? 1,
+                            ),
+                          )}
+                        >
+                          {getApprovalStatusLabel(
+                            r.status,
+                            r.approvedLevel,
+                            maxLevelByType.get(r.leaveTypeId) ?? 1,
+                          )}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{formatDate(r.createdAt)}</TableCell>
+                      <TableCell>
+                        {r.status === "pending" && (
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 px-2 text-primary"
+                              onClick={() => openEdit(r)}
+                              type="button"
+                            >
+                              <Pencil className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 px-2 text-destructive"
+                              onClick={() => handleCancel(r.id)}
+                            >
+                              <XCircle className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -206,15 +326,24 @@ const LeaveMyPage = () => {
       {/* Edit Dialog */}
       <Dialog open={!!editRequest} onOpenChange={() => setEditRequest(null)}>
         <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>Sửa đơn xin nghỉ phép</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Sửa đơn xin nghỉ phép</DialogTitle>
+          </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
               <Label className="text-[13px]">Loại đơn xin nghỉ</Label>
-              <Select value={editLeaveTypeId} onValueChange={setEditLeaveTypeId}>
-                <SelectTrigger><SelectValue placeholder="Chọn loại phép" /></SelectTrigger>
+              <Select
+                value={editLeaveTypeId}
+                onValueChange={setEditLeaveTypeId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Chọn loại phép" />
+                </SelectTrigger>
                 <SelectContent>
                   {leaveTypes.map((t) => (
-                    <SelectItem key={t.id} value={String(t.id)}>{t.name}</SelectItem>
+                    <SelectItem key={t.id} value={String(t.id)}>
+                      {t.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -222,14 +351,25 @@ const LeaveMyPage = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-[13px]">Ngày bắt đầu</Label>
-                <Input type="date" min={today} value={editStartDate} onChange={(e) => {
-                  setEditStartDate(e.target.value);
-                  if (editEndDate && e.target.value > editEndDate) setEditEndDate("");
-                }} />
+                <Input
+                  type="date"
+                  min={today}
+                  value={editStartDate}
+                  onChange={(e) => {
+                    setEditStartDate(e.target.value);
+                    if (editEndDate && e.target.value > editEndDate)
+                      setEditEndDate("");
+                  }}
+                />
               </div>
               <div className="space-y-2">
                 <Label className="text-[13px]">Ngày kết thúc</Label>
-                <Input type="date" min={editStartDate || today} value={editEndDate} onChange={(e) => setEditEndDate(e.target.value)} />
+                <Input
+                  type="date"
+                  min={editStartDate || today}
+                  value={editEndDate}
+                  onChange={(e) => setEditEndDate(e.target.value)}
+                />
               </div>
             </div>
             {editDays > 0 && (
@@ -244,11 +384,18 @@ const LeaveMyPage = () => {
             )}
             <div className="space-y-2">
               <Label className="text-[13px]">Lý do nghỉ</Label>
-              <Textarea value={editReason} onChange={(e) => setEditReason(e.target.value)} placeholder="Nhập lý do..." rows={3} />
+              <Textarea
+                value={editReason}
+                onChange={(e) => setEditReason(e.target.value)}
+                placeholder="Nhập lý do..."
+                rows={3}
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditRequest(null)}>Hủy</Button>
+            <Button variant="outline" onClick={() => setEditRequest(null)}>
+              Hủy
+            </Button>
             <Button onClick={handleSaveEdit}>Lưu & Gửi lại</Button>
           </DialogFooter>
         </DialogContent>
