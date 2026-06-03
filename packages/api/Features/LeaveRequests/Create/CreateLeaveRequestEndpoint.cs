@@ -38,6 +38,7 @@ internal sealed class CreateLeaveRequestEndpoint : Endpoint<Request, Result<Leav
         var currentUser = CurrentUser.GetCurrentUser();
         if (await Db.LeaveRequests.AnyAsync(lr =>
                 lr.UserId == currentUser.UserId &&
+                lr.Status != "cancelled" &&
                 lr.StartDate <= r.EndDate &&
                 lr.EndDate >= r.StartDate, ct))
             AddError(r => r.StartDate, "Trùng lịch với đơn đã gửi");
