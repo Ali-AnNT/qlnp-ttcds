@@ -74,10 +74,8 @@ internal sealed class DevLoginEndpoint : Endpoint<DevLoginRequest, Result<DevLog
         claims.Add(new("Roles", role));
 
         var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(jwtConfig["SigningKey"]!));
+            Encoding.UTF8.GetBytes("DEVDEVDEVDEVDEVDEVDEVDEVDEVDEVDEVDEVDEVDEVDEVDEVDEVDEVDEVDEVDEVDEVDEVDEV"));
         var token = new JwtSecurityToken(
-            issuer: jwtConfig["Issuer"],
-            audience: jwtConfig["Audience"],
             claims: claims,
             expires: DateTime.UtcNow.AddHours(8),
             signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
