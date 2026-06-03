@@ -1,11 +1,26 @@
-import { useState, useMemo } from "react";
 import { useAuth } from "@/features/auth";
-import { Card, CardContent } from "@/shared/ui/card";
+import {
+  getApprovalStatusColor,
+  getApprovalStatusLabel,
+} from "@/features/shared-reference-data";
+import {
+  countBusinessDays,
+  formatDate,
+  parseWorkDays,
+} from "@/shared/lib/date-utils";
+import { cn } from "@/shared/lib/utils";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
-import { Input } from "@/shared/ui/input";
+import { Card, CardContent } from "@/shared/ui/card";
+import { DatePicker } from "@/shared/ui/date-picker";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/ui/dialog";
 import { Label } from "@/shared/ui/label";
-import { Textarea } from "@/shared/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -21,36 +36,81 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/shared/ui/dialog";
-import { cn } from "@/shared/lib/utils";
+import { Textarea } from "@/shared/ui/textarea";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { eachDayOfInterval, format, parseISO } from "date-fns";
+import { Pencil, XCircle } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { XCircle, Pencil } from "lucide-react";
+import { z } from "zod";
+import { useMaxLevelByType } from "../hooks/use-approval-configs";
 import {
-  parseISO,
-  format,
-  eachDayOfInterval,
-} from "date-fns";
-import { formatDate, countBusinessDays, parseWorkDays } from "@/shared/lib/date-utils";
-import {
-  getApprovalStatusLabel,
-  getApprovalStatusColor,
-} from "@/features/shared-reference-data";
-import {
-  useMyLeaveRequests,
   useCancelLeaveRequest,
+  useMyLeaveRequests,
   useUpdateLeaveRequest,
 } from "../hooks/use-leave-requests";
 import { useLeaveTypes } from "../hooks/use-leave-types";
-import { useMaxLevelByType } from "../hooks/use-approval-configs";
-import { useSystemConfigs } from "@/features/config/hooks/use-system-configs";
 
+import { useSystemConfigs } from "@/features/config";
 import type { LeaveRequestDto } from "../api/types";
+
+export const EditLeaveRequestSchema = (
+  approvedDates: Set<string>,
+  today: string,
+) =>
+  z
+    .object({
+      leaveTypeId: z.string().min(1, "Vui lòng chọn loại phép"),
+      startDate: z.string().min(1, "Vui lòng chọn ngày bắt đầu"),
+      endDate: z.string().min(1, "Vui lòng chọn ngày kết thúc"),
+      reason: z
+        .string()
+        .min(1, "Vui lòng nhập lý do")
+        .refine(
+          (val) => val.trim().length > 0,
+          "Lý do nghỉ không được chỉ chứa khoảng trắng",
+        ),
+    })
+    .superRefine((data, ctx) => {
+      if (!data.startDate || !data.endDate) return;
+      if (data.startDate > data.endDate) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Ngày bắt đầu phải trước hoặc trùng ngày kết thúc",
+          path: ["endDate"],
+        });
+        return;
+      }
+      if (data.startDate < today) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Không được chọn ngày trong quá khứ",
+          path: ["startDate"],
+        });
+        return;
+      }
+      try {
+        const interval = {
+          start: parseISO(data.startDate),
+          end: parseISO(data.endDate),
+        };
+        const hasOverlap = eachDayOfInterval(interval).some((d) =>
+          approvedDates.has(format(d, "yyyy-MM-dd")),
+        );
+        if (hasOverlap) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Khoảng ngày nghỉ trùng với đơn đã được duyệt",
+            path: ["startDate"],
+          });
+        }
+      } catch {
+        /* malformed dates handled by field validators */
+      }
+    });
+
+type EditLeaveRequestForm = z.infer<ReturnType<typeof EditLeaveRequestSchema>>;
 
 const LeaveMyPage = () => {
   const { user } = useAuth();
@@ -61,7 +121,9 @@ const LeaveMyPage = () => {
   const { mutateAsync: updateRequest } = useUpdateLeaveRequest();
   const { systemConfigs } = useSystemConfigs();
 
-  const workDays = parseWorkDays(systemConfigs.find((c) => c.configKey === "work_days")?.configValue);
+  const workDays = parseWorkDays(
+    systemConfigs.find((c) => c.configKey === "work_days")?.configValue,
+  );
 
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
@@ -73,16 +135,8 @@ const LeaveMyPage = () => {
   };
 
   const [editRequest, setEditRequest] = useState<LeaveRequestDto | null>(null);
-  const [editLeaveTypeId, setEditLeaveTypeId] = useState("");
-  const [editStartDate, setEditStartDate] = useState("");
-  const [editEndDate, setEditEndDate] = useState("");
-  const [editReason, setEditReason] = useState("");
 
   const today = format(new Date(), "yyyy-MM-dd");
-
-  const myRequests = leaveRequests
-    .filter((r) => r.userId === user?.userId)
-    .filter((r) => filterStatus === "all" || r.status === filterStatus);
 
   const approvedDates = useMemo(() => {
     if (!user) return new Set<string>();
@@ -110,20 +164,26 @@ const LeaveMyPage = () => {
     return dates;
   }, [leaveRequests, user, editRequest]);
 
-  const editHasOverlap = useMemo(() => {
-    if (!editStartDate || !editEndDate) return false;
-    try {
-      const interval = {
-        start: parseISO(editStartDate),
-        end: parseISO(editEndDate),
-      };
-      return eachDayOfInterval(interval).some((d) =>
-        approvedDates.has(format(d, "yyyy-MM-dd")),
-      );
-    } catch {
-      return false;
-    }
-  }, [editStartDate, editEndDate, approvedDates]);
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    reset,
+    setValue,
+    getValues,
+    formState: { errors },
+  } = useForm<EditLeaveRequestForm>({
+    resolver: zodResolver(EditLeaveRequestSchema(approvedDates, today)),
+    defaultValues: { leaveTypeId: "", startDate: "", endDate: "", reason: "" },
+  });
+
+  const startDateValue = watch("startDate");
+  const endDateValue = watch("endDate");
+
+  const myRequests = leaveRequests
+    .filter((r) => r.userId === user?.userId)
+    .filter((r) => filterStatus === "all" || r.status === filterStatus);
 
   const handleCancel = async (id: number) => {
     try {
@@ -136,53 +196,34 @@ const LeaveMyPage = () => {
 
   const openEdit = (r: LeaveRequestDto) => {
     setEditRequest(r);
-    setEditLeaveTypeId(String(r.leaveTypeId));
-    setEditStartDate(r.startDate);
-    setEditEndDate(r.endDate);
-    setEditReason(r.reason || "");
+    reset({
+      leaveTypeId: String(r.leaveTypeId),
+      startDate: r.startDate,
+      endDate: r.endDate,
+      reason: r.reason || "",
+    });
   };
 
   const editDays =
-    editStartDate && editEndDate
-      ? countBusinessDays(parseISO(editStartDate), parseISO(editEndDate), workDays)
+    startDateValue && endDateValue && startDateValue <= endDateValue
+      ? countBusinessDays(
+          parseISO(startDateValue),
+          parseISO(endDateValue),
+          workDays,
+        )
       : 0;
 
-  const handleSaveEdit = async () => {
+  const onEditSubmit = async (data: EditLeaveRequestForm) => {
     if (!editRequest) return;
-    if (!editStartDate || !editEndDate) {
-      toast.error("Vui lòng chọn ngày");
-      return;
-    }
-    if (editStartDate > editEndDate) {
-      toast.error("Ngày bắt đầu phải trước ngày kết thúc");
-      return;
-    }
-    if (editStartDate < today) {
-      toast.error("Không được chọn ngày trong quá khứ");
-      return;
-    }
-    if (!editReason.trim()) {
-      toast.error("Vui lòng nhập lý do");
-      return;
-    }
-    if (!editLeaveTypeId) {
-      toast.error("Vui lòng chọn loại phép");
-      return;
-    }
-    if (editHasOverlap) {
-      toast.error("Khoảng ngày nghỉ trùng với đơn đã được duyệt");
-      return;
-    }
-
     try {
       await updateRequest({
         id: editRequest.id,
         data: {
-          leaveTypeId: Number(editLeaveTypeId),
-          startDate: editStartDate,
-          endDate: editEndDate,
+          leaveTypeId: Number(data.leaveTypeId),
+          startDate: data.startDate,
+          endDate: data.endDate,
           totalDays: editDays,
-          reason: editReason,
+          reason: data.reason,
         },
       });
       toast.success("Đã cập nhật và gửi lại đơn");
@@ -326,47 +367,86 @@ const LeaveMyPage = () => {
           <DialogHeader>
             <DialogTitle>Sửa đơn xin nghỉ phép</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <form onSubmit={handleSubmit(onEditSubmit)} className="space-y-4">
             <div className="space-y-2">
               <Label className="text-[13px]">Loại đơn xin nghỉ</Label>
-              <Select
-                value={editLeaveTypeId}
-                onValueChange={setEditLeaveTypeId}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Chọn loại phép" />
-                </SelectTrigger>
-                <SelectContent>
-                  {leaveTypes.map((t) => (
-                    <SelectItem key={t.id} value={String(t.id)}>
-                      {t.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Controller
+                name="leaveTypeId"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn loại phép" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {leaveTypes.map((t) => (
+                        <SelectItem key={t.id} value={String(t.id)}>
+                          {t.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.leaveTypeId && (
+                <p className="text-destructive text-xs">
+                  {errors.leaveTypeId.message}
+                </p>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-[13px]">Ngày bắt đầu</Label>
-                <Input
-                  type="date"
-                  min={today}
-                  value={editStartDate}
-                  onChange={(e) => {
-                    setEditStartDate(e.target.value);
-                    if (editEndDate && e.target.value > editEndDate)
-                      setEditEndDate("");
-                  }}
+                <Controller
+                  name="startDate"
+                  control={control}
+                  render={({ field }) => (
+                    <DatePicker
+                      date={field.value ? parseISO(field.value) : undefined}
+                      onSelect={(d) => {
+                        const val = d ? format(d, "yyyy-MM-dd") : "";
+                        field.onChange(val);
+                        const currentEndDate = getValues("endDate");
+                        if (currentEndDate && val && currentEndDate < val) {
+                          setValue("endDate", "", { shouldValidate: false });
+                        }
+                      }}
+                      placeholder="Chọn ngày bắt đầu"
+                      fromDate={parseISO(today)}
+                    />
+                  )}
                 />
+                {errors.startDate && (
+                  <p className="text-destructive text-xs">
+                    {errors.startDate.message}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label className="text-[13px]">Ngày kết thúc</Label>
-                <Input
-                  type="date"
-                  min={editStartDate || today}
-                  value={editEndDate}
-                  onChange={(e) => setEditEndDate(e.target.value)}
+                <Controller
+                  name="endDate"
+                  control={control}
+                  render={({ field }) => (
+                    <DatePicker
+                      date={field.value ? parseISO(field.value) : undefined}
+                      onSelect={(d) =>
+                        field.onChange(d ? format(d, "yyyy-MM-dd") : "")
+                      }
+                      placeholder="Chọn ngày kết thúc"
+                      fromDate={
+                        startDateValue
+                          ? parseISO(startDateValue)
+                          : parseISO(today)
+                      }
+                    />
+                  )}
                 />
+                {errors.endDate && (
+                  <p className="text-destructive text-xs">
+                    {errors.endDate.message}
+                  </p>
+                )}
               </div>
             </div>
             {editDays > 0 && (
@@ -374,27 +454,30 @@ const LeaveMyPage = () => {
                 Số ngày nghỉ: <strong>{editDays}</strong> ngày
               </div>
             )}
-            {editHasOverlap && (
-              <div className="bg-destructive/10 text-destructive rounded-md px-3 py-2 text-sm">
-                ⚠ Khoảng ngày nghỉ trùng với đơn đã được duyệt.
-              </div>
-            )}
             <div className="space-y-2">
               <Label className="text-[13px]">Lý do nghỉ</Label>
               <Textarea
-                value={editReason}
-                onChange={(e) => setEditReason(e.target.value)}
+                {...register("reason")}
                 placeholder="Nhập lý do..."
                 rows={3}
               />
+              {errors.reason && (
+                <p className="text-destructive text-xs">
+                  {errors.reason.message}
+                </p>
+              )}
             </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditRequest(null)}>
-              Hủy
-            </Button>
-            <Button onClick={handleSaveEdit}>Lưu & Gửi lại</Button>
-          </DialogFooter>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => setEditRequest(null)}
+              >
+                Hủy
+              </Button>
+              <Button type="submit">Lưu & Gửi lại</Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

@@ -1,15 +1,11 @@
-import { useMemo } from "react";
-import { useNavigate } from "react-router";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useAuth } from "@/features/auth";
 import { ROUTES } from "@/app/routes";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { useAuth } from "@/features/auth";
+import { useSystemConfigs } from "@/features/config/hooks/use-system-configs";
+import { countBusinessDays, parseWorkDays } from "@/shared/lib/date-utils";
 import { Button } from "@/shared/ui/button";
-import { Input } from "@/shared/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { DatePicker } from "@/shared/ui/date-picker";
 import { Label } from "@/shared/ui/label";
-import { Textarea } from "@/shared/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -17,22 +13,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/select";
+import { Textarea } from "@/shared/ui/textarea";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { eachDayOfInterval, format, parseISO } from "date-fns";
+import { useMemo } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { useNavigate } from "react-router";
 import { toast } from "sonner";
-import { parseISO, format, eachDayOfInterval } from "date-fns";
-import { countBusinessDays, parseWorkDays } from "@/shared/lib/date-utils";
-import { useLeaveTypes } from "../hooks/use-leave-types";
+import { z } from "zod";
 import {
   useMyLeaveRequests,
   useSubmitLeaveRequest,
 } from "../hooks/use-leave-requests";
-import { useSystemConfigs } from "@/features/config/hooks/use-system-configs";
+import { useLeaveTypes } from "../hooks/use-leave-types";
 
 // Build a Zod schema that enforces field shape and the cross-field rules
 // that depend on async-loaded state (approved dates, today).
-const createLeaveRequestSchema = (
-  approvedDates: Set<string>,
-  today: string,
-) =>
+const createLeaveRequestSchema = (approvedDates: Set<string>, today: string) =>
   z
     .object({
       leaveTypeId: z.string().min(1, "Vui lòng chọn loại phép"),
@@ -101,7 +98,9 @@ const LeaveNewPage = () => {
   const { mutateAsync: submitLeaveRequest } = useSubmitLeaveRequest();
   const { systemConfigs } = useSystemConfigs();
 
-  const workDays = parseWorkDays(systemConfigs.find((c) => c.configKey === "work_days")?.configValue);
+  const workDays = parseWorkDays(
+    systemConfigs.find((c) => c.configKey === "work_days")?.configValue,
+  );
 
   const today = format(new Date(), "yyyy-MM-dd");
 
@@ -149,7 +148,11 @@ const LeaveNewPage = () => {
   // Business days (Mon-Fri by default, based on system config) between start and end, inclusive.
   const days =
     startDateValue && endDateValue && startDateValue <= endDateValue
-      ? countBusinessDays(parseISO(startDateValue), parseISO(endDateValue), workDays)
+      ? countBusinessDays(
+          parseISO(startDateValue),
+          parseISO(endDateValue),
+          workDays,
+        )
       : 0;
 
   const onSubmit = async (data: LeaveRequestForm) => {
@@ -182,10 +185,7 @@ const LeaveNewPage = () => {
               name="leaveTypeId"
               control={control}
               render={({ field }) => (
-                <Select
-                  value={field.value}
-                  onValueChange={field.onChange}
-                >
+                <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger>
                     <SelectValue placeholder="Chọn loại phép" />
                   </SelectTrigger>
@@ -209,7 +209,20 @@ const LeaveNewPage = () => {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="text-[13px]">Ngày bắt đầu</Label>
-              <Input type="date" min={today} {...register("startDate")} />
+              <Controller
+                name="startDate"
+                control={control}
+                render={({ field }) => (
+                  <DatePicker
+                    date={field.value ? parseISO(field.value) : undefined}
+                    onSelect={(d) =>
+                      field.onChange(d ? format(d, "yyyy-MM-dd") : "")
+                    }
+                    placeholder="Chọn ngày bắt đầu"
+                    fromDate={parseISO(today)}
+                  />
+                )}
+              />
               {errors.startDate && (
                 <p className="text-destructive text-xs">
                   {errors.startDate.message}
@@ -218,10 +231,23 @@ const LeaveNewPage = () => {
             </div>
             <div className="space-y-2">
               <Label className="text-[13px]">Ngày kết thúc</Label>
-              <Input
-                type="date"
-                min={startDateValue || today}
-                {...register("endDate")}
+              <Controller
+                name="endDate"
+                control={control}
+                render={({ field }) => (
+                  <DatePicker
+                    date={field.value ? parseISO(field.value) : undefined}
+                    onSelect={(d) =>
+                      field.onChange(d ? format(d, "yyyy-MM-dd") : "")
+                    }
+                    placeholder="Chọn ngày kết thúc"
+                    fromDate={
+                      startDateValue
+                        ? parseISO(startDateValue)
+                        : parseISO(today)
+                    }
+                  />
+                )}
               />
               {errors.endDate && (
                 <p className="text-destructive text-xs">
