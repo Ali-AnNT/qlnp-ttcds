@@ -301,7 +301,7 @@ function ensureDistBuilt() {
 
   if (!fs.existsSync(distPath)) {
     log('dist not found — running pnpm --filter @qlnp/web build...', 'yellow');
-    const success = execCommand('pnpm --filter @qlnp/web build:dev ', { cwd: PROJECT_ROOT });
+    const success = execCommand('pnpm --filter @qlnp/web build:debug', { cwd: PROJECT_ROOT });
     if (!success) {
       log('Build failed. Aborting deployment.', 'red');
       process.exit(1);

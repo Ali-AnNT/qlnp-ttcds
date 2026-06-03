@@ -38,3 +38,5 @@ _ReSharper.Caches/
 # Gemini CLI settings (contains user-specific config)
 .gemini/
 .claude/
+.agent/
+.agents/
