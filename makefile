@@ -48,7 +48,8 @@ build-web-dev:
 	@echo "==> Building web (development)..."
 	cd ./packages/web && pnpm build:dev
 
-web-dev: scripts/deploy.cjs
+web-dev:
+	node scripts/deploy.cjs
 
 # ---------- Tests ----------
 test: test-web test-api
