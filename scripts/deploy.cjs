@@ -51,7 +51,7 @@ function loadEnvFile(target) {
   const envFiles = [
     path.join(PROJECT_ROOT, `.env.${target}`),
     path.join(PROJECT_ROOT, '.env.local'),
-    path.join(PROJECT_ROOT, '.env')
+    path.join(PROJECT_ROOT, '.prod.env')
   ];
 
   for (const envFile of envFiles) {
