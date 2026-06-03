@@ -69,7 +69,7 @@ const DashboardPage = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-card rounded-lg border p-5">
+      <div className="bg-card rounded-lg border !p-5">
         <h1 className="text-xl font-bold">Xin chào, {user?.fullName}!</h1>
         <p className="text-sm text-muted-foreground mt-1">
           {user?.userName} • {user?.role}

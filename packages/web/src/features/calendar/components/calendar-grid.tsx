@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isWithinInterval, parseISO } from "date-fns";
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  isWithinInterval,
+  parseISO,
+} from "date-fns";
 import { vi } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/shared/ui/button";
@@ -32,7 +39,11 @@ export const CalendarGrid = ({ requests }: CalendarGridProps) => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setCurrentMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1))}
+            onClick={() =>
+              setCurrentMonth(
+                (m) => new Date(m.getFullYear(), m.getMonth() - 1),
+              )
+            }
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -42,7 +53,11 @@ export const CalendarGrid = ({ requests }: CalendarGridProps) => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setCurrentMonth((m) => new Date(m.getFullYear(), m.getMonth() + 1))}
+            onClick={() =>
+              setCurrentMonth(
+                (m) => new Date(m.getFullYear(), m.getMonth() + 1),
+              )
+            }
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -51,7 +66,9 @@ export const CalendarGrid = ({ requests }: CalendarGridProps) => {
       <CardContent>
         <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground mb-1">
           {["T2", "T3", "T4", "T5", "T6", "T7", "CN"].map((d) => (
-            <div key={d} className="py-1 font-medium">{d}</div>
+            <div key={d} className="py-1 font-medium">
+              {d}
+            </div>
           ))}
         </div>
         <div className="grid grid-cols-7 gap-1">
@@ -64,7 +81,7 @@ export const CalendarGrid = ({ requests }: CalendarGridProps) => {
               <div
                 key={day.toISOString()}
                 className={cn(
-                  "min-h-[60px] border rounded p-1 text-xs",
+                  "min-h-[60px] border rounded !p-1 text-xs",
                   leaves.length > 0 && "bg-accent/5",
                 )}
               >

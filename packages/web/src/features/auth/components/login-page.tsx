@@ -67,7 +67,7 @@ const LoginPage = () => {
   if (!DEV_MODE) {
     return (
       <div className="min-h-screen bg-primary flex items-center justify-center !p-4">
-        <Card className="shadow-xl border-0 max-w-md w-full text-center p-8">
+        <Card className="shadow-xl border-0 max-w-md w-full text-center !p-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-accent mb-4">
             <CalendarDays className="h-8 w-8 text-accent-foreground" />
           </div>
@@ -97,8 +97,8 @@ const LoginPage = () => {
 
   // Dev mode: show dev login form
   return (
-    <div className="min-h-screen bg-primary flex items-center justify-center p-4">
-      <Card className="shadow-xl border-0 max-w-md w-full text-center p-8">
+    <div className="min-h-screen bg-primary flex items-center justify-center !p-4">
+      <Card className="shadow-xl border-0 max-w-md w-full text-center !p-8">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-accent mb-4">
           <CalendarDays className="h-8 w-8 text-accent-foreground" />
         </div>

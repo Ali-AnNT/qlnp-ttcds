@@ -14,7 +14,7 @@ export function RouteErrorBoundary() {
       : "Lỗi không xác định";
 
   return (
-    <div className="flex items-center justify-center min-h-[400px] p-6">
+    <div className="flex items-center justify-center min-h-[400px] !p-6">
       <div className="text-center space-y-3">
         <p className="text-destructive font-medium">Có lỗi khi tải trang</p>
         <p className="text-sm text-muted-foreground">{message}</p>

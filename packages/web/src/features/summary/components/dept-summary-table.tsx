@@ -1,4 +1,11 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/shared/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
 import type { DepartmentDto } from "../api/summary.api";
@@ -14,7 +21,11 @@ interface DeptSummaryTableProps {
   onDetailClick: (donViId: number) => void;
 }
 
-export function DeptSummaryTable({ deptSummary, onEmpClick, onDetailClick }: DeptSummaryTableProps) {
+export function DeptSummaryTable({
+  deptSummary,
+  onEmpClick,
+  onDetailClick,
+}: DeptSummaryTableProps) {
   return (
     <Card className="lg:col-span-2">
       <CardHeader className="pb-2">
@@ -26,18 +37,25 @@ export function DeptSummaryTable({ deptSummary, onEmpClick, onDetailClick }: Dep
             <TableRow className="bg-muted/50">
               <TableHead>Phòng ban</TableHead>
               <TableHead className="text-center">Tổng CB</TableHead>
-              <TableHead className="text-center">Tổng ngày phép đã duyệt</TableHead>
+              <TableHead className="text-center">
+                Tổng ngày phép đã duyệt
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {deptSummary.map((d, i) => (
-              <TableRow key={d.donViId} className={i % 2 === 1 ? "bg-muted/20" : ""}>
-                <TableCell className="font-medium">{d.tenDonVi ?? ""}</TableCell>
+              <TableRow
+                key={d.donViId}
+                className={i % 2 === 1 ? "bg-muted/20" : ""}
+              >
+                <TableCell className="font-medium">
+                  {d.tenDonVi ?? ""}
+                </TableCell>
                 <TableCell className="text-center">
                   <Button
                     type="button"
                     variant="link"
-                    className="h-auto p-0 font-semibold"
+                    className="h-auto !p-0 font-semibold"
                     onClick={() => onEmpClick(d.donViId)}
                   >
                     {d.totalEmp}
@@ -47,7 +65,7 @@ export function DeptSummaryTable({ deptSummary, onEmpClick, onDetailClick }: Dep
                   <Button
                     type="button"
                     variant="link"
-                    className="h-auto p-0 font-semibold"
+                    className="h-auto !p-0 font-semibold"
                     onClick={() => onDetailClick(d.donViId)}
                   >
                     {d.totalLeave}

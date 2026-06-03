@@ -217,7 +217,7 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
         })}
       </nav>
 
-      <div className="border-t border-sidebar-border p-2">
+      <div className="border-t border-sidebar-border !p-2">
         <Button
           type="button"
           variant="ghost"
