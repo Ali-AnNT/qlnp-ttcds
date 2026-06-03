@@ -1,7 +1,7 @@
 ---
 phase: 5
 title: "Fix Null Display Bugs"
-status: pending
+status: completed
 priority: P3
 effort: "15min"
 dependencies: []
@@ -50,10 +50,10 @@ Sửa 4 vị trí `tenDonVi` (string | null) hiển thị chữ "null" trong UI 
 
 ## Success Criteria
 
-- [ ] `tenDonVi === null` hiển thị chuỗi rỗng (không hiển thị "null")
-- [ ] `tenDonVi` có giá trị hiển thị đúng
-- [ ] Chart label không hiện "null"
-- [ ] Lint pass
+- [x] `tenDonVi === null` hiển thị chuỗi rỗng (không hiển thị "null")
+- [x] `tenDonVi` có giá trị hiển thị đúng
+- [x] Chart label không hiện "null"
+- [x] Lint pass
 
 ## Risk Assessment
 

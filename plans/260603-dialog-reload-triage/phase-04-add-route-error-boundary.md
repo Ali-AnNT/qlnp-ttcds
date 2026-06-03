@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "Add Route Error Boundary"
-status: pending
+status: completed
 priority: P2
 effort: "30min"
 dependencies: [1]
@@ -97,10 +97,10 @@ React Router data router hỗ trợ `errorElement` prop trên route definition. 
 
 ## Success Criteria
 
-- [ ] Lỗi render trong route con không làm sập sidebar
-- [ ] Fallback UI hiển thị nút "Quay lại trang chủ"
-- [ ] ErrorBoundary toàn app vẫn bắt lỗi ngoài route (Providers, Layout)
-- [ ] Lint pass, Build pass
+- [x] Lỗi render trong route con không làm sập sidebar
+- [x] Fallback UI hiển thị nút "Quay lại trang chủ"
+- [x] ErrorBoundary toàn app vẫn bắt lỗi ngoài route (Providers, Layout)
+- [x] Lint pass, Build pass
 
 ## Risk Assessment
 

@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Fix Sidebar Components"
-status: pending
+status: completed
 priority: P2
 effort: "15min"
 dependencies: []
@@ -102,10 +102,10 @@ Khi `asChild=true`, `Slot` merge props vào child element → `type` prop đư�
 
 ## Success Criteria
 
-- [ ] 3 sidebar component có `type="button"` mặc định
-- [ ] Consumer vẫn override được `type` prop (ví dụ `type="submit"`)
-- [ ] Sidebar render đúng, không có visual regression
-- [ ] Lint pass, Build pass
+- [x] 3 sidebar component có `type="button"` mặc định
+- [x] Consumer vẫn override được `type` prop (ví dụ `type="submit"`)
+- [x] Sidebar render đúng, không có visual regression
+- [x] Lint pass, Build pass
 
 ## Risk Assessment
 

@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Fix Critical Crash"
-status: pending
+status: completed
 priority: P1
 effort: "15min"
 dependencies: []
@@ -51,10 +51,10 @@ Fix: Null coalescing `(d.tenDonVi ?? "")` trước khi gọi string methods.
 
 ## Success Criteria
 
-- [ ] `d.tenDonVi` null không gây TypeError
-- [ ] `d.tenDonVi` có giá trị vẫn hiển thị đúng (truncate nếu > 15 chars)
-- [ ] Lint pass
-- [ ] Build pass
+- [x] `d.tenDonVi` null không gây TypeError
+- [x] `d.tenDonVi` có giá trị vẫn hiển thị đúng (truncate nếu > 15 chars)
+- [x] Lint pass
+- [x] Build pass
 
 ## Risk Assessment
 

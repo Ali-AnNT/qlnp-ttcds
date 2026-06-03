@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Fix Native Buttons"
-status: pending
+status: completed
 priority: P2
 effort: "20min"
 dependencies: []
@@ -109,9 +109,9 @@ Thêm `type="button"` cho 7 native `<button>` elements thiếu thuộc tính. Kh
 
 ## Success Criteria
 
-- [ ] Mọi native `<button>` trong 4 file có `type="button"`
-- [ ] Không có sự cố hồi quy (sidebar, logout, table links hoạt động bình thường)
-- [ ] Lint pass
+- [x] Mọi native `<button>` trong 4 file có `type="button"`
+- [x] Không có sự cố hồi quy (sidebar, logout, table links hoạt động bình thường)
+- [x] Lint pass
 
 ## Risk Assessment
 

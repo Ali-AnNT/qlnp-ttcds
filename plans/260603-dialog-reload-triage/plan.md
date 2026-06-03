@@ -1,7 +1,7 @@
 ---
 title: "Dialog Reload Triage: 5-Layer Defense Fix"
 description: "Sửa triệt để sự cố dialog reload trang: null crash, button type mặc định, thiếu error boundary, và hiển thị null string"
-status: pending
+status: completed
 priority: P1
 branch: "feat/update-deploy-cjs-ttcds-preset"
 tags: [bugfix, defensive-programming, react, ui]
@@ -25,11 +25,11 @@ Kế hoạch 5 phase áp dụng bảo vệ đa lớp: mỗi lỗi được bắt
 
 | Phase | Name | Status | Effort |
 |-------|------|--------|--------|
-| 1 | [Fix Critical Crash](./phase-01-fix-critical-crash.md) | Pending | 15min |
-| 2 | [Fix Native Buttons](./phase-02-fix-native-buttons.md) | Pending | 20min |
-| 3 | [Fix Sidebar Components](./phase-03-fix-sidebar-components.md) | Pending | 15min |
-| 4 | [Add Route Error Boundary](./phase-04-add-route-error-boundary.md) | Pending | 30min |
-| 5 | [Fix Null Display Bugs](./phase-05-fix-null-display-bugs.md) | Pending | 15min |
+| 1 | [Fix Critical Crash](./phase-01-fix-critical-crash.md) | Completed | 15min |
+| 2 | [Fix Native Buttons](./phase-02-fix-native-buttons.md) | Completed | 20min |
+| 3 | [Fix Sidebar Components](./phase-03-fix-sidebar-components.md) | Completed | 15min |
+| 4 | [Add Route Error Boundary](./phase-04-add-route-error-boundary.md) | Completed | 30min |
+| 5 | [Fix Null Display Bugs](./phase-05-fix-null-display-bugs.md) | Completed | 15min |
 
 ## Dependencies
 
