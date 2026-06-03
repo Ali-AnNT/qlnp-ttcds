@@ -9,6 +9,7 @@ import { SummaryPage } from "@/features/summary";
 import { ReportsPage } from "@/features/reports";
 import { ViolationsPage } from "@/features/violations";
 import { ConfigPage } from "@/features/config";
+import { RouteErrorBoundary } from "@/shared/ui/route-error-boundary";
 import { authLoader } from "./auth-loader";
 import { ROUTES } from "./routes";
 import NotFound from "./NotFound";
@@ -31,6 +32,7 @@ export const router = createBrowserRouter([
     path: ROUTES.layout,
     loader: authLoader,
     Component: AppLayout,
+    errorElement: <RouteErrorBoundary />,
     children: [
       {
         index: true,

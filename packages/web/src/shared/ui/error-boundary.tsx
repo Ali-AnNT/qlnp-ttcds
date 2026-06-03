@@ -38,6 +38,7 @@ export class ErrorBoundary extends Component<Props, State> {
               {this.state.error?.message}
             </p>
             <button
+              type="button"
               className="text-sm text-accent hover:underline"
               onClick={() => this.setState({ hasError: false, error: null })}
             >

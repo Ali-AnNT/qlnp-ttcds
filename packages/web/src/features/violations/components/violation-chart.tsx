@@ -74,7 +74,7 @@ export function ViolationChart({ violationByType, deptViolations }: ViolationCha
             <ResponsiveContainer width="100%" height={260}>
               <BarChart
                 data={deptViolations.map((d) => ({
-                  name: d.dept.tenDonVi,
+                  name: d.dept.tenDonVi ?? "",
                   value: d.totalEmpOverage,
                 }))}
               >

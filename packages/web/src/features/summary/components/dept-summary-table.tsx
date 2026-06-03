@@ -1,5 +1,6 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Button } from "@/shared/ui/button";
 import type { DepartmentDto } from "../api/summary.api";
 
 interface DeptSummaryRow extends DepartmentDto {
@@ -31,22 +32,26 @@ export function DeptSummaryTable({ deptSummary, onEmpClick, onDetailClick }: Dep
           <TableBody>
             {deptSummary.map((d, i) => (
               <TableRow key={d.donViId} className={i % 2 === 1 ? "bg-muted/20" : ""}>
-                <TableCell className="font-medium">{d.tenDonVi}</TableCell>
+                <TableCell className="font-medium">{d.tenDonVi ?? ""}</TableCell>
                 <TableCell className="text-center">
-                  <button
-                    className="text-primary underline hover:text-primary/80 font-semibold"
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="h-auto p-0 font-semibold"
                     onClick={() => onEmpClick(d.donViId)}
                   >
                     {d.totalEmp}
-                  </button>
+                  </Button>
                 </TableCell>
                 <TableCell className="text-center">
-                  <button
-                    className="text-primary underline hover:text-primary/80 font-semibold"
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="h-auto p-0 font-semibold"
                     onClick={() => onDetailClick(d.donViId)}
                   >
                     {d.totalLeave}
-                  </button>
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}

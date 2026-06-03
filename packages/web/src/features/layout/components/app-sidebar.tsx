@@ -1,5 +1,6 @@
 import { useAuth } from "@/features/auth";
 import { type UserRole, AppRoles } from "@/features/shared-reference-data";
+import { Button } from "@/shared/ui/button";
 import { cn } from "@/shared/lib/utils";
 import {
   AlertTriangle,
@@ -122,12 +123,15 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
           <span className="font-bold text-sm truncate">QUẢN LÝ NGHỈ PHÉP</span>
         )}
         {isMobile && (
-          <button
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
             onClick={onClose}
-            className="ml-auto p-1 rounded hover:bg-sidebar-accent"
+            className="ml-auto h-7 w-7"
           >
             <X className="h-4 w-4" />
-          </button>
+          </Button>
         )}
       </div>
 
@@ -142,10 +146,12 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
           if (item.children) {
             return (
               <div key={item.label}>
-                <button
+                <Button
+                  type="button"
+                  variant="ghost"
                   onClick={() => toggleExpand(item.label)}
                   className={cn(
-                    "w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-sidebar-accent transition-colors",
+                    "w-full h-auto justify-start gap-3 px-4 py-2.5 text-sm font-normal rounded-none hover:bg-sidebar-accent transition-colors",
                     isChildActive && "bg-sidebar-accent",
                   )}
                 >
@@ -163,7 +169,7 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
                       />
                     </>
                   )}
-                </button>
+                </Button>
                 {!collapsed && isExpanded && (
                   <div className="ml-4 border-l border-sidebar-border">
                     {item.children.map((child) => (
@@ -212,13 +218,15 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
       </nav>
 
       <div className="border-t border-sidebar-border p-2">
-        <button
+        <Button
+          type="button"
+          variant="ghost"
           onClick={logout}
-          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-sidebar-accent rounded-md transition-colors"
+          className="w-full h-auto justify-start gap-3 px-4 py-2.5 text-sm font-normal hover:bg-sidebar-accent rounded-md transition-colors"
         >
           <LogOut className="h-4 w-4 shrink-0" />
           {!collapsed && <span>Đăng xuất</span>}
-        </button>
+        </Button>
       </div>
     </aside>
   );

@@ -36,7 +36,7 @@ const CalendarPage = () => {
             <SelectContent>
               <SelectItem value="all">Tất cả phòng ban</SelectItem>
               {departments.map((d) => (
-                <SelectItem key={d.donViId} value={String(d.donViId)}>{d.tenDonVi}</SelectItem>
+                <SelectItem key={d.donViId} value={String(d.donViId)}>{d.tenDonVi ?? ""}</SelectItem>
               ))}
             </SelectContent>
           </Select>
