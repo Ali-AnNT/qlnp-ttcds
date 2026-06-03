@@ -18,6 +18,7 @@ internal sealed class ListDepartmentsEndpoint : EndpointWithoutRequest<Result<Li
 
     public override async Task HandleAsync(CancellationToken ct) {
         var items = await Db.DmDonvi
+            .Where(o=> o.DonViCapChaId == 49)
             .OrderBy(d => d.TenDonVi)
             .Select(d => new DepartmentDto(d.DonViId, d.MaDonVi, d.TenDonVi, d.TenVietTat))
             .ToListAsync(ct);

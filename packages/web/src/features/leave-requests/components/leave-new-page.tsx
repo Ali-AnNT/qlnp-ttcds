@@ -4,6 +4,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/features/auth";
+import { ROUTES } from "@/app/routes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
@@ -17,17 +18,14 @@ import {
   SelectValue,
 } from "@/shared/ui/select";
 import { toast } from "sonner";
-import {
-  differenceInBusinessDays,
-  parseISO,
-  format,
-  eachDayOfInterval,
-} from "date-fns";
+import { parseISO, format, eachDayOfInterval } from "date-fns";
+import { countBusinessDays, parseWorkDays } from "@/shared/lib/date-utils";
 import { useLeaveTypes } from "../hooks/use-leave-types";
 import {
   useMyLeaveRequests,
   useSubmitLeaveRequest,
 } from "../hooks/use-leave-requests";
+import { useSystemConfigs } from "@/features/config/hooks/use-system-configs";
 
 // Build a Zod schema that enforces field shape and the cross-field rules
 // that depend on async-loaded state (approved dates, today).
@@ -101,6 +99,9 @@ const LeaveNewPage = () => {
   const { data: leaveRequests = [] } = useMyLeaveRequests();
   const navigate = useNavigate();
   const { mutateAsync: submitLeaveRequest } = useSubmitLeaveRequest();
+  const { systemConfigs } = useSystemConfigs();
+
+  const workDays = parseWorkDays(systemConfigs.find((c) => c.configKey === "work_days")?.configValue);
 
   const today = format(new Date(), "yyyy-MM-dd");
 
@@ -130,6 +131,7 @@ const LeaveNewPage = () => {
     handleSubmit,
     control,
     watch,
+    reset,
     formState: { errors },
   } = useForm<LeaveRequestForm>({
     resolver: zodResolver(createLeaveRequestSchema(approvedDates, today)),
@@ -144,16 +146,10 @@ const LeaveNewPage = () => {
   const startDateValue = watch("startDate");
   const endDateValue = watch("endDate");
 
-  // Business days between start and end (inclusive). Returns 0 if range is invalid/incomplete.
+  // Business days (Mon-Fri by default, based on system config) between start and end, inclusive.
   const days =
     startDateValue && endDateValue && startDateValue <= endDateValue
-      ? Math.max(
-          1,
-          differenceInBusinessDays(
-            parseISO(endDateValue),
-            parseISO(startDateValue),
-          ) + 1,
-        )
+      ? countBusinessDays(parseISO(startDateValue), parseISO(endDateValue), workDays)
       : 0;
 
   const onSubmit = async (data: LeaveRequestForm) => {
@@ -166,6 +162,8 @@ const LeaveNewPage = () => {
         reason: data.reason,
       });
       toast.success("Đã gửi phê duyệt");
+      reset();
+      navigate(ROUTES.leaveMy);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Gửi đơn thất bại");
     }

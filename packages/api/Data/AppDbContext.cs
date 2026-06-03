@@ -157,14 +157,15 @@ public partial class AppDbContext : DbContext {
 
         // General settings and per-role default days for NPN leave type
         modelBuilder.Entity<SystemConfig>().HasData(
-            new SystemConfig { Id = 1, ConfigKey = "max_annual_leave", ConfigValue = "12", Description = "So ngay phep nam toi da" },
-            new SystemConfig { Id = 2, ConfigKey = "min_request_days", ConfigValue = "1", Description = "So ngay toi thieu khi tao don" },
-            new SystemConfig { Id = 3, ConfigKey = "max_carry_over", ConfigValue = "5", Description = "So ngay phep chuyen sang nam sau" },
-            new SystemConfig { Id = 4, ConfigKey = "leave_cycle", ConfigValue = "yearly", Description = "Chu ky tinh phep" },
-            new SystemConfig { Id = 5, ConfigKey = "default_days_CB.PCM", ConfigValue = "14", Description = "Mac dinh CB.PCM" },
-            new SystemConfig { Id = 6, ConfigKey = "default_days_LD.PCM", ConfigValue = "14", Description = "Mac dinh LD.PCM" },
-            new SystemConfig { Id = 7, ConfigKey = "default_days_GD.PGD", ConfigValue = "16", Description = "Mac dinh GD.PGD" },
-            new SystemConfig { Id = 8, ConfigKey = "default_days_QTHT", ConfigValue = "12", Description = "Mac dinh QTHT" }
+            new SystemConfig { Id = 1, ConfigKey = "max_annual_leave", ConfigValue = "12", Description = "Số ngày phép năm tối đa" },
+            new SystemConfig { Id = 2, ConfigKey = "min_request_days", ConfigValue = "1", Description = "Số ngày tối thiểu khi tạo đơn" },
+            new SystemConfig { Id = 3, ConfigKey = "max_carry_over", ConfigValue = "5", Description = "Số ngày phép chuyển sang năm sau" },
+            new SystemConfig { Id = 4, ConfigKey = "leave_cycle", ConfigValue = "yearly", Description = "Chu kỳ tính phép" },
+            new SystemConfig { Id = 5, ConfigKey = "default_days_CB.PCM", ConfigValue = "14", Description = "Mặc định Cán bộ PCM" },
+            new SystemConfig { Id = 6, ConfigKey = "default_days_LD.PCM", ConfigValue = "14", Description = "Mặc định Lãnh đạo PCM" },
+            new SystemConfig { Id = 7, ConfigKey = "default_days_GD.PGD", ConfigValue = "16", Description = "Mặc định Giám đốc PGD" },
+            new SystemConfig { Id = 8, ConfigKey = "default_days_QTHT", ConfigValue = "12", Description = "Mặc định Quản trị hệ thống" },
+            new SystemConfig { Id = 9, ConfigKey = "work_days", ConfigValue = "1,2,3,4,5", Description = "Các ngày làm việc trong tuần (0=CN, 1=T2...)" }
         );
 
         OnModelCreatingPartial(modelBuilder);

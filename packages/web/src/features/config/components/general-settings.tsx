@@ -3,6 +3,7 @@ import { Label } from "@/shared/ui/label";
 import { Input } from "@/shared/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import { SystemConfigDto } from "../api/types";
+import { cn } from "@/shared/lib/utils";
 
 interface GeneralSettingsProps {
   configs: SystemConfigDto[];
@@ -11,8 +12,23 @@ interface GeneralSettingsProps {
 }
 
 export const GeneralSettings = ({ configs, onChange, isAdmin }: GeneralSettingsProps) => {
-  const getSystemConfig = (key: string) => 
+  const getSystemConfig = (key: string) =>
     configs.find((c) => c.configKey === key)?.configValue ?? "";
+
+  const workDaysValue = getSystemConfig("work_days");
+  const workDays = workDaysValue ? workDaysValue.split(",").map(Number) : [1, 2, 3, 4, 5];
+  const daysLabels = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+
+  const toggleDay = (day: number) => {
+    const next = workDays.includes(day)
+      ? workDays.filter((d) => d !== day)
+      : [...workDays, day].sort((a, b) => a - b);
+
+    // Ensure at least one day is selected to avoid invalid config
+    if (next.length === 0) return;
+
+    onChange("work_days", next.join(","));
+  };
 
   return (
     <Card>
@@ -72,6 +88,27 @@ export const GeneralSettings = ({ configs, onChange, isAdmin }: GeneralSettingsP
                 <SelectItem value="monthly">Hàng tháng</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          <div className="flex items-center gap-2">
+            <Label className="text-xs w-40">Ngày làm việc trong tuần</Label>
+            <div className="flex gap-1">
+              {daysLabels.map((label, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  disabled={!isAdmin}
+                  onClick={() => toggleDay(idx)}
+                  className={cn(
+                    "w-7 h-7 text-[10px] rounded flex items-center justify-center transition-colors",
+                    workDays.includes(idx)
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover:bg-muted-foreground/20"
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </CardContent>

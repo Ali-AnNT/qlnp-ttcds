@@ -24,7 +24,14 @@ internal sealed class CreateLeaveRequestEndpoint : Endpoint<Request, Result<Leav
         if (!await Db.LeaveTypes.AnyAsync(t => t.Id == r.LeaveTypeId && t.IsActive, ct))
             AddError(r => r.LeaveTypeId, "Loại nghỉ không tồn tại hoặc không còn hiệu lực");
 
-        var totalDays = BusinessDayCalculator.Count(r.StartDate, r.EndDate);
+        // Read work_days config
+        var workDaysConfig = await Db.SystemConfigs
+            .Where(c => c.ConfigKey == "work_days")
+            .Select(c => c.ConfigValue)
+            .FirstOrDefaultAsync(ct);
+
+        var workDays = BusinessDayCalculator.ParseWorkDays(workDaysConfig);
+        var totalDays = BusinessDayCalculator.Count(r.StartDate, r.EndDate, workDays);
         if (totalDays < 1)
             AddError(r => r.StartDate, "Khoảng thời gian không có ngày làm việc");
 

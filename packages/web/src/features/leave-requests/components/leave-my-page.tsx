@@ -32,12 +32,11 @@ import { cn } from "@/shared/lib/utils";
 import { toast } from "sonner";
 import { XCircle, Pencil } from "lucide-react";
 import {
-  differenceInBusinessDays,
   parseISO,
   format,
   eachDayOfInterval,
 } from "date-fns";
-import { formatDate } from "@/shared/lib/date-utils";
+import { formatDate, countBusinessDays, parseWorkDays } from "@/shared/lib/date-utils";
 import {
   getApprovalStatusLabel,
   getApprovalStatusColor,
@@ -49,6 +48,7 @@ import {
 } from "../hooks/use-leave-requests";
 import { useLeaveTypes } from "../hooks/use-leave-types";
 import { useMaxLevelByType } from "../hooks/use-approval-configs";
+import { useSystemConfigs } from "@/features/config/hooks/use-system-configs";
 
 import type { LeaveRequestDto } from "../api/types";
 
@@ -59,6 +59,9 @@ const LeaveMyPage = () => {
   const { maxLevelByType } = useMaxLevelByType();
   const { mutateAsync: cancelRequest } = useCancelLeaveRequest();
   const { mutateAsync: updateRequest } = useUpdateLeaveRequest();
+  const { systemConfigs } = useSystemConfigs();
+
+  const workDays = parseWorkDays(systemConfigs.find((c) => c.configKey === "work_days")?.configValue);
 
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
@@ -141,13 +144,7 @@ const LeaveMyPage = () => {
 
   const editDays =
     editStartDate && editEndDate
-      ? Math.max(
-          1,
-          differenceInBusinessDays(
-            parseISO(editEndDate),
-            parseISO(editStartDate),
-          ) + 1,
-        )
+      ? countBusinessDays(parseISO(editStartDate), parseISO(editEndDate), workDays)
       : 0;
 
   const handleSaveEdit = async () => {
