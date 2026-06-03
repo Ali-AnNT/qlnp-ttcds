@@ -3,7 +3,7 @@ import { leaveRequestsApi, type LeaveRequestDto } from "../api/dashboard.api";
 import { useAuth } from "@/features/auth";
 import { AppRoles } from "@/features/shared-reference-data";
 
-/** Recent leave requests for dashboard activity feed.
+/** Recent leave requests for the dashboard activity feed.
  *  Staff see only their own; managers/admins see all. */
 export function useRecentRequests() {
   const { user } = useAuth();
@@ -21,30 +21,16 @@ export function useRecentRequests() {
 
   const leaveRequests: LeaveRequestDto[] = query.data ?? [];
 
-  // My own requests (for staff metrics)
-  const myRequests = isStaff
-    ? leaveRequests
-    : leaveRequests.filter((r) => r.userId === user?.userId);
-
-  // Pending approval count (all for managers, own for staff)
+  // Pending approval count (all for managers, own for staff) — used by the CTA button
   const pendingApproval = isStaff
-    ? myRequests.filter((r) => r.status === "pending")
+    ? leaveRequests.filter((r) => r.status === "pending")
     : leaveRequests.filter((r) => r.status === "pending");
-
-  const approvedCount = myRequests.filter((r) => r.status === "approved").length;
-  const totalDaysUsed = myRequests
-    .filter((r) => r.status === "approved")
-    .reduce((sum, r) => sum + r.totalDays, 0);
 
   // Last 8 requests for activity feed
   const recentRequests = leaveRequests.slice(0, 8);
 
   return {
-    leaveRequests,
-    myRequests,
     pendingApproval,
-    approvedCount,
-    totalDaysUsed,
     recentRequests,
     loading: query.isLoading,
   };
