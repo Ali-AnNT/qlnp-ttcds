@@ -35,13 +35,25 @@ export function AppRouter() {
             element={<Navigate to="/quan-ly-nghi-phep/tong-quan" replace />}
           />
           <Route path="tong-quan" element={<DashboardPage />} />
-          <Route path="leave/new" element={<LeaveNewPage />} />
-          <Route path="leave/my" element={<LeaveMyPage />} />
+          <Route
+            path="xin-nghi-phep/tao-đon-xin-nghi-phep"
+            element={<LeaveNewPage />}
+          />
+          <Route
+            path="xin-nghi-phep/danh-sach-đon-cua-toi"
+            element={<LeaveMyPage />}
+          />
           <Route path="phe-duyet-đon" element={<ApprovalPage />} />
-          <Route path="calendar" element={<CalendarPage />} />
-          <Route path="summary" element={<SummaryPage />} />
-          <Route path="reports" element={<ReportsPage />} />
-          <Route path="violations" element={<ViolationsPage />} />
+          <Route path="theo-doi-lich-nghi-phep" element={<CalendarPage />} />
+          <Route
+            path="tong-hop-lich-nghi-toan-trung-tam"
+            element={<SummaryPage />}
+          />
+          <Route path="thong-ke-bao-cao" element={<ReportsPage />} />
+          <Route
+            path="theo-doi-vuot-muc-quy-đinh"
+            element={<ViolationsPage />}
+          />
           <Route path="config" element={<ConfigPage />} />
         </Route>
         <Route path="*" element={<NotFound />} />

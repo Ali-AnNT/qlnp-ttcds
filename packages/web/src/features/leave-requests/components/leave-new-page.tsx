@@ -1,16 +1,99 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useAuth } from "@/features/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Textarea } from "@/shared/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/ui/select";
 import { toast } from "sonner";
-import { differenceInBusinessDays, parseISO, format, eachDayOfInterval } from "date-fns";
+import {
+  differenceInBusinessDays,
+  parseISO,
+  format,
+  eachDayOfInterval,
+} from "date-fns";
 import { useLeaveTypes } from "../hooks/use-leave-types";
-import { useMyLeaveRequests, useSubmitLeaveRequest } from "../hooks/use-leave-requests";
+import {
+  useMyLeaveRequests,
+  useSubmitLeaveRequest,
+} from "../hooks/use-leave-requests";
+
+// Build a Zod schema that enforces field shape and the cross-field rules
+// that depend on async-loaded state (approved dates, today).
+const createLeaveRequestSchema = (
+  approvedDates: Set<string>,
+  today: string,
+) =>
+  z
+    .object({
+      leaveTypeId: z.string().min(1, "Vui lòng chọn loại phép"),
+      startDate: z.string().min(1, "Vui lòng chọn ngày bắt đầu"),
+      endDate: z.string().min(1, "Vui lòng chọn ngày kết thúc"),
+      reason: z
+        .string()
+        .min(1, "Vui lòng nhập lý do")
+        .refine(
+          (val) => val.trim().length > 0,
+          "Lý do nghỉ không được chỉ chứa khoảng trắng",
+        ),
+    })
+    .superRefine((data, ctx) => {
+      // Only run cross-field checks when both dates are present and parseable.
+      if (!data.startDate || !data.endDate) return;
+
+      // 1. End date must be on/after start date.
+      if (data.startDate > data.endDate) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Ngày bắt đầu phải trước hoặc trùng ngày kết thúc",
+          path: ["endDate"],
+        });
+        return;
+      }
+
+      // 2. Start date must not be in the past.
+      if (data.startDate < today) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Không được chọn ngày trong quá khứ",
+          path: ["startDate"],
+        });
+        return;
+      }
+
+      // 3. Selected range must not overlap with any approved leave.
+      try {
+        const interval = {
+          start: parseISO(data.startDate),
+          end: parseISO(data.endDate),
+        };
+        const hasOverlap = eachDayOfInterval(interval).some((d) =>
+          approvedDates.has(format(d, "yyyy-MM-dd")),
+        );
+        if (hasOverlap) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Khoảng ngày nghỉ trùng với đơn đã được duyệt",
+            path: ["startDate"],
+          });
+        }
+      } catch {
+        // Ignore malformed dates; field-level validators above handle them.
+      }
+    });
+
+type LeaveRequestForm = z.infer<ReturnType<typeof createLeaveRequestSchema>>;
 
 const LeaveNewPage = () => {
   const { user } = useAuth();
@@ -19,16 +102,7 @@ const LeaveNewPage = () => {
   const navigate = useNavigate();
   const { mutateAsync: submitLeaveRequest } = useSubmitLeaveRequest();
 
-  const [leaveTypeId, setLeaveTypeId] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [reason, setReason] = useState("");
-
   const today = format(new Date(), "yyyy-MM-dd");
-
-  const days = startDate && endDate
-    ? Math.max(1, differenceInBusinessDays(parseISO(endDate), parseISO(startDate)) + 1)
-    : 0;
 
   const approvedDates = useMemo(() => {
     if (!user) return new Set<string>();
@@ -37,8 +111,13 @@ const LeaveNewPage = () => {
       .filter((r) => r.userId === user.userId && r.status === "approved")
       .forEach((r) => {
         try {
-          const interval = { start: parseISO(r.startDate), end: parseISO(r.endDate) };
-          eachDayOfInterval(interval).forEach((d) => dates.add(format(d, "yyyy-MM-dd")));
+          const interval = {
+            start: parseISO(r.startDate),
+            end: parseISO(r.endDate),
+          };
+          eachDayOfInterval(interval).forEach((d) =>
+            dates.add(format(d, "yyyy-MM-dd")),
+          );
         } catch {
           // Ignore malformed historical dates; form validation covers the submitted range.
         }
@@ -46,34 +125,47 @@ const LeaveNewPage = () => {
     return dates;
   }, [leaveRequests, user]);
 
-  const hasOverlap = useMemo(() => {
-    if (!startDate || !endDate) return false;
-    try {
-      const interval = { start: parseISO(startDate), end: parseISO(endDate) };
-      return eachDayOfInterval(interval).some((d) => approvedDates.has(format(d, "yyyy-MM-dd")));
-    } catch {
-      return false;
-    }
-  }, [startDate, endDate, approvedDates]);
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    formState: { errors },
+  } = useForm<LeaveRequestForm>({
+    resolver: zodResolver(createLeaveRequestSchema(approvedDates, today)),
+    defaultValues: {
+      leaveTypeId: "",
+      startDate: "",
+      endDate: "",
+      reason: "",
+    },
+  });
 
-  const handleSubmit = async () => {
-    if (!startDate || !endDate) { toast.error("Vui lòng chọn ngày"); return; }
-    if (startDate > endDate) { toast.error("Ngày bắt đầu phải trước ngày kết thúc"); return; }
-    if (startDate < today) { toast.error("Không được chọn ngày trong quá khứ"); return; }
-    if (!reason.trim()) { toast.error("Vui lòng nhập lý do"); return; }
-    if (!leaveTypeId) { toast.error("Vui lòng chọn loại phép"); return; }
-    if (hasOverlap) { toast.error("Khoảng ngày nghỉ trùng với đơn đã được duyệt"); return; }
+  const startDateValue = watch("startDate");
+  const endDateValue = watch("endDate");
 
+  // Business days between start and end (inclusive). Returns 0 if range is invalid/incomplete.
+  const days =
+    startDateValue && endDateValue && startDateValue <= endDateValue
+      ? Math.max(
+          1,
+          differenceInBusinessDays(
+            parseISO(endDateValue),
+            parseISO(startDateValue),
+          ) + 1,
+        )
+      : 0;
+
+  const onSubmit = async (data: LeaveRequestForm) => {
     try {
       await submitLeaveRequest({
-        leaveTypeId: Number(leaveTypeId),
-        startDate,
-        endDate,
+        leaveTypeId: Number(data.leaveTypeId),
+        startDate: data.startDate,
+        endDate: data.endDate,
         totalDays: days,
-        reason,
+        reason: data.reason,
       });
       toast.success("Đã gửi phê duyệt");
-      navigate("/leave/my");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Gửi đơn thất bại");
     }
@@ -88,27 +180,56 @@ const LeaveNewPage = () => {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label className="text-[13px]">Loại đơn xin nghỉ</Label>
-            <Select value={leaveTypeId} onValueChange={setLeaveTypeId}>
-              <SelectTrigger><SelectValue placeholder="Chọn loại phép" /></SelectTrigger>
-              <SelectContent>
-                {leaveTypes.map((t) => (
-                  <SelectItem key={t.id} value={String(t.id)}>{t.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Controller
+              name="leaveTypeId"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  value={field.value}
+                  onValueChange={field.onChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn loại phép" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {leaveTypes.map((t) => (
+                      <SelectItem key={t.id} value={String(t.id)}>
+                        {t.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.leaveTypeId && (
+              <p className="text-destructive text-xs">
+                {errors.leaveTypeId.message}
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="text-[13px]">Ngày bắt đầu</Label>
-              <Input type="date" min={today} value={startDate} onChange={(e) => {
-                setStartDate(e.target.value);
-                if (endDate && e.target.value > endDate) setEndDate("");
-              }} />
+              <Input type="date" min={today} {...register("startDate")} />
+              {errors.startDate && (
+                <p className="text-destructive text-xs">
+                  {errors.startDate.message}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label className="text-[13px]">Ngày kết thúc</Label>
-              <Input type="date" min={startDate || today} value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              <Input
+                type="date"
+                min={startDateValue || today}
+                {...register("endDate")}
+              />
+              {errors.endDate && (
+                <p className="text-destructive text-xs">
+                  {errors.endDate.message}
+                </p>
+              )}
             </div>
           </div>
 
@@ -118,20 +239,30 @@ const LeaveNewPage = () => {
             </div>
           )}
 
-          {hasOverlap && (
-            <div className="bg-destructive/10 text-destructive rounded-md px-3 py-2 text-sm">
-              ⚠ Khoảng ngày nghỉ trùng với đơn đã được duyệt. Vui lòng chọn ngày khác.
-            </div>
-          )}
-
           <div className="space-y-2">
             <Label className="text-[13px]">Lý do nghỉ</Label>
-            <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Nhập lý do xin nghỉ..." rows={3} />
+            <Textarea
+              {...register("reason")}
+              placeholder="Nhập lý do xin nghỉ..."
+              rows={3}
+            />
+            {errors.reason && (
+              <p className="text-destructive text-xs">
+                {errors.reason.message}
+              </p>
+            )}
           </div>
 
           <div className="flex gap-2 pt-2">
-            <Button className="bg-accent hover:bg-accent/90 text-accent-foreground" onClick={handleSubmit}>Gửi phê duyệt</Button>
-            <Button variant="ghost" onClick={() => navigate(-1)}>Hủy</Button>
+            <Button
+              className="bg-accent hover:bg-accent/90 text-accent-foreground"
+              onClick={handleSubmit(onSubmit)}
+            >
+              Gửi phê duyệt
+            </Button>
+            <Button variant="ghost" onClick={() => navigate(-1)}>
+              Hủy
+            </Button>
           </div>
         </CardContent>
       </Card>
