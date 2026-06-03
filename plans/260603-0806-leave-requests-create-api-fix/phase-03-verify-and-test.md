@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Verify and test"
-status: pending
+status: completed
 priority: P1
 effort: "30m"
 dependencies: [1, 2]
@@ -29,11 +29,11 @@ Compile and smoke-test both backend and frontend changes. Confirm the validator 
 
 ## Success Criteria
 
-- [ ] Backend compiles without errors
-- [ ] Frontend compiles without TypeScript errors
-- [ ] Validation errors display as readable Vietnamese messages (not raw JSON)
-- [ ] Existing leave request creation flow still works
-- [ ] Update leave request flow still works (same validator fix applies)
+- [x] Backend compiles without errors
+- [x] Frontend compiles without TypeScript errors
+- [x] Validation errors display as readable Vietnamese messages (not raw JSON)
+- [x] Existing leave request creation flow still works
+- [x] Update leave request flow still works (same validator fix applies)
 
 ## Risk Assessment
 

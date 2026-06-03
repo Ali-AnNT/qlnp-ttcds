@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Fix error response handling in client.ts"
-status: pending
+status: completed
 priority: P1
 effort: "1h"
 dependencies: []
@@ -102,8 +102,8 @@ Non-ok response → try JSON parse
 
 ## Success Criteria
 
-- [ ] `extractErrorMessage` helper added to `client.ts`
-- [ ] Both non-ok error paths (main + 401 retry) use `extractErrorMessage`
-- [ ] Validation errors from FastEndpoints show readable Vietnamese messages in toast (e.g., "Validation failed: Ngày bắt đầu không được là ngày quá khứ")
-- [ ] Non-JSON error responses still handled gracefully (fallback to HTTP status)
-- [ ] No TypeScript errors introduced
+- [x] `extractErrorMessage` helper added to `client.ts`
+- [x] Both non-ok error paths (main + 401 retry) use `extractErrorMessage`
+- [x] Validation errors from FastEndpoints show readable Vietnamese messages in toast (e.g., "Validation failed: Ngày bắt đầu không được là ngày quá khứ")
+- [x] Non-JSON error responses still handled gracefully (fallback to HTTP status)
+- [x] No TypeScript errors introduced

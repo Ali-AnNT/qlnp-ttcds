@@ -6,7 +6,7 @@ namespace QLNP.Api.Features.LeaveRequests.Update;
 internal sealed class Validator : Validator<Request> {
     public Validator() {
         RuleFor(x => x.StartDate)
-            .GreaterThanOrEqualTo(DateTime.Today)
+            .GreaterThanOrEqualTo(_ => DateTime.Today)
             .WithMessage("Ngày bắt đầu không được là ngày quá khứ");
 
         RuleFor(x => x.EndDate)

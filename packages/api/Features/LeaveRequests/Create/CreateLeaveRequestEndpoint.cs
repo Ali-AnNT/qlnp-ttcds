@@ -65,6 +65,6 @@ internal sealed class CreateLeaveRequestEndpoint : Endpoint<Request, Result<Leav
             .FirstOrDefaultAsync(lr => lr.Id == entity.Id, ct);
         var (hoTen, donViId, tenDonVi, _) = await LeaveRequestUserLookup.LoadUserInfoAsync(Db, entity.UserId, ct);
         var dto = loaded!.MapToDto(hoTen, donViId, tenDonVi);
-        await Send.CreatedAtAsync($"/api/leave-requests/{entity.Id}", Result<LeaveRequestDto>.Ok(dto), cancellation: ct);
+        await Send.OkAsync(Result<LeaveRequestDto>.Ok(dto), ct);
     }
 }

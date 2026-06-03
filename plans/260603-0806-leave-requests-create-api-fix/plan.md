@@ -5,7 +5,7 @@ description: >-
   in validators, (2) raw JSON error shown to users, (3) envelope case mismatch
   risk. Root cause: POST /api/leave-requests returns unreadable error to
   frontend.
-status: in-progress
+status: completed
 priority: P1
 branch: dev
 tags:
@@ -34,9 +34,9 @@ Scout report: [`scout-260603-0801-leave-requests-create-api-report.md`](../repor
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | [Fix DateTime.Today in validators](./phase-01-fix-datetime-today-in-validators.md) | In Progress |
-| 2 | [Fix error response handling in client.ts](./phase-02-fix-error-response-handling-in-client-ts.md) | Pending |
-| 3 | [Verify and test](./phase-03-verify-and-test.md) | Pending |
+| 1 | [Fix DateTime.Today in validators](./phase-01-fix-datetime-today-in-validators.md) | Completed |
+| 2 | [Fix error response handling in client.ts](./phase-02-fix-error-response-handling-in-client-ts.md) | Completed |
+| 3 | [Verify and test](./phase-03-verify-and-test.md) | Completed |
 
 ## Dependencies
 

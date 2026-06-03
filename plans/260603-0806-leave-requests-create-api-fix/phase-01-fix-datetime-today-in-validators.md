@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: Fix DateTime.Today in validators
-status: in-progress
+status: completed
 priority: P1
 effort: 30m
 dependencies: []
@@ -46,6 +46,6 @@ FluentValidation `RuleFor(x => x.StartDate).GreaterThanOrEqualTo(DateTime.Today)
 
 ## Success Criteria
 
-- [ ] Both validators use `_ => DateTime.Today` (lambda) instead of `DateTime.Today` (captured value)
-- [ ] API compiles without errors
-- [ ] Date validation works correctly when API has been running past midnight
+- [x] Both validators use `_ => DateTime.Today` (lambda) instead of `DateTime.Today` (captured value)
+- [x] API compiles without errors
+- [x] Date validation works correctly when API has been running past midnight
