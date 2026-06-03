@@ -49,9 +49,12 @@ export function useCalendarData() {
 
   const leaveRequests = lrQuery.data ?? [];
   const departments = deptQuery.data ?? [];
-  const approvalConfigs = cfgQuery.data ?? [];
+  const approvalConfigs = cfgQuery.data || [];
 
-  const maxLevelByType = useMemo(() => buildMaxLevelByType(approvalConfigs), [approvalConfigs]);
+  const maxLevelByType = useMemo(
+    () => buildMaxLevelByType(approvalConfigs),
+    [approvalConfigs],
+  );
 
   const isStaff = user?.role === AppRoles.Staff;
 
@@ -62,7 +65,8 @@ export function useCalendarData() {
     return true;
   });
 
-  const loading = lrQuery.isLoading || deptQuery.isLoading || cfgQuery.isLoading;
+  const loading =
+    lrQuery.isLoading || deptQuery.isLoading || cfgQuery.isLoading;
 
   return {
     leaveRequests,

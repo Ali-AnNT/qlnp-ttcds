@@ -32,7 +32,7 @@ internal sealed class ListLeaveBalancesEndpoint : EndpointWithoutRequest<Result<
             // Admin view — seed for all active users
             var userIds = await Db.UserMaster
                 .Where(u => u.Used == true && u.UserPortalId != null)
-                .Select(u => (long)u.UserPortalId)
+                .Select(u => (long)u.UserPortalId!)
                 .ToListAsync(ct);
             await LeaveBalanceSeeding.EnsureBalancesForUsersAsync(Db, userIds, effectiveYear, ct);
         }

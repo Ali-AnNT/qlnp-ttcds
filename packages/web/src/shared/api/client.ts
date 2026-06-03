@@ -8,6 +8,27 @@ interface ApiResponse<T> {
   error: string | null;
 }
 
+function extractErrorMessage(body: string): string {
+  try {
+    const parsed = JSON.parse(body);
+    if (typeof parsed === "object" && parsed !== null) {
+      // Backend Result<T> envelope (camelCase from FastEndpoints)
+      if ("success" in parsed) {
+        const env = parsed as { success: boolean; message?: string; errors?: string[] };
+        const msg = env.message || "Request failed";
+        const errs = env.errors?.length ? env.errors.join("; ") : "";
+        return errs ? `${msg}: ${errs}` : msg;
+      }
+      // Fallback: try common error fields
+      if ("message" in parsed) return String(parsed.message);
+      if ("error" in parsed) return String(parsed.error);
+    }
+    return body;
+  } catch {
+    return body || "Request failed";
+  }
+}
+
 async function request<T>(
   path: string,
   options: RequestInit = {}
@@ -43,7 +64,7 @@ async function request<T>(
 
         if (!retryRes.ok) {
           const errBody = await retryRes.text();
-          return { data: null, error: errBody || `HTTP ${retryRes.status}` };
+          return { data: null, error: extractErrorMessage(errBody) || `HTTP ${retryRes.status}` };
         }
         const raw = await retryRes.json();
         return unwrapEnvelope<T>(raw);
@@ -54,7 +75,7 @@ async function request<T>(
 
     if (!res.ok) {
       const errBody = await res.text();
-      return { data: null, error: errBody || `HTTP ${res.status}` };
+      return { data: null, error: extractErrorMessage(errBody) || `HTTP ${res.status}` };
     }
 
     const raw = await res.json();

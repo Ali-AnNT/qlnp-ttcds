@@ -21,7 +21,7 @@ internal static class LeaveRequestUserLookup {
 
         return (
             user?.HoTen ?? "",
-            user?.DonViId,
+            user?.PhongBanId ?? user?.DonViId,
             user?.DonVi?.TenDonVi ?? "",
             user?.PhongBanId
         );
@@ -41,7 +41,7 @@ internal static class LeaveRequestUserLookup {
 
         return users.ToDictionary(
             u => (long)u.UserPortalId!,
-            u => (u.HoTen ?? "", u.DonViId, u.DonVi?.TenDonVi ?? "", u.PhongBanId)
+            u => (u.HoTen ?? "", u.PhongBanId ?? u.DonViId, u.DonVi?.TenDonVi ?? "", u.PhongBanId)
         );
     }
 }

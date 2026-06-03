@@ -181,9 +181,7 @@ const LeaveMyPage = () => {
   const startDateValue = watch("startDate");
   const endDateValue = watch("endDate");
 
-  const myRequests = leaveRequests
-    .filter((r) => r.userId === user?.userId)
-    .filter((r) => filterStatus === "all" || r.status === filterStatus);
+  const myRequests = leaveRequests.filter((r) => r.userId === user?.userId);
 
   const handleCancel = async (id: number) => {
     try {
