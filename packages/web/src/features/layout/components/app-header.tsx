@@ -1,19 +1,21 @@
-import { useLocation, Link } from "react-router-dom";
+import { useLocation, Link } from "react-router";
 import { useAuth } from "@/features/auth";
+import { ROUTES } from "@/app/routes";
 import { Menu, Bell, ChevronRight } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
 
 const breadcrumbMap: Record<string, string> = {
-  "/": "Tổng quan",
-  "/leave/new": "Tạo đơn mới",
-  "/leave/my": "Danh sách đơn của tôi",
-  "/approval": "Phê duyệt đơn",
-  "/calendar": "Theo dõi lịch nghỉ phép",
-  "/summary": "Tổng hợp lịch nghỉ",
-  "/reports": "Thống kê báo cáo",
-  "/violations": "Vượt mức quy định",
-  "/config": "Cấu hình quy định",
+  [ROUTES.layout]: "Quản lý nghỉ phép",
+  [ROUTES.dashboard]: "Tổng quan",
+  [ROUTES.leaveNew]: "Tạo đơn mới",
+  [ROUTES.leaveMy]: "Danh sách đơn của tôi",
+  [ROUTES.approval]: "Phê duyệt đơn",
+  [ROUTES.calendar]: "Theo dõi lịch nghỉ phép",
+  [ROUTES.summary]: "Tổng hợp lịch nghỉ",
+  [ROUTES.reports]: "Thống kê báo cáo",
+  [ROUTES.violations]: "Vượt mức quy định",
+  [ROUTES.config]: "Cấu hình quy định",
 };
 
 export const AppHeader = ({ onToggleSidebar }: { onToggleSidebar: () => void }) => {
@@ -30,7 +32,7 @@ export const AppHeader = ({ onToggleSidebar }: { onToggleSidebar: () => void }) 
       </Button>
 
       <nav className="flex items-center gap-1 text-sm text-muted-foreground flex-1 min-w-0">
-        <Link to="/" className="hover:text-foreground">Trang chủ</Link>
+        <Link to={ROUTES.layout} className="hover:text-foreground">Trang chủ</Link>
         <ChevronRight className="h-3 w-3" />
         <span className="text-foreground font-medium truncate">{crumb}</span>
       </nav>

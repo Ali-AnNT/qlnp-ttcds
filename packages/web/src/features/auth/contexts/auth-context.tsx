@@ -9,6 +9,7 @@ import {
 import { authApi } from "../api/auth.api";
 import type { AuthUser } from "../api/types";
 import { hasAccessToken, clearTokens } from "@/shared/lib/token-store";
+import { ROUTES } from "@/app/routes";
 
 interface AuthState {
   user: AuthUser | null;
@@ -36,7 +37,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = useCallback(() => {
     clearTokens();
-    window.location.href = "/login";
+    // Defensive full reload: clears React Query cache, Zustand, etc.
+    window.location.href = ROUTES.login;
   }, []);
 
   const fetchUser = useCallback(async () => {
@@ -44,7 +46,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!error && data) {
       setState((s) => ({ ...s, user: data, loading: false }));
     } else {
-      setState((s) => ({ ...s, loading: false }));
+      // Invalid/expired token: clear it and force a full reload to /login.
+      // Without AuthGuard in the route tree, this is the only safety net
+      // that prevents the user from sitting on a broken authenticated page.
+      clearTokens();
+      window.location.href = ROUTES.login;
     }
   }, []);
 

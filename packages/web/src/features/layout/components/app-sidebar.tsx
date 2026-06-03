@@ -15,7 +15,8 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation } from "react-router";
+import { ROUTES } from "@/app/routes";
 
 interface MenuItem {
   label: string;
@@ -30,7 +31,7 @@ const { Staff, Leader, Director, Admin } = AppRoles;
 const menuItems: MenuItem[] = [
   {
     label: "Tổng quan",
-    path: "/",
+    path: ROUTES.dashboard,
     icon: LayoutDashboard,
     roles: [Staff, Leader, Director, Admin],
   },
@@ -39,43 +40,43 @@ const menuItems: MenuItem[] = [
     icon: FileText,
     roles: [Staff, Leader],
     children: [
-      { label: "Tạo đơn mới", path: "/leave/new" },
-      { label: "Danh sách đơn của tôi", path: "/leave/my" },
+      { label: "Tạo đơn mới", path: ROUTES.leaveNew },
+      { label: "Danh sách đơn của tôi", path: ROUTES.leaveMy },
     ],
   },
   {
     label: "Phê duyệt đơn",
-    path: "/approval",
+    path: ROUTES.approval,
     icon: CheckSquare,
     roles: [Leader, Director],
   },
   {
     label: "Theo dõi lịch nghỉ phép",
-    path: "/calendar",
+    path: ROUTES.calendar,
     icon: CalendarDays,
     roles: [Staff, Leader, Director, Admin],
   },
   {
     label: "Tổng hợp lịch nghỉ",
-    path: "/summary",
+    path: ROUTES.summary,
     icon: PieChart,
     roles: [Director],
   },
   {
     label: "Thống kê báo cáo",
-    path: "/reports",
+    path: ROUTES.reports,
     icon: BarChart3,
     roles: [Director],
   },
   {
     label: "Vượt mức quy định",
-    path: "/violations",
+    path: ROUTES.violations,
     icon: AlertTriangle,
     roles: [Director],
   },
   {
     label: "Cấu hình quy định",
-    path: "/config",
+    path: ROUTES.config,
     icon: Settings,
     roles: [Admin],
   },
@@ -192,7 +193,7 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
             <NavLink
               key={item.path}
               to={item.path!}
-              end={item.path === "/"}
+              end
               onClick={isMobile ? onClose : undefined}
               className={({ isActive }) =>
                 cn(

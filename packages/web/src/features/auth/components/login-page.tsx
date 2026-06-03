@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { useAuth } from "../hooks/use-auth";
 import { api } from "@/shared/api/client";
 import { setTokens } from "@/shared/lib/token-store";
+import { ROUTES } from "@/app/routes";
 import { Card } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
 import { CalendarDays, Loader2, LogIn, RefreshCw } from "lucide-react";
@@ -25,7 +26,7 @@ const LoginPage = () => {
   const [retrying, setRetrying] = useState(false);
 
   useEffect(() => {
-    if (user) navigate("/");
+    if (user) navigate(ROUTES.layout, { replace: true });
   }, [user, navigate]);
 
   const handleDevLogin = async () => {
@@ -43,7 +44,9 @@ const LoginPage = () => {
     }
     // Dev login: 8h JWT, no renewal needed → tokenRenew = ""
     setTokens(data.token, Date.now() + 8 * 3600 * 1000, "");
-    window.location.href = "/";
+    // Trigger AuthProvider to re-fetch user; useEffect on `user` will
+    // navigate to the layout page. Avoids a full-page reload.
+    await retryAuth();
   };
 
   const handleRetry = async () => {
