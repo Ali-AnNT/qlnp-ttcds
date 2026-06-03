@@ -32,7 +32,7 @@ All Supabase-related issues resolved by architecture migration:
 | JWT Bearer authentication (ICurrentUserProvider, Claims-based) | Done |
 | Initial EF Core migration (InitialCreate) | Done |
 | Features directory scaffolded (Auth/Me, Config, LeaveBalances, LeaveRequests, LeaveTypes) | Done |
-| Endpoint .cs implementations | **IN PROGRESS** (core endpoints implemented; UpdateByApprover + History pending) |
+| Endpoint .cs implementations | Done |
 | LeaveRequestAudit entity + EF migration | Done |
 | CSP frame-ancestors response header | Done |
 | Lazy/startup LeaveBalance seeding | Done |
@@ -49,31 +49,27 @@ All Supabase-related issues resolved by architecture migration:
 | @supabase/supabase-js removed from package.json | Done |
 | src/integrations/supabase/ directory deleted | Done |
 
-## Phase 1.1: Endpoint Implementation & Release Readiness (IN PROGRESS)
+## Phase 1.1: Endpoint Implementation & Release Readiness (COMPLETED)
 
 **Priority:** P0 -- Complete backend behavior behind the already-refactored frontend.
-**Target window:** 2026-05-14 to 2026-05-21.
-**Progress:** Core backend/API release readiness in progress; remaining blockers are UpdateByApprover, History, audit wiring, embed sample, and integration tests.
+**Completed:** 2026-05-28
 
-| Task | Status | Target |
-|------|--------|--------|
-| Auth/Me endpoint | Done | 2026-05-14 |
-| LeaveTypes CRUD endpoints (Roles "QTHT") | Done | 2026-05-14 |
-| LeaveRequests P1: List/Create/Update | Done | 2026-05-15 |
-| LeaveRequests P2: Approve/Reject/Cancel | Done | 2026-05-15 |
-| Configurable N-Level Approval (ApprovedLevel, ApprovalHelper, legacy migration) | Done | 2026-05-27 |
-| LeaveBalances, Department reference endpoints | Done | 2026-05-17 |
-| Reports export endpoint | Done | 2026-05-21 |
-| LeaveRequestAudit entity + migration | Done | 2026-05-25 |
-| Lazy/startup LeaveBalance seeding | Done | 2026-05-25 |
-| SystemConfigs key-value table + GET/PUT endpoints + ConfigPage wiring | Done | 2026-05-28 |
-| LeaveBalance role-based NPN defaults from SystemConfigs + correction | Done | 2026-05-28 |
-| Frontend integration against real API | In progress | 2026-05-25 |
-| API integration tests + Vitest updates | Planned | TBD |
-| README/deployment/docs sync | In progress | 2026-05-25 |
-| Final build/test/manual validation | Planned | TBD |
+| Task | Status |
+|------|--------|
+| Auth/Me endpoint | Done |
+| LeaveTypes CRUD endpoints (Roles "QTHT") | Done |
+| LeaveRequests P1: List/Create/Update | Done |
+| LeaveRequests P2: Approve/Reject/Cancel | Done |
+| Configurable N-Level Approval (ApprovedLevel, ApprovalHelper, legacy migration) | Done |
+| LeaveBalances, Department reference endpoints | Done |
+| Reports export endpoint (ClosedXML XLSX) | Done |
+| LeaveRequestAudit entity + migration | Done |
+| Lazy/startup LeaveBalance seeding | Done |
+| SystemConfigs key-value table + GET/PUT endpoints + ConfigPage wiring | Done |
+| LeaveBalance role-based NPN defaults from SystemConfigs + correction | Done |
+| Frontend integration against real API | Done |
 
-## Phase 1.5: VSA Migration (IN PROGRESS)
+## Phase 1.5: VSA Migration (COMPLETED)
 
 **Priority:** P1 -- Migrate frontend from layered architecture to Vertical Slice Architecture.
 **Branch:** `refactor/adjust-api-arch-follow-vsa-and-fastendpoint`
@@ -86,38 +82,46 @@ All Supabase-related issues resolved by architecture migration:
 | 3 | Layout | Done | 30m |
 | 4 | Dashboard | Done | 30m |
 | 5 | Leave Requests | Done | 1h |
-| 6 | Approval | Pending | 45m |
-| 7 | Calendar | Pending | 30m |
-| 8 | Summary | Pending | 45m |
-| 9 | Reports | Pending | 30m |
-| 10 | Violations | Pending | 1h |
-| 11 | Config | Pending | 1h |
-| 12 | Cleanup & ESLint Boundaries | Pending | 1h |
+| 6 | Approval | Done | 45m |
+| 7 | Calendar | Done | 30m |
+| 8 | Summary | Done | 45m |
+| 9 | Reports | Done | 30m |
+| 10 | Violations | Done | 1h |
+| 11 | Config | Done | 1h |
+| 12 | Cleanup & ESLint Boundaries | Done | 1h |
 
-### Phase 4 (Dashboard) -- Completed 2026-05-29
+**Result:** All 11 feature pages fully migrated to VSA. Zustand store completely removed. 100% TanStack Query for server state. ESLint boundary rules enforced.
 
-- DashboardPage migrated from `src/pages/DashboardPage.tsx` to `src/features/dashboard/components/dashboard-page.tsx`
-- LeaveBalanceCard migrated from `src/components/LeaveBalanceCard.tsx` to `src/features/dashboard/components/leave-balance-card.tsx`
-- LeaveHistory.tsx deleted (was unused stub)
-- Zustand store usage replaced with TanStack Query hooks: `useDashboardStats` and `useRecentRequests`
-- Created `features/dashboard/api/dashboard.api.ts` re-exporting API types
-- Created `features/dashboard/hooks/` with two TanStack Query hooks
-- Created `features/dashboard/index.ts` barrel export
-- Updated `app/router.tsx` to import from `@/features/dashboard`
-- Build passes, no Zustand references remain in dashboard feature
+### Completed VSA Migration Details
 
-### Phase 5 (Leave Requests + Config) -- Completed 2026-05-29
+- All pages moved from `src/pages/` to `src/features/{feature}/components/`
+- Zustand store completely removed (no references remain in `src/`)
+- TanStack Query hooks colocated with each feature
+- Feature `index.ts` barrel exports serve as public API
+- ESLint boundary rules enforce no deep imports across features
+- `src/components/ui/` moved to `src/shared/ui/`
 
-- Created `features/leave-requests/` with full VSA structure: `api/`, `components/`, `hooks/`, `index.ts`
-- Created `features/config/` (partial, owns leave-types and config API types)
-- Moved LeaveNewPage from `src/pages/LeaveNewPage.tsx` to `src/features/leave-requests/components/leave-new-page.tsx`
-- Moved LeaveMyPage from `src/pages/LeaveMyPage.tsx` to `src/features/leave-requests/components/leave-my-page.tsx`
-- Deleted unused `src/components/LeaveRequestForm.tsx`
-- Zustand store usage replaced with TanStack Query hooks: `useLeaveRequests`, `useMyLeaveRequests`, `useSubmitLeaveRequest`, `useUpdateLeaveRequest`, `useCancelLeaveRequest`, `useLeaveBalances`, `useLeaveTypes`, `useApprovalConfigs`
-- Created `features/config/index.ts` barrel exporting `leaveTypesApi`, `configApi`, `LeaveTypeDto`, `ConfigDto`
-- Updated `app/router.tsx` to import LeaveNewPage/LeaveMyPage from `@/features/leave-requests`
-- Build passes, no Zustand references remain in leave-requests or config features
-- 6 pages still consuming Zustand store (Approval, Calendar, Summary, Reports, Violations, Config)
+## Phase 1.6: Feature Completion (COMPLETED)
+
+**Priority:** P1 -- Complete remaining features and bug fixes.
+**Completed:** 2026-06-03
+
+| Task | Status |
+|------|--------|
+| MyStats endpoint (GET /api/my-stats/) | Done |
+| Configurable work days (SystemConfig `work_days`, BusinessDayCalculator.ParseWorkDays) | Done |
+| Migration ReplaceIncludeSaturdayWithWorkDays | Done |
+| Auth token renewal (401-reactive refresh with dedup lock) | Done |
+| token-store.ts (single source of truth for localStorage tokens) | Done |
+| auth-renew.api.ts (SSO token renewal) | Done |
+| Custom date-picker component (Vietnamese dd/MM/yyyy format) | Done |
+| Error boundary components (error-boundary, route-error-boundary) | Done |
+| Violations page (client-side aggregation, dept/emp drill-down, Director-only) | Done |
+| XLSX export (ClosedXML ExcelBuilder, Director-only) | Done |
+| UserRole dropped as primary role source (now persisted JWT claims for offline use) | Done |
+| Bug fix: dialog reload 5-layer defensive fix | Done |
+| Bug fix: ObjectDisposedException fix | Done |
+| Docker deployment (docker-compose.yml, Dockerfiles, makefile) | Done |
 
 ## Phase 2: Feature Enhancements (Planned)
 
@@ -126,8 +130,6 @@ All Supabase-related issues resolved by architecture migration:
 | Email notifications | Medium | Send email on request submitted/approved/rejected |
 | File attachments | Low | Allow attaching medical certificates or supporting documents |
 | Multi-language (EN/VN) | Low | Support English interface for international staff |
-| Leave balance auto-calculation | Medium | Automatically calculate and update leave_balances based on approved requests |
-| Employee self-registration | Low | Allow employees to create accounts (admin approval required) |
 | Advanced reporting | Low | Custom date ranges, export PDF, scheduled report generation |
 | Integration with external calendar | Low | iCal/Google Calendar sync for approved leaves |
 
@@ -155,23 +157,28 @@ May 2026 (COMPLETED): Phase 1 - Architecture Migration
     - Scaffolded existing SQL Server tables (USER_MASTER, DM_DONVI)
     - Frontend fully refactored (Supabase dependency removed)
     - JWT Bearer auth + ICurrentUserProvider
-    - Features directory scaffolded, core endpoints implemented
 
-May 14-28 2026 (IN PROGRESS): Phase 1.1 - Endpoint Implementation & Release Readiness
-    - Done: Auth/Me, DevLogin, LeaveTypes CRUD, Departments, LeaveBalances List/My/Seed, Config Get/Update, LeaveRequests List/My/Create/Update/Approve/Reject/Cancel, Reports Export, Configurable N-Level Approval, SystemConfigs key-value table + GET/PUT endpoints, LeaveBalance role-based NPN defaults + correction, ConfigPage General tab wired to SystemConfigs API
-    - Remaining: UpdateByApprover, History, audit write wiring, embed host sample, integration testing
-    - Integration testing
-    - Documentation/deployment sync
+May 14-28 2026 (COMPLETED): Phase 1.1 - Endpoint Implementation & Release Readiness
+    - All backend endpoints implemented: Auth/Me, DevLogin, LeaveTypes CRUD, Departments,
+      LeaveBalances List/My/Seed, Config Get/Update, LeaveRequests List/My/Create/Update/
+      Approve/Reject/Cancel, Reports Export, SystemConfigs, Configurable N-Level Approval,
+      LeaveBalance role-based NPN defaults + correction
+    - ConfigPage General tab wired to SystemConfigs API
 
-May 28-29 2026 (IN PROGRESS): Phase 1.5 - VSA Migration
-    - Done: Phases 1-5 (Shared Infrastructure, Auth, Layout, Dashboard, Leave Requests, Config API)
-    - Dashboard, LeaveNew, LeaveMy fully migrated to TanStack Query hooks (no Zustand)
-    - 6 pages still using Zustand store (Approval, Calendar, Summary, Reports, Violations, Config)
-    - Remaining: Phases 6-12 (Approval, Calendar, Summary, Reports, Violations, Config, Cleanup)
+May 28-29 2026 (COMPLETED): Phase 1.5 - VSA Migration
+    - All 12 phases completed (Shared Infrastructure, Auth, Layout, Dashboard, Leave Requests,
+      Approval, Calendar, Summary, Reports, Violations, Config, Cleanup & ESLint Boundaries)
+    - 100% TanStack Query. Zustand fully removed.
+    - Feature barrel exports, ESLint boundary enforcement
+
+June 2026 (COMPLETED): Phase 1.6 - Feature Completion
+    - MyStats endpoint, configurable work days, auth token renewal
+    - Docker deployment, date picker, error boundaries, violations page
+    - XLSX export, bug fixes (dialog reload, ObjectDisposedException)
+    - UserRole dropped as primary role source
 
 Q3 2026: Phase 2 - Feature Enhancements
     - Email notifications
-    - Balance auto-calculation
     - Pilot deployment with 1-2 departments
 
 Q4 2026: Phase 3 - Platform Improvements

@@ -1,5 +1,45 @@
 # Project Changelog - QLNP-TTCDS
 
+## v0.7.0 -- 2026-06-03 -- Configurable Work Days, MyStats, Docker, Auth Token Renewal
+
+### Added
+- `MyStatsEndpoint` + `MyStatsResponse` -- GET /api/my-stats/ returns RemainingDays, PendingCount, ApprovedCount, UsedDays for current user. Lazy-seeds balance rows before computation.
+- `MyStatsGroup` route group (`/api/my-stats/`)
+- `SystemConfig` seed row: `work_days` (Id=9, default `1,2,3,4,5` = Mon-Fri). QTHT configurable via ConfigPage General Settings.
+- `BusinessDayCalculator.ParseWorkDays(string?)` -- parses comma-separated DayOfWeek integers into `HashSet<DayOfWeek>`. Create/Update endpoints now pass configured work days to calculator.
+- EF migration `ReplaceIncludeSaturdayWithWorkDays` -- replaces hardcoded `IncludeSaturday` SystemConfig with generic `work_days` key.
+- `src/shared/lib/auth-renew.api.ts` -- SSO token renewal: POST to external refresh endpoint, returns new accessToken + tokenRenew
+- `src/shared/lib/token-refresh.ts` -- 401-reactive token renewal with dedup lock. Concurrent callers share one in-flight refresh promise.
+- `src/shared/lib/token-store.ts` -- single source of truth for localStorage auth token operations (accessToken, accessTokenExp, tokenRenew, MachineId)
+- `src/shared/api/client.ts` -- 401 auto-retry: detects 401, calls `renewToken()`, retries original request with new token
+- `src/shared/ui/date-picker.tsx` -- custom date picker wrapping react-day-picker with Vietnamese dd/MM/yyyy format and calendar popup
+- `src/shared/ui/error-boundary.tsx` -- component-level React error boundary with retry UI
+- `src/shared/ui/route-error-boundary.tsx` -- route-level error boundary for page crashes
+- `src/shared/lib/date-utils.ts` -- added `parseWorkDays()` to mirror backend's `BusinessDayCalculator.ParseWorkDays()` for client-side validation
+- `src/features/config/components/general-settings.tsx` -- configurable work days UI with day-of-week checkboxes
+- `src/features/violations/` feature module -- violations page with client-side aggregation, dept/emp drill-down, Director-only access
+  - `violation-metrics.tsx`, `violation-chart.tsx`, `violation-dept-table.tsx`, `violation-emp-table.tsx`
+  - `dept-detail-dialog.tsx`, `emp-detail-dialog.tsx`
+- `docker-compose.yml` -- api (port 8003) + web (port 8001) services
+- `packages/api/Dockerfile` -- .NET 10 runtime, certificate handling
+- `packages/web/Dockerfile` -- multi-stage (Node build + Nginx serve), build args `VITE_API_URL`, `VITE_DEV_MODE`
+- `makefile` -- Docker build/push targets: `api-dev`, `release`, `build-prod`, `push-prod`
+- `VITE_DEV_MODE` env var support for enabling dev-mode features in production builds
+- `VITE_AUTH_RENEW_URL` env var for SSO token renewal endpoint
+
+### Changed
+- `BusinessDayCalculator`: no longer hardcoded Mon-Fri. Now accepts `HashSet<DayOfWeek>` parameter. `ParseWorkDays()` reads from SystemConfig `work_days` key. Default fallback: Mon-Fri.
+- `src/shared/ui/` expanded from 49 to 52 shadcn/ui components (added date-picker, error-boundary, route-error-boundary)
+- Frontend date validation: `parseWorkDays()` reads `work_days` SystemConfig for business day count
+- Zustand fully removed from `src/` (no references remain). All state management is TanStack Query + React Context.
+- `UserRole` table: no longer primary role source. Roles resolved from JWT claims. `UserRole` persists claims for offline recalculation (synced on login via GET /me and DevLogin).
+- Dashboard: uses MyStats endpoint for KPI cards (RemainingDays, PendingCount, ApprovedCount, UsedDays)
+- React Router: upgraded from `react-router-dom` v6 to `react-router` v7
+
+### Fixed
+- Dialog reload: 5-layer defensive fix preventing unintended page reloads on dialog interactions
+- ObjectDisposedException: fixed in EF Core DbContext usage pattern
+
 ## v0.6.0 -- 2026-05-29 -- VSA Phases 4-5: Dashboard + Leave Requests + Config Migration
 
 ### Added
@@ -74,7 +114,7 @@
   - `GetNextLevelRoles()` -- returns roles for next approval level
 - `ConfigPage.tsx` -- approval level dropdown now supports 1-5 levels (was 1 or 2)
 - Frontend helpers: `getApprovalStatusLabel()` and `getApprovalStatusColor()` in `leave-data.ts`
-- EF Core `HasData` seed for 9 `LeaveConfig` rows in `AppDbContext.OnModelCreating`, establishing the initial approval-level baseline so `MigrateLegacyStatusesAsync` can correctly determine max approval levels per LeaveType. Runtime updates via `Config/Update` endpoint (`ReplaceAllAsync`) still overwrite these rows. Seed baseline:
+- EF Core `HasData` seed for 9 `LeaveConfig` rows in `AppDbContext.OnModelCreating`, establishing the initial approval-level baseline so `MigrateLegacyStatusesAsync` can correctly determine max approval levels per LeaveType at startup. Runtime updates via `Config/Update` endpoint (`ReplaceAllAsync`) still overwrite these rows. Seed baseline:
 
   | Id | LeaveTypeId (Code) | ApprovalLevel | ApproverRole |
   |----|---------------------|---------------|--------------|
@@ -135,14 +175,14 @@
 
 ### Added
 - **PUT /api/leave-requests/{id}/approve** -- Approve endpoint (Roles: LD.PCM, GD.PGD):
-  - LD.PCM: pending → approved_leader, scope check (same PhongBanId, not self)
-  - GD.PGD: approved_leader → approved_director, auto-upsert LeaveBalance.UsedDays
+  - LD.PCM: pending -> approved_leader, scope check (same PhongBanId, not self)
+  - GD.PGD: approved_leader -> approved_director, auto-upsert LeaveBalance.UsedDays
   - Dual-role user: isDirector priority (GD.PGD logic wins)
   - UsedDays overflow protection: 422 if would exceed TotalDays
   - Lazy-init LeaveBalance row (TotalDays = LeaveType.DefaultDays) if not exists
 - **PUT /api/leave-requests/{id}/reject** -- Reject endpoint (Roles: LD.PCM, GD.PGD):
-  - LD.PCM: reject pending → rejected (scope: same PhongBanId, not self)
-  - GD.PGD: reject approved_leader → rejected
+  - LD.PCM: reject pending -> rejected (scope: same PhongBanId, not self)
+  - GD.PGD: reject approved_leader -> rejected
   - FluentValidation: RejectedReason required (NotEmpty)
 - **DELETE /api/leave-requests/{id}** -- Cancel endpoint (Roles: CB.PCM, LD.PCM):
   - Owner-only check (entity.UserId == currentUser.UserId)

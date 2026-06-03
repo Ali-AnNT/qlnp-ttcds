@@ -1,10 +1,10 @@
 # System Architecture - QLNP-TTCDS
 
-## ~~Supabase Prototype~~ (DEPRECATED — removed in Phase 1)
+## ~~Supabase Prototype~~ (DEPRECATED -- removed in Phase 1)
 
 Supabase architecture replaced by .NET API + SQL Server. All Supabase code, deps, and migrations removed.
 
-## Current Architecture (Phase 12): .NET 10 + React VSA
+## Current Architecture (Phase 12+): .NET 10 + React VSA
 
 ### High-Level Frontend (Vertical Slice Architecture)
 
@@ -12,21 +12,21 @@ Supabase architecture replaced by .NET API + SQL Server. All Supabase code, deps
 React SPA (Vite)
   ├─ app/                        ← App shell (App.tsx, providers, router, NotFound)
   ├─ shared/                     ← Generic infrastructure (api client, lib, hooks, ui)
-  │   ├─ api/client.ts (fetch + Bearer JWT)
-  │   ├─ lib/ (utils, date-utils)
+  │   ├─ api/client.ts (fetch + Bearer JWT + 401 auto-retry)
+  │   ├─ lib/ (utils, date-utils, auth-renew.api, token-refresh, token-store)
   │   ├─ hooks/ (use-mobile, use-toast)
-  │   └─ ui/ (49 shadcn/ui components)
+  │   └─ ui/ (52 shadcn/ui components incl. date-picker, error-boundary, route-error-boundary)
   ├─ features/                   ← Feature modules (VSA)
-  │   ├─ auth/                    ← Auth feature
+  │   ├─ auth/                    ← Auth feature (SSO + 401-reactive token renewal)
   │   ├─ layout/                  ← App shell components (Sidebar, Header)
-  │   ├─ dashboard/               ← Dashboard + stats
-  │   ├─ leave-requests/          ← Leave CRUD + balances
+  │   ├─ dashboard/               ← Dashboard + MyStats
+  │   ├─ leave-requests/          ← Leave CRUD + balances + date picker
   │   ├─ approval/                ← N-level approval logic
   │   ├─ calendar/                ← Leave calendar view
   │   ├─ summary/                 ← GD.PGD summary view
-  │   ├─ reports/                 ← GD.PGD reports + export
+  │   ├─ reports/                 ← GD.PGD reports + XLSX export
   │   ├─ violations/              ← GD.PGD violation monitoring
-  │   ├─ config/                  ← QTHT system configuration
+  │   ├─ config/                  ← QTHT system configuration (incl. work days)
   │   └─ shared-reference-data/   ← Cross-feature types & constants
   └─ test/                       ← Test utilities & mock factories
 ```
@@ -35,7 +35,7 @@ React SPA (Vite)
 - **Feature Colocation**: Components, hooks, API, and types live together in feature folders.
 - **Public API**: Each feature exports a clean interface via `index.ts`.
 - **Boundary Enforcement**: ESLint rules block deep imports and illegal cross-feature dependencies.
-- **Server State**: 100% TanStack Query. No global data store (Zustand removed).
+- **Server State**: 100% TanStack Query. No global data store (Zustand fully removed).
 
 ### High-Level Backend (Vertical Slice Architecture)
   ├─ JWT Bearer Authentication (Issuer, Audience, SigningKey from appsettings.json)
@@ -47,20 +47,22 @@ React SPA (Vite)
   │   ├─ LeaveRequests/List, Create, Update, Approve, Reject, Cancel, My/  ← config-driven N-level approval
   │   │   ├─ LeaveRequestMapping.cs (shared DRY DTO mapping, includes ApprovedLevel)
   │   │   └─ LeaveRequestDto.cs (shared DTO)
-  │   ├─ LeaveTypes/List, Create, Update, Delete/  ← Roles(AppRoles.Admin)
+  │   ├─ LeaveTypes/List, Create/, Update/, Delete/  ← Roles(AppRoles.Admin)
+  │   ├─ MyStats/MyStatsEndpoint  ← GET /api/my-stats/ (RemainingDays, PendingCount, ApprovedCount, UsedDays)
   │   ├─ SystemConfigs/Get, Update, GetLeaveConfigs, ReplaceLeaveConfigs/  ← system settings + approval config
-  │   └─ Reports/Export/           ClosedXML .xlsx export
+  │   └─ Reports/Export/           ClosedXML .xlsx export (Director-only)
   ├─ Shared/                        ← Cross-cutting shared code
   │   ├─ Domain/                    ← Entities, domain services, helpers
   │   │   ├─ LeaveRequest.cs, LeaveType.cs, LeaveBalance.cs, ... (all domain entities)
   │   │   ├─ ApprovalHelper.cs, BusinessDayCalculator.cs       (domain logic)
+  │   │   │   └─ BusinessDayCalculator.ParseWorkDays(): configurable work days from SystemConfig `work_days`
   │   │   ├─ LeaveBalanceService.cs, ILeaveBalanceService.cs    (domain service)
   │   │   └─ LeaveBalanceSeeding.cs                              (seeding logic)
   │   ├─ Contracts/                 ← Shared response envelopes
   │   │   ├─ Result<T>             (success/error envelope)
   │   │   └─ PagedData<T>          (paginated list envelope)
   │   ├─ Groups/                    ← FastEndpoints route groups
-  │   │   └─ AuthGroup, LeaveRequestGroup, LeaveTypeGroup, LeaveBalanceGroup, DepartmentGroup, SystemConfigGroup
+  │   │   └─ AuthGroup, LeaveRequestGroup, LeaveTypeGroup, LeaveBalanceGroup, DepartmentGroup, MyStatsGroup, SystemConfigGroup
   │   └─ Middleware/
   │       └─ CurrentUser.cs         (CurrentUser record)
   ├─ Infrastructure/
@@ -68,9 +70,8 @@ React SPA (Vite)
   │       ├─ ICurrentUserProvider.cs, CurrentUserProvider.cs, Roles.cs (AppRoles constants)
   ├─ Data/AppDbContext              (EF Core 9 + SQL Server)
   │   ├─ System tables: USER_MASTER, DM_DONVI (ExcludeFromMigrations)
-  │   └─ App tables: LeaveTypes, LeaveBalances, LeaveRequests (incl. ApprovedLevel), LeaveConfigs, SystemConfigs, LeaveRequestAudits
+  │   └─ App tables: LeaveTypes, LeaveBalances, LeaveRequests (incl. ApprovedLevel), LeaveConfigs, SystemConfigs, LeaveRequestAudits, UserRoles
   └─ SQL Server (existing `VI_NGHIPHEP` database)
-```
 
 ### Vertical Slice Architecture Pattern
 
@@ -92,26 +93,26 @@ React SPA (Vite)
 │    LeaveRepo.cs                  │    Employees/        │
 │                                  │      List/           │
 │  Cross-cutting changes touch     │        ...           │
-│  all layers → high coupling      │      Create/         │
+│  all layers -> high coupling     │      Create/         │
 │                                  │        ...           │
 │                                  │                      │
 │                                  │  Each slice is self- │
-│                                  │  contained → low     │
+│                                  │  contained -> low    │
 │                                  │  coupling, easy to   │
 │                                  │  change independently│
 └─────────────────────────────────────────────────────────┘
 ```
 
-**Nguyên tắc chính**:
-- Mỗi feature là một vertical slice khép kín: Endpoint + Request DTO + Response DTO + Validator + Mapper + Handler logic
+**Nguyen tac chinh**:
+- Moi feature la mot vertical slice khep kin: Endpoint + Request DTO + Response DTO + Validator + Mapper + Handler logic
 - VSA file naming: `{Action}{Role}.cs` pattern (e.g., `CreateLeaveRequestEndpoint.cs`, `ListLeaveRequestsEndpoint.cs`)
-- Data access qua EF Core DbContext (property injection `= null!;`), không có repository layer riêng, không có Data.cs classes
+- Data access qua EF Core DbContext (property injection `= null!;`), khong co repository layer rieng, khong co Data.cs classes
 - Domain entities in `Shared/Domain/` (namespace: `QLNP.Api.Shared.Domain`), not in `Entities/`
 - Auth infrastructure in `Infrastructure/Auth/` (namespace: `QLNP.Api.Infrastructure.Auth`), not in `Auth/`
-- Cross-cutting concerns (current user resolution, response envelopes, route groups) nằm trong `Shared/` (Contracts, Groups, Middleware)
+- Cross-cutting concerns (current user resolution, response envelopes, route groups) nam trong `Shared/` (Contracts, Groups, Middleware)
 - Route groups in `Shared/Groups/` define URL prefixes per feature area
 - Response envelopes: `Result<T>` (success/error) and `PagedData<T>` (paginated lists) in `Shared/Contracts/`
-- Thêm feature mới = thêm endpoint files trong Features/, thêm route group trong Shared/Groups/, không đụng đến code hiện có
+- Them feature moi = them endpoint files trong Features/, them route group trong Shared/Groups/, khong dung den code hien co
 
 ## Component Tree
 
@@ -180,7 +181,35 @@ sequenceDiagram
     Component-->>User: Updated UI
 ```
 
-Note: All frontend state management has been migrated to TanStack Query. Legacy Zustand store and `src/pages` structure have been removed in Phase 12.
+Note: All frontend state management has been migrated to TanStack Query. Zustand store has been fully removed.
+
+## Auth Token Renewal Flow
+
+```mermaid
+sequenceDiagram
+    participant C as client.ts
+    participant TF as token-refresh.ts
+    participant AR as auth-renew.api.ts
+    participant TS as token-store.ts
+    participant SSO as SSO Portal
+
+    C->>C: API call returns 401
+    C->>TF: renewToken()
+    TF->>TF: Check dedup lock (refreshPromise)
+    alt No in-flight refresh
+        TF->>AR: renewTokenViaApi()
+        AR->>SSO: POST /RefreshToken
+        SSO-->>AR: { accessToken, tokenRenew }
+        AR-->>TF: RenewResponse
+        TF->>TS: setTokens(accessToken, exp, tokenRenew)
+        TF-->>C: true (retry original request)
+    else In-flight refresh exists
+        TF-->>C: Await existing refreshPromise
+    end
+    C->>C: Retry original request with new token
+```
+
+Key design: 401-reactive renewal only (no proactive expiry check). Dedup lock prevents thundering herd on concurrent 401s.
 
 ## Database ERD
 
@@ -276,7 +305,7 @@ erDiagram
   | 5 (NTS)             | 1             | LD.PCM       |
   | 5 (NTS)             | 2             | GD.PGD       |
 
-- SystemConfigs: 8 rows seeded via `HasData` providing configurable system settings. Overwritable at runtime via `PUT /api/system-configs` (QTHT-only).
+- SystemConfigs: 9 rows seeded via `HasData` providing configurable system settings. Overwritable at runtime via `PUT /api/system-configs` (QTHT-only).
 
   | Id | ConfigKey | ConfigValue | Description |
   |----|-----------|-------------|-------------|
@@ -288,9 +317,10 @@ erDiagram
   | 6  | default_days_LD.PCM | 14 | Mac dinh LD.PCM |
   | 7  | default_days_GD.PGD | 16 | Mac dinh GD.PGD |
   | 8  | default_days_QTHT | 12 | Mac dinh QTHT |
+  | 9  | work_days | 1,2,3,4,5 | Cac ngay lam viec trong tuan (0=CN, 1=T2...) |
 
 - LeaveBalances: seeded on startup for active `USER_MASTER` users and lazily during `/leave-balances` reads. NPN TotalDays uses role-based defaults from SystemConfigs (`default_days_{role}`); correction applied for unused NPN balances that differ from role default
-- Roles: resolved from JWT claims; dev-login maps known test users to roles. `UserRoles` table was dropped.
+- Roles: resolved from JWT claims; dev-login maps known test users to roles. `UserRoles` table persists role claims for offline recalculation (synced on login via GET /me and DevLogin).
 
 ## Authentication Flow
 
@@ -305,13 +335,21 @@ sequenceDiagram
 
     Note over Host,DB: User already authenticated on SSO Portal
     Host->>R: postMessage({ type: "auth", token: jwt })
-    R->>R: features/auth/contexts stores JWT in localStorage
+    R->>R: features/auth/contexts stores JWT in localStorage (token-store.ts)
     R->>API: GET /api/auth/me (Bearer JWT)
     API->>API: JWT validation + ICurrentUserProvider reads claims
     API->>DB: Lookup USER_MASTER; roles come from JWT claims
     API-->>R: { userId, displayName, roles, ... }
     R->>R: AuthState updated, app rendered
 ```
+
+### Token Renewal (401-reactive)
+
+When API returns 401, `client.ts` triggers `token-refresh.ts`:
+1. Check dedup lock (concurrent 401s share one refresh)
+2. Call `auth-renew.api.ts` -> SSO Portal refresh endpoint
+3. Store new tokens via `token-store.ts`
+4. Retry original request with new token
 
 ### Dev Mode (standalone)
 
@@ -362,45 +400,53 @@ stateDiagram-v2
 
 ```mermaid
 graph TD
-    subgraph "Static Hosting (Vercel / Netlify / Nginx)"
-        SPA[React SPA static files]
+    subgraph "Docker Compose (Production)"
+        WEB[nginx: Web Container :8001]
+        API[ASP.NET 10 + FastEndpoints :8003]
     end
-    subgraph "Application Server (IIS)"
+    subgraph "Alternative: Static Hosting"
+        STATIC[Vercel / Netlify / Nginx]
+    end
+    subgraph "Alternative: IIS"
         RP[Reverse Proxy / IIS ARR]
-        API[ASP.NET 10 + FastEndpoints]
-        AUTH[JWT Bearer Auth + ICurrentUserProvider]
+        API2[ASP.NET 10 + FastEndpoints]
     end
     subgraph "Database Server"
         DB[SQL Server - VI_NGHIPHEP]
     end
     subgraph "External"
-        Host[SSO Portal with iframe]
+        SSO[SSO Portal with iframe]
     end
     subgraph "User"
         Browser[Browser]
     end
 
-    Browser -->|HTTPS| SPA
-    Browser -->|HTTPS + Bearer JWT| RP
-    RP -->|JWT validated| API
-    Host -->|postMessage JWT| SPA
-    API --> AUTH
-    AUTH --> DB
+    Browser -->|HTTPS| WEB
+    Browser -->|HTTPS + Bearer JWT| API
+    WEB --> API
+    API --> DB
+    SSO -->|postMessage JWT| Browser
 ```
+
+Docker Compose configuration:
+- `api`: port 8003 -> 8080, .NET 10 runtime, certificate handling
+- `web`: port 8001 -> 80, multi-stage build (Node build + Nginx serve), build args `VITE_API_URL`, `VITE_DEV_MODE`
 
 ## Key Architectural Decisions
 
 | Decision | Rationale |
 |----------|-----------|
-| **FastEndpoints** thay vì Minimal API | Mỗi endpoint là 1 class riêng (REPR pattern) → dễ test, dễ maintain, pipeline behaviors rõ ràng (Validator → PreProcessor → Handler → PostProcessor) |
-| **EF Core** thay vì Dapper | Type-safe LINQ queries, migrations built-in, change tracking. Phù hợp khi làm việc với DB có sẵn (scaffold system tables + Code First app tables) |
-| **JWT Bearer Auth** thay vì gateway headers | SSO Portal issues JWT, app nhận qua postMessage (iframe) hoặc Authorization header. API validates JWT via symmetric key. ICurrentUserProvider reads claims → CurrentUser record. Đã bỏ CurrentUserMiddleware và gateway headers |
-| **ExcludeFromMigrations** cho system tables | USER_MASTER, DM_DONVI là các bảng có sẵn của hệ thống khác. Không được phép thay đổi schema. EF Core chỉ đọc dữ liệu |
-| **Vertical Slice Architecture** thay vì N-tier | Code tổ chức theo feature, không theo layer kỹ thuật. VSA `{Action}{Role}.cs` file naming. Thêm/sửa feature = làm việc trong endpoint files, không lan sang các layer khác → giảm coupling, tăng cohesion. Property injection (`= null!;`) thay vì constructor injection; Data.cs classes eliminated |
-| Zustand store (partial migration) | Data-only state management for legacy pages. Auth state in `features/auth/contexts/`. Dashboard migrated in Phase 4; LeaveNewPage and LeaveMyPage migrated in Phase 5. 6 pages still consume Zustand store (Approval, Calendar, Summary, Reports, Violations, Config). Full migration planned (Phases 6-12) |
-| TanStack Query for server state | Dashboard uses TanStack Query hooks for data fetching with automatic caching. Will replace Zustand store for all remaining pages in subsequent VSA migration phases |
-| Role-based sidebar (not route guards) | SPA UX: all routes mounted, navigation elements hidden by role. `AppSidebar` in `features/layout/`. Simple and effective for intranet |
-| Business days calculation (date-fns) | Standard for government/education leave tracking |
-| shadcn/ui (Radix primitives) | Production-ready accessible components, customizable via CSS variables |
-| No SSR | Intranet app behind auth, no SEO needed. SPA is simpler to deploy and maintain |
-| pnpm monorepo | `packages/api` (.NET 10) + `packages/web` (React SPA). Shared tooling, single repo |
+| **FastEndpoints** thay vi Minimal API | Moi endpoint la 1 class rieng (REPR pattern) -> de test, de maintain, pipeline behaviors ro rang (Validator -> PreProcessor -> Handler -> PostProcessor) |
+| **EF Core** thay vi Dapper | Type-safe LINQ queries, migrations built-in, change tracking. Phu hop khi lam viec voi DB co san (scaffold system tables + Code First app tables) |
+| **JWT Bearer Auth** thay vi gateway headers | SSO Portal issues JWT, app nhan qua postMessage (iframe) hoac Authorization header. API validates JWT via symmetric key. ICurrentUserProvider reads claims -> CurrentUser record. Da bo CurrentUserMiddleware va gateway headers |
+| **401-reactive token renewal** | Only refreshes on 401 (not proactive by expiry). Dedup lock prevents thundering herd. SSO Portal refresh endpoint returns new accessToken + tokenRenew. Avoids epoch format mismatch issues |
+| **ExcludeFromMigrations** cho system tables | USER_MASTER, DM_DONVI la cac bang co san cua he thong khac. Khong duoc phep thay doi schema. EF Core chi doc du lieu |
+| **Vertical Slice Architecture** thay vi N-tier | Code to chuc theo feature, khong theo layer ky thuat. VSA `{Action}{Role}.cs` file naming. Them/sua feature = lam viec trong endpoint files, khong lan sang cac layer khac -> giam coupling, tang cohesion. Property injection (`= null!;`) thay vi constructor injection; Data.cs classes eliminated |
+| **TanStack Query for server state** | 100% server state via TanStack Query. Hooks colocated with features. No global data store (Zustand fully removed in Phase 12) |
+| **Configurable work days** | BusinessDayCalculator reads `work_days` from SystemConfigs (default Mon-Fri). Admin can configure via ConfigPage General Settings. Frontend mirrors via `parseWorkDays()` in date-utils.ts |
+| **MyStats endpoint** | GET /api/my-stats/ aggregates RemainingDays, PendingCount, ApprovedCount, UsedDays. Lazy-seeds balance rows before computation. Used by dashboard for KPI cards |
+| **Role-based sidebar (not route guards)** | SPA UX: all routes mounted, navigation elements hidden by role. `AppSidebar` in `features/layout/`. Simple and effective for intranet |
+| **shadcn/ui (Radix primitives)** | Production-ready accessible components, customizable via CSS variables. 52 components including custom date-picker, error-boundary, route-error-boundary |
+| **No SSR** | Intranet app behind auth, no SEO needed. SPA is simpler to deploy and maintain |
+| **pnpm monorepo** | `packages/api` (.NET 10) + `packages/web` (React SPA). Shared tooling, single repo |
+| **Docker Compose deployment** | api:8003 + web:8001. Multi-stage Dockerfiles. Makefile targets for build/push |

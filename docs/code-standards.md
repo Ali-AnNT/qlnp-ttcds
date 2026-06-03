@@ -15,7 +15,7 @@
 | TypeScript types / interfaces | PascalCase | `UserRole`, `LeaveRequest`, `AppState` |
 | Zod schemas | camelCase, suffix `Schema` | `leaveRequestSchema` |
 | Constants / labels | camelCase + `Labels` suffix | `roleLabels`, `leaveStatusLabels` |
-| Env variables | UPPER_SNAKE_CASE, prefix `VITE_` | `VITE_API_URL` |
+| Env variables | UPPER_SNAKE_CASE, prefix `VITE_` | `VITE_API_URL`, `VITE_DEV_MODE`, `VITE_AUTH_RENEW_URL` |
 | C# classes/entities | PascalCase | `UserMaster`, `LeaveRequest`, `AppDbContext` |
 | C# properties | PascalCase | `UserId`, `FullName`, `LeaveTypeId` |
 | Database tables (system) | UPPER_SNAKE_CASE | `USER_MASTER`, `DM_DONVI` |
@@ -70,10 +70,15 @@ export const roleLabels: Record<UserRole, string> = {
 
 ### Shared & UI Components
 - Named exports for shared components
-- Generic UI components in `src/shared/ui/` (shadcn/ui)
+- Generic UI components in `src/shared/ui/` (shadcn/ui, 52 components including date-picker, error-boundary, route-error-boundary)
 - Shared app-level components in `src/shared/components/`
 - Props interface defined inline or at top
-- No default export (use named export pattern)
+- Named export pattern (no default exports)
+
+### Date Picker Component
+- Custom `date-picker.tsx` in `src/shared/ui/` wraps react-day-picker with Vietnamese date format (dd/MM/yyyy)
+- Uses `parseWorkDays()` from `date-utils.ts` for business day validation
+- Calendar popup with day-of-week headers matching configurable work days
 
 ## Import Order
 
@@ -87,11 +92,11 @@ export const roleLabels: Record<UserRole, string> = {
 
 Use `@/` path alias for all internal imports. Deep imports into features are disallowed:
 ```typescript
-// ✅ Correct
+// Correct
 import { useAuth } from "@/features/auth";
 import { Button } from "@/shared/ui/button";
 
-// ❌ Incorrect (deep import)
+// Incorrect (deep import)
 import { useAuth } from "@/features/auth/hooks/use-auth";
 ```
 
@@ -107,48 +112,55 @@ import { useAuth } from "@/features/auth/hooks/use-auth";
 - `contexts/auth-context.tsx`: Manages auth state: `user` (AuthUser | null), `loading`, `isEmbed`
 - On mount: calls `GET /api/auth/me` to resolve current user
 - Embed mode: listens for `postMessage({ type: "auth", token })` from host
-- JWT stored in `localStorage` under key `"jwt"`
+- JWT stored in `localStorage` via `token-store.ts` (keys: accessToken, accessTokenExp, tokenRenew, MachineId)
 - `hooks/use-auth.ts`: Access auth state via `useAuth()` hook
 - `hooks/use-auth-guard.tsx`: AuthGuard component, redirects to /login if no user
 - `components/login-page.tsx`: SSO waiting screen + dev-only user selector
 - `api/auth.api.ts` + `api/types.ts`: AuthUser type + authApi.me()
 
-### Global UI State (Context/Zustand)
-- Use React Context or scoped Zustand stores ONLY for true UI state that must be shared.
-- Avoid global data stores.
+### Auth Token Renewal
+- `src/shared/lib/token-store.ts`: Single source of truth for localStorage auth token operations
+- `src/shared/lib/auth-renew.api.ts`: SSO token renewal via external API (`VITE_AUTH_RENEW_URL`)
+- `src/shared/lib/token-refresh.ts`: 401-reactive renewal with dedup lock. Concurrent callers share one in-flight refresh promise. Only refreshes on 401, not proactively by expiry.
+- `src/shared/api/client.ts`: Detects 401 responses, calls `renewToken()`, retries original request with new token
+
+### Global UI State
+- No global data store (Zustand fully removed in Phase 12).
+- Use React Context for auth state, local `useState` for UI state.
 
 ## Component Pattern Example
 
 ```typescript
-import { useEffect } from "react";
 import { useAuth } from "@/features/auth";
-import { useStore } from "@/store/useStore";
 import { leaveStatusLabels, type LeaveStatus } from "@/features/shared-reference-data";
+import { useMyLeaveRequests } from "@/features/leave-requests";
 import { Badge } from "@/shared/ui/badge";
 import { cn } from "@/shared/lib/utils";
 
-const MyComponent = () => {
+export const MyComponent = () => {
   const { user } = useAuth();
-  const leaveRequests = useStore((s) => s.leaveRequests);
-  const loadData = useStore((s) => s.loadData);
-
-  useEffect(() => { loadData(); }, []);
+  const { data: leaveRequests } = useMyLeaveRequests();
 
   return (
     <div>...</div>
   );
 };
-
-export default MyComponent;
 ```
+
+Key differences from pre-VSA pattern:
+- Named exports (no `export default`)
+- TanStack Query hooks instead of Zustand store
+- Feature imports via public API barrel
 
 ## Error Handling
 
 - API calls return `ApiResponse<T>` = `{ data: T | null, error: string | null }`
+- 401 responses trigger automatic token renewal via `token-refresh.ts` dedup lock
 - Display errors via Sonner toast: `toast.error("message")`
 - Form validation: React Hook Form + Zod schema
 - Network failures: client.ts catches exceptions, returns error string
 - Entity validation: EF Core attributes ([MaxLength], [Required]) + FluentValidation per endpoint
+- Error boundaries: `error-boundary.tsx` (component-level) and `route-error-boundary.tsx` (route-level) in `src/shared/ui/`
 
 ## Formatting & Linting
 
@@ -183,25 +195,26 @@ packages/api/
 │   │   ├── LeaveRequestAudit.cs      # Code First
 │   │   ├── LeaveConfig.cs            # Code First
 │   │   ├── SystemConfig.cs           # Code First (key-value settings)
-│   │   ├── UserRole.cs               # Role constants
+│   │   ├── UserRole.cs               # Persisted JWT role claims for offline use
 │   │   ├── ApprovalHelper.cs         # Shared N-level approval logic
-│   │   ├── BusinessDayCalculator.cs  # T2-T6 inclusive count
+│   │   ├── BusinessDayCalculator.cs  # Configurable work days (ParseWorkDays from SystemConfig)
 │   │   ├── LeaveBalanceService.cs    # Domain service for balance operations
 │   │   ├── ILeaveBalanceService.cs   # Interface for LeaveBalanceService
 │   │   └── LeaveBalanceSeeding.cs    # Balance seeding logic
 │   ├── Contracts/                     # Shared response envelopes (namespace: QLNP.Api.Shared.Contracts)
 │   │   ├── Result.cs                 # Result<T> success/error envelope
-│   │   └── PagedData.cs             # PagedData<T> paginated list envelope
+│   │   └── PagedData.cs              # PagedData<T> paginated list envelope
 │   ├── Groups/                        # FastEndpoints route groups (namespace: QLNP.Api.Shared.Groups)
-│   │   ├── AuthGroup.cs             # /api/auth
-│   │   ├── LeaveRequestGroup.cs     # /api/leave-requests
-│   │   ├── LeaveTypeGroup.cs        # /api/leave-types
-│   │   ├── LeaveBalanceGroup.cs     # /api/leave-balances
-│   │   ├── DepartmentGroup.cs       # /api/departments
-│   │   └── SystemConfigGroup.cs     # /api/system-configs
+│   │   ├── AuthGroup.cs              # /api/auth
+│   │   ├── LeaveRequestGroup.cs      # /api/leave-requests
+│   │   ├── LeaveTypeGroup.cs         # /api/leave-types
+│   │   ├── LeaveBalanceGroup.cs      # /api/leave-balances
+│   │   ├── DepartmentGroup.cs        # /api/departments
+│   │   ├── MyStatsGroup.cs           # /api/my-stats
+│   │   └── SystemConfigGroup.cs      # /api/system-configs
 │   ├── Middleware/                    # (namespace: QLNP.Api.Shared.Middleware)
 │   │   └── CurrentUser.cs            # CurrentUser record (UserId, DisplayName, UnitId, PhongBanId, DeviceId, Roles, UserIdUBTP, PhongBanIdUBTP, DonViIdUBTP)
-│   └── LinqExtension.cs              # LINQ helpers
+│   └── LinqExtension.cs             # LINQ helpers
 ├── Infrastructure/
 │   └── Auth/                          # Auth infrastructure (namespace: QLNP.Api.Infrastructure.Auth)
 │       ├── ICurrentUserProvider.cs    # Interface for current user resolution
@@ -229,13 +242,21 @@ packages/api/
 │   ├── LeaveTypes/                    # Leave type CRUD (Admin-only)
 │   │   ├── List/, Create/, Update/, Delete/  # Each: {Action}LeaveTypeEndpoint.cs
 │   │   └── LeaveTypeDto.cs
+│   ├── MyStats/                       # GET /api/my-stats/ (RemainingDays, PendingCount, ApprovedCount, UsedDays)
+│   │   ├── MyStatsEndpoint.cs
+│   │   └── MyStatsResponse.cs
 │   ├── SystemConfigs/                 # System settings + approval config
 │   │   ├── Get/, Update/             # SystemConfig endpoints
 │   │   ├── GetLeaveConfigs/           # GetLeaveConfigsEndpoint
 │   │   ├── ReplaceLeaveConfigs/       # ReplaceLeaveConfigsEndpoint
 │   │   ├── SystemConfigDto.cs, LeaveConfigDto.cs
 │   │   └── ReplaceLeaveConfigsResponse.cs
-│   └── Reports/Export/                # ClosedXML .xlsx export
+│   └── Reports/Export/                # ClosedXML .xlsx export (Director-only)
+│       ├── ExcelBuilder.cs
+│       ├── ExportReportEndpoint.cs
+│       ├── ExportReportRequest.cs
+│       ├── ExportReportValidator.cs
+│       └── StatusLabels.cs
 ```
 
 ### Naming Conventions
@@ -245,25 +266,25 @@ packages/api/
 | Endpoint files | `{Action}{Role}.cs` VSA pattern | `CreateLeaveRequestEndpoint.cs`, `ListLeaveRequestsEndpoint.cs` |
 | Endpoint classes | PascalCase, suffix `Endpoint` | `CreateLeaveRequestEndpoint`, `ListLeaveRequestsEndpoint` |
 | Request DTOs | PascalCase, suffix `Request` | `CreateLeaveRequestRequest`, `UpdateSystemConfigRequest` |
-| Response DTOs | PascalCase, suffix `Response` | `ReplaceLeaveConfigsResponse` |
+| Response DTOs | PascalCase, suffix `Response` | `ReplaceLeaveConfigsResponse`, `MyStatsResponse` |
 | Validator classes | PascalCase, suffix `Validator` | `CreateLeaveRequestValidator`, `RejectLeaveRequestValidator` |
 | Mapper classes | PascalCase, suffix `Mapper` | `CreateLeaveRequestMapper`, `UpdateLeaveRequestMapper` |
 | Domain entities | In `Shared/Domain/`, PascalCase | `LeaveRequest.cs`, `SystemConfig.cs`, `ApprovalHelper.cs` |
-| Route Groups | In `Shared/Groups/`, suffix `Group` | `LeaveRequestGroup`, `SystemConfigGroup` |
+| Route Groups | In `Shared/Groups/`, suffix `Group` | `LeaveRequestGroup`, `SystemConfigGroup`, `MyStatsGroup` |
 | Response envelopes | In `Shared/Contracts/`, generic `record` | `Result<T>`, `PagedData<T>` |
 | Auth infrastructure | In `Infrastructure/Auth/` | `ICurrentUserProvider.cs`, `Roles.cs` (AppRoles constants) |
-| Feature folders | PascalCase | `Auth/`, `LeaveRequests/`, `SystemConfigs/` |
+| Feature folders | PascalCase | `Auth/`, `LeaveRequests/`, `SystemConfigs/`, `MyStats/` |
 | SQL tables (system) | UPPER_SNAKE_CASE | `USER_MASTER`, `DM_DONVI` |
 | SQL tables (app) | PascalCase (EF default) | `LeaveRequests`, `LeaveBalances` |
 
 ### Endpoint Pattern (REPR + Property Injection)
 
 ```csharp
-// {Action}{Role}.cs — e.g. CreateLeaveRequestEndpoint.cs
+// {Action}{Role}.cs -- e.g. CreateLeaveRequestEndpoint.cs
 internal sealed class CreateLeaveRequestEndpoint
     : Endpoint<CreateLeaveRequestRequest, Result<LeaveRequestDto>, CreateLeaveRequestMapper>
 {
-    // Property injection — no constructor, no Data.cs class
+    // Property injection -- no constructor, no Data.cs class
     public AppDbContext Db { get; set; } = null!;
     public ICurrentUserProvider CurrentUser { get; set; } = null!;
 
@@ -285,41 +306,41 @@ internal sealed class CreateLeaveRequestEndpoint
 Key changes from pre-VSA:
 - **Property injection** (`= null!;`) replaces constructor injection and `Data.cs` classes
 - **Route Groups** (`Group<T>()`) define URL prefixes; endpoints use relative routes (`Post("")`, `Get("")`)
-- **`AppRoles` constants** replace magic strings like `"CB.PCM"` — defined in `Infrastructure/Auth/Roles.cs`
+- **`AppRoles` constants** replace magic strings like `"CB.PCM"` -- defined in `Infrastructure/Auth/Roles.cs`
 - **`Result<T>`** envelope wraps all responses for consistent `{ Success, Data, Message, Errors }` format
-- **No `Data.cs`** — endpoints query `Db` (AppDbContext) directly
+- **No `Data.cs`** -- endpoints query `Db` (AppDbContext) directly
 
 ### FastEndpoints Pipeline
 
 ```
 HTTP Request
-  → Route Group prefix (e.g. /api/leave-requests from LeaveRequestGroup)
-  → JWT Bearer Authentication (Issuer/Audience/SigningKey validation)
-  → Authorization (claims-based, Roles(AppRoles.*) attribute)
-  → Validator.ValidateAsync()       [FluentValidation, auto]
-  → Endpoint.HandleAsync()           [business logic + property-injected Db + CurrentUser]
-  → Result<T> envelope response
+  -> Route Group prefix (e.g. /api/leave-requests from LeaveRequestGroup)
+  -> JWT Bearer Authentication (Issuer/Audience/SigningKey validation)
+  -> Authorization (claims-based, Roles(AppRoles.*) attribute)
+  -> Validator.ValidateAsync()       [FluentValidation, auto]
+  -> Endpoint.HandleAsync()           [business logic + property-injected Db + CurrentUser]
+  -> Result<T> envelope response
 ```
 
 ### Data Access (EF Core)
 
-- Endpoint nhận `AppDbContext` qua property injection (`Db { get; set; } = null!;`), không dùng constructor injection
+- Endpoint nhan `AppDbContext` qua property injection (`Db { get; set; } = null!;`), khong dung constructor injection
 - Domain entities in `Shared/Domain/` (namespace: `QLNP.Api.Shared.Domain`), not `Entities/`
 - System tables (USER_MASTER, DM_DONVI): read-only, `ExcludeFromMigrations()`
-- App tables (LeaveRequests, LeaveBalances, LeaveConfigs, SystemConfigs, LeaveRequestAudits, ...): Code First, managed by migrations
-- LINQ queries thay vì SQL thuần, type-safe compile-time check
-- Seed data configured trong `OnModelCreating`: LeaveTypes (5), LeaveConfigs (9 rows), SystemConfigs (8 key-value rows for system settings and role-based NPN defaults)
+- App tables (LeaveRequests, LeaveBalances, LeaveConfigs, SystemConfigs, LeaveRequestAudits, UserRoles): Code First, managed by migrations
+- LINQ queries thay vi SQL thuan, type-safe compile-time check
+- Seed data configured trong `OnModelCreating`: LeaveTypes (5), LeaveConfigs (9 rows), SystemConfigs (9 key-value rows for system settings, role-based NPN defaults, and configurable work days)
 
 ### API Conventions
 
-- Request/Response dùng C# `record` types
+- Request/Response dung C# `record` types
 - All responses wrapped in `Result<T>` envelope: `{ Success, Data, Message, Errors }`
 - Paginated lists use `PagedData<T>`: `{ Items, TotalCount, Page, PageSize }`
 - CurrentUser resolved from Claims via ICurrentUserProvider (UserId, DisplayName, UnitId, PhongBanId, Roles list)
 - Role check: FastEndpoints `Roles(AppRoles.*)` with constants from `Infrastructure/Auth/Roles.cs`
-- Multi-role users: `CurrentUser.Roles` là `List<string>`, nhiều roles possible (VD: LD.PCM + GD.PGD)
+- Multi-role users: `CurrentUser.Roles` la `List<string>`, nhieu roles possible (VD: LD.PCM + GD.PGD)
 - Route Groups define URL prefixes: endpoints use relative routes (`Post("")`, `Get("")`)
-- Error response dùng `AddError()` hoặc `ThrowError()` của FastEndpoints
+- Error response dung `AddError()` hoac `ThrowError()` cua FastEndpoints
 - Dev mode: ICurrentUserProvider fallback to userId=1, roles=["QTHT"] khi anonymous (no JWT)
 
 ### N-Level Approval Pattern
@@ -341,6 +362,13 @@ Key rules:
 - OR logic per level: any role configured at a level can advance the request
 - Scope: LD.PCM = same department check (not self); GD.PGD = no scope restriction
 - `LeaveConfig.ApprovalLevel` supports 1-5 levels per leave type
+
+### Configurable Work Days
+
+- `BusinessDayCalculator` uses `ParseWorkDays(configValue)` to parse `SystemConfig.work_days` (e.g., `"1,2,3,4,5"`) into `HashSet<DayOfWeek>`
+- Default: Monday-Friday (DayOfWeek 1-5) if config missing
+- Frontend mirrors via `parseWorkDays()` in `date-utils.ts`
+- Admin UI: checkbox-based work day selection in General Settings tab
 
 ## Git Practices
 

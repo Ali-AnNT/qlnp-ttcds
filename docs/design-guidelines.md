@@ -138,6 +138,51 @@ Use shadcn/ui Table component with:
 - ResponsiveContainer with fixed aspect ratio
 - Color palette: accent blue, success green, warning amber, info cyan
 
+### Date Picker
+Custom `date-picker.tsx` component in `src/shared/ui/`:
+- Wraps react-day-picker with Vietnamese date format (dd/MM/yyyy)
+- Calendar popup with day-of-week headers
+- Integrates with configurable work days (`parseWorkDays()` from `date-utils.ts`)
+- Used in leave request forms for start/end date selection
+- Supports manual date input with format validation
+
+### Error Boundaries
+- `error-boundary.tsx`: Component-level error boundary for graceful error recovery
+- `route-error-boundary.tsx`: Route-level error boundary for page-level crashes
+- Both use shadcn/ui Card with error message and retry button
+
+## Dashboard Design (MyStats)
+
+Dashboard uses the MyStats endpoint (GET /api/my-stats/) for KPI cards:
+- **Remaining Days**: `RemainingDays` (total balance - used)
+- **Pending Count**: `PendingCount` (leave requests awaiting approval)
+- **Approved Count**: `ApprovedCount` (leave requests approved this year)
+- **Used Days**: `UsedDays` (total days taken)
+
+Cards displayed in a 4-column grid (`grid-cols-1 sm:grid-cols-2 lg:grid-cols-4`) with LeaveBalanceCard for detailed per-type breakdown.
+
+## Violations Page Design
+
+- Director-only access (GD.PGD role)
+- Client-side aggregation of leave request data
+- Components:
+  - `violations-page.tsx`: Main page with filters (year/quarter/month)
+  - `violation-metrics.tsx`: KPI cards (total violations, dept count, emp count)
+  - `violation-chart.tsx`: Recharts pie chart of violation distribution
+  - `violation-dept-table.tsx`: Department-level violation summary
+  - `violation-emp-table.tsx`: Employee-level violation details
+  - `dept-detail-dialog.tsx`: Drill-down into department violations
+  - `emp-detail-dialog.tsx`: Drill-down into individual employee violations
+
+## Configurable Work Days UI
+
+- Located in ConfigPage -> General Settings tab
+- Checkboxes for each day of the week (CN through T7)
+- Reads from SystemConfig `work_days` (comma-separated DayOfWeek integers)
+- Maps 0=Sunday, 1=Monday, ..., 6=Saturday
+- Default: Mon-Fri (`1,2,3,4,5`)
+- Changes saved via PUT /api/system-configs
+
 ## Vietnamese UI Patterns
 
 ### Language
@@ -146,8 +191,9 @@ Use shadcn/ui Table component with:
 - Unicode fully supported (Be Vietnam Pro font)
 
 ### Date Format
-- Display: dd-MM-yyyy (Vietnamese standard)
+- Display: dd/MM/yyyy (Vietnamese standard)
 - API: ISO 8601 / yyyy-MM-dd (SQL Server date type)
+- Date picker: dd/MM/yyyy format with calendar popup
 
 ### Navigation Labels
 - Short, action-oriented: "Tao don moi", "Phe duyet don"
