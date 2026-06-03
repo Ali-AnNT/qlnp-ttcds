@@ -10,8 +10,8 @@
 |---|---|
 | **ID** | UC26 |
 | **Tên** | Gửi đơn xin nghỉ phép |
-| **Tác nhân** | CB.PCM, LD.PCM |
-| **Mục tiêu** | Tạo, chỉnh sửa, gửi, hủy đơn xin nghỉ phép |
+| **Tác nhân** | CB.PCM, LD.PCM, GD.PGD, QTHT |
+| **Mục tiêu** | Tạo, chỉnh sửa, gửi, hủy đơn xin nghỉ phép; tự động phê duyệt theo vai trò người gửi |
 | **Trạng thái** | ✅ implemented |
 
 ### KS chính (Main Success Scenario)
@@ -20,8 +20,14 @@
 2. Hệ thống hiển thị form: loại phép, ngày bắt đầu, ngày kết thúc, lý do
 3. CB.PCM điền thông tin → nhấn Gửi
 4. Hệ thống tính số ngày nghỉ (business days, T2-T6) → kiểm tra trùng lịch
-5. Hệ thống tạo đơn (status=pending), ghi audit log
-6. Hệ thống thông báo thành công, chuyển đến `/leave/my`
+5. Hệ thống tạo đơn, ghi audit log
+6. Hệ thống áp dụng auto-approve theo vai trò người gửi:
+   - **Staff (CB.PCM)**: status=pending (chờ duyệt bình thường)
+   - **Leader (LD.PCM)**: auto-approve cấp ≤ Leader; nếu hết cấp → approved; nếu còn cấp trên → pending (ApprovedLevel=matchLevel)
+   - **Director (GD.PGD)**: auto-approve cấp ≤ Director; thường → approved; nếu không match config nào nhưng có approver role → auto-approve tất cả → approved
+   - **Admin (QTHT)**: auto-approve tất cả cấp → approved ngay
+7. Nếu LeaveType không có LeaveConfig → block tạo đơn (403)
+8. Hệ thống thông báo thành công, chuyển đến `/leave/my`
 
 ### KS phụ (Alternative Flows)
 
@@ -35,9 +41,14 @@
 
 - **BR-01**: Chỉ tính ngày làm việc (T2-T6) khi tính TotalDays
 - **BR-02**: Trùng lịch kiểm tra với các đơn đã approved (status = approved)
-- **BR-03**: Chỉ CB.PCM/LD.PCM có quyền tạo đơn
+- **BR-03**: Tất cả roles được tạo đơn (CB.PCM, LD.PCM, GD.PGD, QTHT)
 - **BR-04**: Chỉ người tạo mới được hủy đơn (owner check)
 - **BR-05**: Chỉ hủy được đơn ở trạng thái pending. Hủy đơn đã approved sẽ hoàn trả ngày phép (UsedDays −= TotalDays)
+- **BR-33**: Auto-approve theo vai trò người gửi: matchLevel = highest level where requester.Roles ∩ flow[level].roles ≠ ∅. matchLevel == maxLevel → approved + trừ balance; matchLevel < maxLevel → pending (ApprovedLevel = matchLevel)
+- **BR-34**: matchLevel == 0 + requester có approver role (Leader/Director/Admin) → auto-approve ALL → approved + trừ balance
+- **BR-35**: matchLevel == 0 + requester chỉ Staff → pending (đợi duyệt bình thường)
+- **BR-36**: Zero LeaveConfig cho LeaveType → block tạo đơn (403)
+- **BR-37**: Auto-approved: ApprovedBy = người gửi, ApprovedAt = thời điểm tạo
 
 ### Trace
 
@@ -47,6 +58,7 @@
 | **API** | `POST /api/leave-requests`, `PUT /api/leave-requests/{id}`, `POST /api/leave-requests/{id}/cancel` |
 | **Feature** | `LeaveRequests/Create`, `LeaveRequests/Update`, `LeaveRequests/Cancel`, `LeaveRequests/My` |
 | **Entity** | `LeaveRequest`, `LeaveBalance`, `LeaveRequestAudit` |
+| **Helper** | `ApprovalHelper.GetAutoApproveLevel`, `ApprovalHelper.HasApproverRole`, `ApprovalBalanceService` |
 | **Page** | `LeaveNewPage.tsx`, `LeaveMyPage.tsx` |
 
 ---
@@ -84,7 +96,7 @@
 - **BR-06**: Cấp phê duyệt được xác định bởi LeaveConfig.ApprovalLevel theo loại nghỉ phép (1-5 cấp)
 - **BR-07**: LD.PCM (QLNP.LD.PCM) duyệt đơn của nhân viên cùng phòng (PhongBanId match), không duyệt đơn của chính mình — scope check
 - **BR-08**: GD.PGD duyệt đơn bất kỳ, không kiểm tra phòng — không giới hạn scope
-- **BR-09**: Trừ ngày phép (UpsertBalanceAsync) chỉ khi duyệt ở cấp cuối cùng (ApprovedLevel == maxLevel)
+- **BR-09**: Trừ ngày phép (ApprovalBalanceService.UpsertBalanceForApprovalAsync) chỉ khi duyệt ở cấp cuối cùng (ApprovedLevel == maxLevel) hoặc auto-approve tất cả cấp
 - **BR-10**: State machine: pending (ApprovedLevel=0) → pending (ApprovedLevel=1..maxLevel-1) → approved (ApprovedLevel=maxLevel) | rejected; cancelled từ pending hoặc pending (ApprovedLevel < maxLevel)
 
 ### Trace
@@ -95,6 +107,7 @@
 | **API** | `POST /api/leave-requests/{id}/approve`, `POST /api/leave-requests/{id}/reject` |
 | **Feature** | `LeaveRequests/Approve`, `LeaveRequests/Reject` |
 | **Entity** | `LeaveRequest`, `LeaveConfig`, `LeaveBalance`, `LeaveRequestAudit` |
+| **Helper** | `ApprovalHelper`, `ApprovalBalanceService` |
 | **Page** | `ApprovalPage.tsx` |
 
 ---
@@ -313,8 +326,8 @@
 
 | UC | Tên | Trạng thái | Ghi chú |
 |----|-----|-----------|---------|
-| UC26 | Gửi đơn xin nghỉ phép | ✅ implemented | Create/Update/Cancel/My endpoints |
-| UC27 | Phê duyệt / từ chối | ✅ implemented | Config-driven N-level approval (1-5 cấp), ApprovedLevel tracking, OR logic per level |
+| UC26 | Gửi đơn xin nghỉ phép | ✅ implemented | Create/Update/Cancel/My endpoints + auto-approve by requester role (BR-33..BR-37) |
+| UC27 | Phê duyệt / từ chối | ✅ implemented | Config-driven N-level approval (1-5 cấp), ApprovedLevel tracking, OR logic per level, ApprovalBalanceService |
 | UC28 | Theo dõi đơn nghỉ phép | ✅ implemented | My/List/Calendar + LeaveBalances |
 | UC29 | Tổng hợp lịch nghỉ phép | ⚠️ partial | Page exists, no dedicated API |
 | UC30 | Cấu hình quy định | ✅ implemented | Config CRUD + LeaveTypes CRUD |

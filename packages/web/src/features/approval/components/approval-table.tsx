@@ -1,5 +1,4 @@
 import type { LeaveRequestDto } from "@/features/leave-requests";
-import type { LeaveTypeDto } from "@/features/config";
 import type { DepartmentDto } from "@/features/layout";
 import { formatDate } from "@/shared/lib/date-utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
@@ -9,7 +8,6 @@ import { getApprovalStatusLabel } from "@/features/shared-reference-data";
 
 interface ApprovalTableProps {
   requests: LeaveRequestDto[];
-  leaveTypes: LeaveTypeDto[];
   departments: DepartmentDto[];
   maxLevelByType: Map<number, number>;
   loading: boolean;
@@ -20,7 +18,6 @@ interface ApprovalTableProps {
 
 export function ApprovalTable({
   requests,
-  leaveTypes,
   departments,
   maxLevelByType,
   loading,
@@ -109,7 +106,6 @@ export function ApprovalTable({
       </TableHeader>
       <TableBody>
         {requests.map((r, i) => {
-          const lt = leaveTypes.find((t) => t.id === r.leaveTypeId);
           const dept = departments.find((d) => d.donViId === r.donViId);
           const maxLevel = maxLevelByType.get(r.leaveTypeId) ?? 1;
           const statusLabel = getApprovalStatusLabel(r.status, r.approvedLevel, maxLevel);
@@ -118,7 +114,7 @@ export function ApprovalTable({
               <TableCell className="text-center">{i + 1}</TableCell>
               <TableCell className="font-medium">{r.userName}</TableCell>
               <TableCell>{dept?.tenDonVi}</TableCell>
-              <TableCell>{lt?.name}</TableCell>
+              <TableCell>{r.leaveTypeName ?? "—"}</TableCell>
               <TableCell>{formatDate(r.startDate)}</TableCell>
               <TableCell>{formatDate(r.endDate)}</TableCell>
               <TableCell className="text-center">{r.totalDays}</TableCell>
@@ -129,16 +125,20 @@ export function ApprovalTable({
                 <div className="flex gap-1">
                   <Button
                     size="sm"
-                    className="h-7 px-2 bg-success hover:bg-success/90 text-success-foreground"
+                    className="h-7 px-2 bg-success hover:bg-success/90 text-success-foreground disabled:opacity-40 disabled:cursor-not-allowed"
                     onClick={() => onApprove(r.id)}
+                    disabled={!r.canCurrentUserApprove}
+                    title={r.canCurrentUserApprove ? "Phê duyệt" : "Đơn đang chờ cấp khác duyệt"}
                   >
                     <CheckCircle className="h-3 w-3 mr-1" />
                   </Button>
                   <Button
                     size="sm"
                     variant="destructive"
-                    className="h-7 px-2"
+                    className="h-7 px-2 disabled:opacity-40 disabled:cursor-not-allowed"
                     onClick={() => onReject(r.id)}
+                    disabled={!r.canCurrentUserApprove}
+                    title={r.canCurrentUserApprove ? "Từ chối" : "Đơn đang chờ cấp khác duyệt"}
                   >
                     <XCircle className="h-3 w-3 mr-1" />
                   </Button>
@@ -147,6 +147,7 @@ export function ApprovalTable({
                     variant="ghost"
                     className="h-7 px-2"
                     onClick={() => onDetail(r)}
+                    title="Xem chi tiết"
                   >
                     <Eye className="h-3 w-3" />
                   </Button>

@@ -121,6 +121,9 @@ All Supabase-related issues resolved by architecture migration:
 | UserRole dropped as primary role source (now persisted JWT claims for offline use) | Done |
 | Bug fix: dialog reload 5-layer defensive fix | Done |
 | Bug fix: ObjectDisposedException fix | Done |
+| Auto-approve by requester role (Leader/Director/Admin auto-approve levels <= their role; no config match + approver role -> auto-approve all; Staff -> pending unchanged) | Done |
+| ApprovalBalanceService (shared service for balance deduction, extracted from Approve endpoint) | Done |
+| ApprovalHelper.GetAutoApproveLevel + HasApproverRole (auto-approve level resolution) | Done |
 | Docker deployment (docker-compose.yml, Dockerfiles, makefile) | Done |
 
 ## Phase 2: Feature Enhancements (Planned)
@@ -173,6 +176,8 @@ May 28-29 2026 (COMPLETED): Phase 1.5 - VSA Migration
 
 June 2026 (COMPLETED): Phase 1.6 - Feature Completion
     - MyStats endpoint, configurable work days, auth token renewal
+    - Auto-approve by requester role (Leader/Director/Admin levels auto-approved)
+    - ApprovalBalanceService (shared balance deduction), ApprovalHelper enhancements
     - Docker deployment, date picker, error boundaries, violations page
     - XLSX export, bug fixes (dialog reload, ObjectDisposedException)
     - UserRole dropped as primary role source

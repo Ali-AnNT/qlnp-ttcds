@@ -16,13 +16,24 @@ internal sealed class CreateLeaveRequestEndpoint : Endpoint<Request, Result<Leav
     public override void Configure() {
         Post("");
         Group<LeaveRequestGroup>();
-        Roles(AppRoles.Staff, AppRoles.Leader);
+        Roles(AppRoles.Staff, AppRoles.Leader, AppRoles.Director, AppRoles.Admin);
     }
 
     public override async Task HandleAsync(Request r, CancellationToken ct) {
         // Business validation (DB-dependent)
         if (!await Db.LeaveTypes.AnyAsync(t => t.Id == r.LeaveTypeId && t.IsActive, ct))
             AddError(r => r.LeaveTypeId, "Loại nghỉ không tồn tại hoặc không còn hiệu lực");
+
+        // Validate LeaveConfig exists for this leave type
+        var configs = await Db.LeaveConfigs
+            .Where(c => c.LeaveTypeId == r.LeaveTypeId)
+            .OrderBy(c => c.ApprovalLevel)
+            .ToListAsync(ct);
+        if (configs.Count == 0) {
+            AddError("Chưa cấu hình phê duyệt cho loại phép này");
+            await Send.ErrorsAsync(403, ct);
+            return;
+        }
 
         // Read work_days config
         var workDaysConfig = await Db.SystemConfigs
@@ -38,19 +49,43 @@ internal sealed class CreateLeaveRequestEndpoint : Endpoint<Request, Result<Leav
         var currentUser = CurrentUser.GetCurrentUser();
         if (await Db.LeaveRequests.AnyAsync(lr =>
                 lr.UserId == currentUser.UserId &&
+                lr.Status != "cancelled" &&
                 lr.StartDate <= r.EndDate &&
                 lr.EndDate >= r.StartDate, ct))
             AddError(r => r.StartDate, "Trùng lịch với đơn đã gửi");
 
         ThrowIfAnyErrors();
 
-        // Create
+        // Create entity
         var entity = Map.ToEntity(r);
         entity.UserId = currentUser.UserId;
         entity.TotalDays = totalDays;
 
+        // Auto-approve logic for approver-role users
+        var flow = ApprovalHelper.GetApprovalFlow(configs);
+        var maxLevel = ApprovalHelper.GetMaxLevel(flow);
+        var autoLevel = ApprovalHelper.GetAutoApproveLevel(currentUser, flow);
+
+        if (autoLevel == ApprovalHelper.AutoApproveAll || (autoLevel > 0 && autoLevel >= maxLevel)) {
+            // Auto-approve all levels → status = approved
+            entity.ApprovedLevel = maxLevel;
+            entity.Status = "approved";
+            entity.ApprovedBy = currentUser.UserId;
+            entity.ApprovedAt = DateTime.UtcNow;
+        } else if (autoLevel > 0) {
+            // Partial auto-approve → still pending, higher levels remain
+            entity.ApprovedLevel = autoLevel;
+            entity.ApprovedBy = currentUser.UserId;
+            entity.ApprovedAt = DateTime.UtcNow;
+        }
+        // else autoLevel == 0 → default pending (no changes needed)
+
         try {
             Db.LeaveRequests.Add(entity);
+            // If fully auto-approved → deduct balance in same transaction
+            if (entity.Status == "approved") {
+                await ApprovalBalanceService.UpsertBalanceForApprovalAsync(entity, Db, ct);
+            }
             await Db.SaveChangesAsync(ct);
         }
         catch (DbUpdateException) {

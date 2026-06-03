@@ -10,6 +10,45 @@ namespace QLNP.Api.Shared.Domain;
 /// </summary>
 public static class ApprovalHelper {
     /// <summary>
+    /// Roles capable of approving leave requests.
+    /// </summary>
+    private static readonly string[] ApproverRoles = [AppRoles.Leader, AppRoles.Director, AppRoles.Admin];
+
+    /// <summary>
+    /// Checks if the user holds any approver-capable role (Leader, Director, or Admin).
+    /// </summary>
+    public static bool HasApproverRole(CurrentUser user) =>
+        user.Roles.Any(r => ApproverRoles.Contains(r));
+
+    /// <summary>
+    /// Sentinel return value: auto-approve ALL remaining levels.
+    /// Used when the requester has an approver role but no match in the configured flow.
+    /// </summary>
+    public const int AutoApproveAll = -1;
+
+    /// <summary>
+    /// Determines auto-approve level for a requester based on their roles
+    /// vs the configured approval flow.
+    /// Returns:
+    ///   > 0 = highest matching level (auto-approve levels 1..result)
+    ///   AutoApproveAll (-1) = no match but has approver role → auto-approve ALL levels
+    ///   0   = no auto-approve (Staff or no role match)
+    /// </summary>
+    public static int GetAutoApproveLevel(CurrentUser user, Dictionary<int, List<string>> flow) {
+        var matchLevel = 0;
+        foreach (var (level, roles) in flow) {
+            if (roles.Any(r => user.Roles.Contains(r)))
+                matchLevel = Math.Max(matchLevel, level);
+        }
+
+        // No match in flow but user is an approver → they're above the chain
+        if (matchLevel == 0 && HasApproverRole(user))
+            return AutoApproveAll;
+
+        return matchLevel;
+    }
+
+    /// <summary>
     /// Groups LeaveConfigs by ApprovalLevel, returning a sorted dictionary
     /// where key = level (1-based) and value = list of approver roles for that level.
     /// </summary>

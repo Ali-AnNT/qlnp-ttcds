@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { leaveRequestsApi } from "../api/approval.api";
+import { leaveRequestsApi } from "@/features/leave-requests";
 import { toast } from "sonner";
 
 /** Throw on API error or null data so TanStack Query tracks the mutation as failed. */

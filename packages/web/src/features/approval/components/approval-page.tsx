@@ -1,31 +1,32 @@
-import { useState, useMemo } from "react";
-import { useAuth } from "@/features/auth";
+import { useState } from "react";
 import { useApprovalConfigs } from "../hooks/use-approval-configs";
-import { useApprovalRequests } from "../hooks/use-approval-requests";
-import { useApproveLeaveRequest, useRejectLeaveRequest } from "../hooks/use-approval-actions";
-import { useLeaveTypes } from "@/features/leave-requests";
+import { useApprovableRequests } from "../hooks/use-approvable-requests";
+import {
+  useApproveLeaveRequest,
+  useRejectLeaveRequest,
+} from "../hooks/use-approval-actions";
 import { useQuery } from "@tanstack/react-query";
 import { departmentsApi, type DepartmentDto } from "@/features/layout";
 import { ApprovalTable } from "./approval-table";
 import { RejectDialog } from "./reject-dialog";
 import { DetailDialog } from "./detail-dialog";
 import { Input } from "@/shared/ui/input";
-import { AppRoles } from "@/features/shared-reference-data";
 import { Card, CardContent } from "@/shared/ui/card";
 import type { LeaveRequestDto } from "@/features/leave-requests";
 
 export function ApprovalPage() {
-  const { user } = useAuth();
-  const { data: leaveRequests = [], isLoading: requestsLoading } = useApprovalRequests();
-  const { data: leaveTypes = [] } = useLeaveTypes();
-  const { maxLevelByType, flowByType } = useApprovalConfigs();
+  const { data: requests = [], isLoading } = useApprovableRequests();
+  const { maxLevelByType } = useApprovalConfigs();
   const approveMutation = useApproveLeaveRequest();
   const rejectMutation = useRejectLeaveRequest();
   const [filterName, setFilterName] = useState("");
-  const [detailRequest, setDetailRequest] = useState<LeaveRequestDto | null>(null);
+  const [detailRequest, setDetailRequest] = useState<LeaveRequestDto | null>(
+    null,
+  );
   const [rejectId, setRejectId] = useState<number | null>(null);
 
-  // Fetch departments via TanStack Query
+  // Departments used for display in table/detail (BE returns donViName, but
+  // the existing UI looks up TenDonVi via the departments list)
   const { data: departments = [] } = useQuery<DepartmentDto[]>({
     queryKey: ["departments"],
     queryFn: async () => {
@@ -34,38 +35,11 @@ export function ApprovalPage() {
     },
   });
 
-  // Config-driven filtering: show requests where the current user's role
-  // is a valid approver at the next approval level
-  const visibleRequests = useMemo(
-    () =>
-      leaveRequests
-        .filter((r) => {
-          if (!user) return false;
-          if (r.status !== "pending") return false;
-
-          const flow = flowByType.get(r.leaveTypeId);
-          if (!flow) return false;
-
-          const nextLevel = r.approvedLevel + 1;
-          const rolesAtNextLevel = flow.get(nextLevel);
-          if (!rolesAtNextLevel) return false;
-
-          const hasRole = rolesAtNextLevel.some((role) => role === user.role);
-          if (!hasRole) return false;
-
-          if (user.role === AppRoles.Leader) {
-            if (r.userId === user.userId) return false;
-          }
-
-          return true;
-        })
-        .filter(
-          (r) =>
-            !filterName ||
-            (r.userName || "").toLowerCase().includes(filterName.toLowerCase()),
-        ),
-    [leaveRequests, user, flowByType, filterName],
-  );
+  const visibleRequests = filterName
+    ? requests.filter((r) =>
+        (r.userName || "").toLowerCase().includes(filterName.toLowerCase()),
+      )
+    : requests;
 
   const handleApprove = (id: number) => {
     approveMutation.mutate(id);
@@ -93,10 +67,9 @@ export function ApprovalPage() {
         <CardContent className="p-0">
           <ApprovalTable
             requests={visibleRequests}
-            leaveTypes={leaveTypes}
             departments={departments}
             maxLevelByType={maxLevelByType}
-            loading={requestsLoading}
+            loading={isLoading}
             onApprove={handleApprove}
             onReject={(id) => setRejectId(id)}
             onDetail={(r) => setDetailRequest(r)}
@@ -113,7 +86,6 @@ export function ApprovalPage() {
 
       <DetailDialog
         request={detailRequest}
-        leaveTypes={leaveTypes}
         departments={departments}
         maxLevelByType={maxLevelByType}
         onClose={() => setDetailRequest(null)}

@@ -37,7 +37,9 @@ push-prod:
 
 all: build-prod push-prod
 
-dev: api-dev
+dev: 
+	make api-dev
+	make web-dev
 
 # ---------- Web build ----------
 build-web:

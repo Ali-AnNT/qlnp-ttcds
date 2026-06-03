@@ -20,6 +20,7 @@ export interface LeaveRequestDto {
   rejectedReason: string | null;
   createdAt: string;
   updatedAt: string | null;
+  canCurrentUserApprove: boolean;
 }
 
 export interface CreateLeaveRequestDto {
