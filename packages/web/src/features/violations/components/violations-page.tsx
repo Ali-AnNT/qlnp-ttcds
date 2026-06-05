@@ -64,7 +64,7 @@ const ViolationsPage = () => {
         <CardContent className="lma-p-4">
           <div className="lma-grid lma-grid-cols-1 sm:lma-grid-cols-2 lg:lma-grid-cols-5 lma-gap-3">
             <div className="lg:lma-col-span-2 lma-relative">
-              <Search className="lma-absolute lma-left-3 lma-top-1/2 -lma-translate-y-1/2 lma-h-4 lma-w-4 lma-text-muted-foreground" />
+              <Search className="lma-absolute lma-left-3 lma-top-1/2 lma--translate-y-1/2 lma-h-4 lma-w-4 lma-text-muted-foreground" />
               <Input placeholder="Tìm cán bộ hoặc phòng ban..." value={search} onChange={(e) => setSearch(e.target.value)} className="lma-pl-9" />
             </div>
             <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>

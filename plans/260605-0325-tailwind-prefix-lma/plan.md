@@ -1,7 +1,7 @@
 ---
 title: "Add Tailwind CSS prefix and remove postcss-prefix-selector"
 description: "Add Tailwind prefix to all utility classes, remove postcss-prefix-selector. Colon prefix (lma:) NOT supported in v3 — must use dash (lma-) or upgrade to v4."
-status: in-progress
+status: completed
 priority: P1
 branch: "dev"
 tags: [tailwind, css, prefix, migration]

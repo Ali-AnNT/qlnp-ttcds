@@ -27,7 +27,7 @@ const TabsTrigger = React.forwardRef<
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      "lma-inline-flex lma-items-center lma-justify-center lma-whitespace-nowrap lma-rounded-sm lma-px-3 lma-py-1.5 lma-text-sm lma-font-medium lma-ring-offset-background lma-transition-all data-[state=active]:lma-bg-background data-[state=active]:lma-text-foreground data-[state=active]:lma-shadow-sm focus-visible:outline-none focus-visible:lma-ring-2 focus-visible:lma-ring-ring focus-visible:lma-ring-offset-2 disabled:lma-pointer-events-none disabled:lma-opacity-50",
+      "lma-inline-flex lma-items-center lma-justify-center lma-whitespace-nowrap lma-rounded-sm lma-px-3 lma-py-1.5 lma-text-sm lma-font-medium lma-ring-offset-background lma-transition-all data-[state=active]:lma-bg-background data-[state=active]:lma-text-foreground data-[state=active]:lma-shadow-sm focus-visible:lma-outline-none focus-visible:lma-ring-2 focus-visible:lma-ring-ring focus-visible:lma-ring-offset-2 disabled:lma-pointer-events-none disabled:lma-opacity-50",
       className,
     )}
     {...props}
@@ -42,7 +42,7 @@ const TabsContent = React.forwardRef<
   <TabsPrimitive.Content
     ref={ref}
     className={cn(
-      "lma-mt-2 lma-ring-offset-background focus-visible:outline-none focus-visible:lma-ring-2 focus-visible:lma-ring-ring focus-visible:lma-ring-offset-2",
+      "lma-mt-2 lma-ring-offset-background focus-visible:lma-outline-none focus-visible:lma-ring-2 focus-visible:lma-ring-ring focus-visible:lma-ring-offset-2",
       className,
     )}
     {...props}

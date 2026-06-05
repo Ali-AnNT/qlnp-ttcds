@@ -21,7 +21,7 @@ const ResizableHandle = ({
 }) => (
   <ResizablePrimitive.PanelResizeHandle
     className={cn(
-      "lma-relative lma-flex lma-w-px lma-items-center lma-justify-center lma-bg-border after:lma-absolute after:lma-inset-y-0 after:lma-left-1/2 after:lma-w-1 after:-lma-translate-x-1/2 data-[panel-group-direction=vertical]:lma-h-px data-[panel-group-direction=vertical]:lma-w-full data-[panel-group-direction=vertical]:after:lma-left-0 data-[panel-group-direction=vertical]:after:lma-h-1 data-[panel-group-direction=vertical]:after:lma-w-full data-[panel-group-direction=vertical]:after:-lma-translate-y-1/2 data-[panel-group-direction=vertical]:after:lma-translate-x-0 focus-visible:outline-none focus-visible:lma-ring-1 focus-visible:lma-ring-ring focus-visible:lma-ring-offset-1 [&[data-panel-group-direction=vertical]>div]:lma-rotate-90",
+      "lma-relative lma-flex lma-w-px lma-items-center lma-justify-center lma-bg-border after:lma-absolute after:lma-inset-y-0 after:lma-left-1/2 after:lma-w-1 after:lma--translate-x-1/2 data-[panel-group-direction=vertical]:lma-h-px data-[panel-group-direction=vertical]:lma-w-full data-[panel-group-direction=vertical]:after:lma-left-0 data-[panel-group-direction=vertical]:after:lma-h-1 data-[panel-group-direction=vertical]:after:lma-w-full data-[panel-group-direction=vertical]:after:lma--translate-y-1/2 data-[panel-group-direction=vertical]:after:lma-translate-x-0 focus-visible:lma-outline-none focus-visible:lma-ring-1 focus-visible:lma-ring-ring focus-visible:lma-ring-offset-1 [&[data-panel-group-direction=vertical]>div]:lma-rotate-90",
       className,
     )}
     {...props}

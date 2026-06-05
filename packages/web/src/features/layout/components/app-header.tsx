@@ -27,7 +27,7 @@ export const AppHeader = ({ onToggleSidebar }: { onToggleSidebar: () => void }) 
 
   return (
     <header className="lma-h-14 lma-bg-card lma-border-b lma-flex lma-items-center lma-px-4 lma-gap-3 lma-sticky lma-top-0 lma-z-20">
-      <Button variant="ghost" size="icon" onClick={onToggleSidebar} className="shrink-0">
+      <Button variant="ghost" size="icon" onClick={onToggleSidebar} className="lma-shrink-0">
         <Menu className="lma-h-5 lma-w-5" />
       </Button>
 

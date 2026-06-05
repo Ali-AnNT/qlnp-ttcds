@@ -136,7 +136,7 @@ const DashboardPage = () => {
                   </div>
                   <Badge
                     className={cn(
-                      "lma-text-[11px] lma-ml-2 shrink-0",
+                      "lma-text-[11px] lma-ml-2 lma-shrink-0",
                       getApprovalStatusColor(
                         r.status,
                         r.approvedLevel,

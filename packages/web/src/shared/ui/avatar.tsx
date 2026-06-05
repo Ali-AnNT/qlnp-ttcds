@@ -9,7 +9,7 @@ const Avatar = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <AvatarPrimitive.Root
     ref={ref}
-    className={cn("lma-relative lma-flex lma-h-10 lma-w-10 shrink-0 lma-overflow-hidden lma-rounded-full", className)}
+    className={cn("lma-relative lma-flex lma-h-10 lma-w-10 lma-shrink-0 lma-overflow-hidden lma-rounded-full", className)}
     {...props}
   />
 ));
@@ -19,7 +19,7 @@ const AvatarImage = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Image>,
   React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>
 >(({ className, ...props }, ref) => (
-  <AvatarPrimitive.Image ref={ref} className={cn("aspect-square lma-h-full lma-w-full", className)} {...props} />
+  <AvatarPrimitive.Image ref={ref} className={cn("lma-aspect-square lma-h-full lma-w-full", className)} {...props} />
 ));
 AvatarImage.displayName = AvatarPrimitive.Image.displayName;
 

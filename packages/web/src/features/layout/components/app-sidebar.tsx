@@ -113,12 +113,12 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
   return (
     <aside
       className={cn(
-        "lma-bg-sidebar lma-text-sidebar-foreground lma-flex lma-flex-col shrink-0 lma-transition-all lma-duration-200 lma-h-screen lma-sticky lma-top-0 lma-z-40 lma-border-r lma-border-sidebar-border",
+        "lma-bg-sidebar lma-text-sidebar-foreground lma-flex lma-flex-col lma-shrink-0 lma-transition-all lma-duration-200 lma-h-screen lma-sticky lma-top-0 lma-z-40 lma-border-r lma-border-sidebar-border",
         isMobile ? "lma-fixed lma-left-0 lma-top-0 lma-w-60" : sidebarWidth,
       )}
     >
       <div className="lma-h-14 lma-flex lma-items-center lma-px-4 lma-border-b lma-border-sidebar-border lma-gap-2">
-        <CalendarDays className="lma-h-6 lma-w-6 lma-text-accent shrink-0" />
+        <CalendarDays className="lma-h-6 lma-w-6 lma-text-accent lma-shrink-0" />
         {!collapsed && (
           <span className="lma-font-bold lma-text-sm truncate">QUẢN LÝ NGHỈ PHÉP</span>
         )}
@@ -155,7 +155,7 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
                     isChildActive && "lma-bg-sidebar-accent",
                   )}
                 >
-                  <Icon className="lma-h-4 lma-w-4 shrink-0" />
+                  <Icon className="lma-h-4 lma-w-4 lma-shrink-0" />
                   {!collapsed && (
                     <>
                       <span className="lma-flex-1 lma-text-left truncate">
@@ -210,7 +210,7 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
                 )
               }
             >
-              <Icon className="lma-h-4 lma-w-4 shrink-0" />
+              <Icon className="lma-h-4 lma-w-4 lma-shrink-0" />
               {!collapsed && <span className="truncate">{item.label}</span>}
             </NavLink>
           );
@@ -224,7 +224,7 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
           onClick={logout}
           className="lma-w-full lma-h-auto lma-justify-start lma-gap-3 lma-px-4 lma-py-2.5 lma-text-sm lma-font-normal hover:lma-bg-sidebar-accent lma-rounded-md lma-transition-colors"
         >
-          <LogOut className="lma-h-4 lma-w-4 shrink-0" />
+          <LogOut className="lma-h-4 lma-w-4 lma-shrink-0" />
           {!collapsed && <span>Đăng xuất</span>}
         </Button>
       </div>

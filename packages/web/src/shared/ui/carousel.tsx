@@ -139,7 +139,7 @@ const CarouselContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HT
       <div ref={carouselRef} className="lma-overflow-hidden">
         <div
           ref={ref}
-          className={cn("lma-flex", orientation === "horizontal" ? "-lma-ml-4" : "-lma-mt-4 lma-flex-col", className)}
+          className={cn("lma-flex", orientation === "horizontal" ? "lma--ml-4" : "lma--mt-4 lma-flex-col", className)}
           {...props}
         />
       </div>
@@ -157,7 +157,7 @@ const CarouselItem = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLD
         ref={ref}
         role="group"
         aria-roledescription="slide"
-        className={cn("min-w-0 shrink-0 grow-0 basis-full", orientation === "horizontal" ? "lma-pl-4" : "lma-pt-4", className)}
+        className={cn("lma-min-w-0 lma-shrink-0 lma-grow-0 lma-basis-full", orientation === "horizontal" ? "lma-pl-4" : "lma-pt-4", className)}
         {...props}
       />
     );
@@ -177,8 +177,8 @@ const CarouselPrevious = React.forwardRef<HTMLButtonElement, React.ComponentProp
         className={cn(
           "lma-absolute lma-h-8 lma-w-8 lma-rounded-full",
           orientation === "horizontal"
-            ? "-lma-left-12 lma-top-1/2 -lma-translate-y-1/2"
-            : "-lma-top-12 lma-left-1/2 -lma-translate-x-1/2 lma-rotate-90",
+            ? "lma--left-12 lma-top-1/2 lma--translate-y-1/2"
+            : "lma--top-12 lma-left-1/2 lma--translate-x-1/2 lma-rotate-90",
           className,
         )}
         disabled={!canScrollPrev}
@@ -205,8 +205,8 @@ const CarouselNext = React.forwardRef<HTMLButtonElement, React.ComponentProps<ty
         className={cn(
           "lma-absolute lma-h-8 lma-w-8 lma-rounded-full",
           orientation === "horizontal"
-            ? "-lma-right-12 lma-top-1/2 -lma-translate-y-1/2"
-            : "-lma-bottom-12 lma-left-1/2 -lma-translate-x-1/2 lma-rotate-90",
+            ? "lma--right-12 lma-top-1/2 lma--translate-y-1/2"
+            : "lma--bottom-12 lma-left-1/2 lma--translate-x-1/2 lma-rotate-90",
           className,
         )}
         disabled={!canScrollNext}

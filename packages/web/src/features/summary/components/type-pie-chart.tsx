@@ -13,7 +13,7 @@ function renderLegend(props: DefaultLegendContentProps) {
     <div className="lma-flex lma-flex-wrap lma-justify-center lma-gap-3 lma-mt-2">
       {payload?.map((entry, index) => (
         <div key={index} className="lma-flex lma-items-center lma-gap-1.5 lma-text-xs">
-          <div className="lma-w-3 lma-h-3 lma-rounded-sm shrink-0" style={{ backgroundColor: entry.color }} />
+          <div className="lma-w-3 lma-h-3 lma-rounded-sm lma-shrink-0" style={{ backgroundColor: entry.color }} />
           <span className="lma-text-muted-foreground">{entry.value}</span>
         </div>
       ))}

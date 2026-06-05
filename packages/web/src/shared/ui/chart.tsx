@@ -54,7 +54,7 @@ const ChartContainer = React.forwardRef<
         data-chart={chartId}
         ref={ref}
         className={cn(
-          "lma-flex aspect-video lma-justify-center lma-text-xs [&_.recharts-cartesian-axis-tick_text]:lma-fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:lma-stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:lma-stroke-border [&_.recharts-dot[stroke='#fff']]:lma-stroke-transparent [&_.recharts-layer]:outline-none [&_.recharts-polar-grid_[stroke='#ccc']]:lma-stroke-border [&_.recharts-radial-bar-background-sector]:lma-fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:lma-fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:lma-stroke-border [&_.recharts-sector[stroke='#fff']]:lma-stroke-transparent [&_.recharts-sector]:outline-none [&_.recharts-surface]:outline-none",
+          "lma-flex aspect-video lma-justify-center lma-text-xs [&_.recharts-cartesian-axis-tick_text]:lma-fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:lma-stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:lma-stroke-border [&_.recharts-dot[stroke='#fff']]:lma-stroke-transparent [&_.recharts-layer]:lma-outline-none [&_.recharts-polar-grid_[stroke='#ccc']]:lma-stroke-border [&_.recharts-radial-bar-background-sector]:lma-fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:lma-fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:lma-stroke-border [&_.recharts-sector[stroke='#fff']]:lma-stroke-transparent [&_.recharts-sector]:lma-outline-none [&_.recharts-surface]:lma-outline-none",
           className,
         )}
         {...props}
@@ -203,7 +203,7 @@ const ChartTooltipContent = React.forwardRef<
                     ) : (
                       !hideIndicator && (
                         <div
-                          className={cn("shrink-0 lma-rounded-[2px] lma-border-[--color-border] lma-bg-[--color-bg]", {
+                          className={cn("lma-shrink-0 lma-rounded-[2px] lma-border-[--color-border] lma-bg-[--color-bg]", {
                             "lma-h-2.5 lma-w-2.5": indicator === "dot",
                             "lma-w-1": indicator === "line",
                             "lma-w-0 lma-border-[1.5px] lma-border-dashed lma-bg-transparent": indicator === "dashed",
@@ -282,7 +282,7 @@ const ChartLegendContent = React.forwardRef<
               <itemConfig.icon />
             ) : (
               <div
-                className="lma-h-2 lma-w-2 shrink-0 lma-rounded-[2px]"
+                className="lma-h-2 lma-w-2 lma-shrink-0 lma-rounded-[2px]"
                 style={{
                   backgroundColor: item.color,
                 }}
