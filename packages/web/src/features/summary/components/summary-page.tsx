@@ -113,23 +113,23 @@ const SummaryPage = () => {
   }, [userDetailUserId, approvedRequests, leaveTypes]);
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-lg font-bold">Tổng hợp lịch nghỉ toàn trung tâm</h2>
+    <div className="lma-space-y-6">
+      <h2 className="lma-text-lg lma-font-bold">Tổng hợp lịch nghỉ toàn trung tâm</h2>
 
-      <div className="flex flex-wrap gap-4">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-muted-foreground">Năm:</span>
+      <div className="lma-flex lma-flex-wrap lma-gap-4">
+        <div className="lma-flex lma-items-center lma-gap-2">
+          <span className="lma-text-sm lma-font-medium lma-text-muted-foreground">Năm:</span>
           <Select value={selectedYear} onValueChange={setSelectedYear}>
-            <SelectTrigger className="w-[100px]"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="lma-w-[100px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               {years.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-muted-foreground">Loại phép:</span>
+        <div className="lma-flex lma-items-center lma-gap-2">
+          <span className="lma-text-sm lma-font-medium lma-text-muted-foreground">Loại phép:</span>
           <Select value={selectedLeaveType} onValueChange={setSelectedLeaveType}>
-            <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="lma-w-[180px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tất cả</SelectItem>
               {leaveTypes.map((lt) => <SelectItem key={lt.id} value={String(lt.id)}>{lt.name}</SelectItem>)}
@@ -138,7 +138,7 @@ const SummaryPage = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="lma-grid lma-grid-cols-1 lg:lma-grid-cols-3 lma-gap-4">
         <DeptSummaryTable
           deptSummary={deptSummary}
           onEmpClick={(donViId) => { setEmpDialogDeptId(donViId); setEmpDialogOpen(true); }}
@@ -149,7 +149,7 @@ const SummaryPage = () => {
 
       {/* Employee list dialog */}
       <Dialog open={empDialogOpen} onOpenChange={setEmpDialogOpen}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+        <DialogContent className="lma-max-w-lg lma-max-h-[80vh] lma-overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               Danh sách cán bộ - {departments.find((d) => d.donViId === empDialogDeptId)?.tenDonVi}
@@ -159,24 +159,24 @@ const SummaryPage = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Họ tên</TableHead>
-                <TableHead className="text-center">Tổng ngày phép đã duyệt</TableHead>
-                <TableHead className="text-center w-[60px]">Chi tiết</TableHead>
+                <TableHead className="lma-text-center">Tổng ngày phép đã duyệt</TableHead>
+                <TableHead className="lma-text-center lma-w-[60px]">Chi tiết</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {empListForDept.map((emp) => (
                 <TableRow key={emp.userId}>
                   <TableCell>{emp.userName}</TableCell>
-                  <TableCell className="text-center font-semibold">{emp.totalApprovedDays}</TableCell>
-                  <TableCell className="text-center">
+                  <TableCell className="lma-text-center lma-font-semibold">{emp.totalApprovedDays}</TableCell>
+                  <TableCell className="lma-text-center">
                     <Button variant="ghost" size="icon" onClick={() => { setUserDetailUserId(emp.userId); setUserDetailOpen(true); }}>
-                      <Eye className="h-4 w-4" />
+                      <Eye className="lma-h-4 lma-w-4" />
                     </Button>
                   </TableCell>
                 </TableRow>
               ))}
               {empListForDept.length === 0 && (
-                <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground">Không có dữ liệu</TableCell></TableRow>
+                <TableRow><TableCell colSpan={3} className="lma-text-center lma-text-muted-foreground">Không có dữ liệu</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
@@ -185,7 +185,7 @@ const SummaryPage = () => {
 
       {/* User detail dialog */}
       <Dialog open={userDetailOpen} onOpenChange={setUserDetailOpen}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+        <DialogContent className="lma-max-w-lg lma-max-h-[80vh] lma-overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               Chi tiết nghỉ phép - {userDetailList.length > 0 ? approvedRequests.find((r) => r.userId === userDetailUserId)?.userName : ""}
@@ -197,7 +197,7 @@ const SummaryPage = () => {
                 <TableHead>Loại phép</TableHead>
                 <TableHead>Từ ngày</TableHead>
                 <TableHead>Đến ngày</TableHead>
-                <TableHead className="text-center">Số ngày</TableHead>
+                <TableHead className="lma-text-center">Số ngày</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -206,11 +206,11 @@ const SummaryPage = () => {
                   <TableCell>{r.leaveType}</TableCell>
                   <TableCell>{formatDate(r.startDate)}</TableCell>
                   <TableCell>{formatDate(r.endDate)}</TableCell>
-                  <TableCell className="text-center font-semibold">{r.totalDays}</TableCell>
+                  <TableCell className="lma-text-center lma-font-semibold">{r.totalDays}</TableCell>
                 </TableRow>
               ))}
               {userDetailList.length === 0 && (
-                <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">Chưa có lịch nghỉ phép</TableCell></TableRow>
+                <TableRow><TableCell colSpan={4} className="lma-text-center lma-text-muted-foreground">Chưa có lịch nghỉ phép</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
@@ -219,7 +219,7 @@ const SummaryPage = () => {
 
       {/* Department detail dialog */}
       <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="lma-max-w-2xl lma-max-h-[80vh] lma-overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               Chi tiết ngày phép đã duyệt - {departments.find((d) => d.donViId === detailDialogDeptId)?.tenDonVi}
@@ -233,7 +233,7 @@ const SummaryPage = () => {
                 <TableHead>Loại phép</TableHead>
                 <TableHead>Từ ngày</TableHead>
                 <TableHead>Đến ngày</TableHead>
-                <TableHead className="text-center">Số ngày</TableHead>
+                <TableHead className="lma-text-center">Số ngày</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -244,11 +244,11 @@ const SummaryPage = () => {
                   <TableCell>{r.leaveType}</TableCell>
                   <TableCell>{formatDate(r.startDate)}</TableCell>
                   <TableCell>{formatDate(r.endDate)}</TableCell>
-                  <TableCell className="text-center font-semibold">{r.totalDays}</TableCell>
+                  <TableCell className="lma-text-center lma-font-semibold">{r.totalDays}</TableCell>
                 </TableRow>
               ))}
               {detailListForDept.length === 0 && (
-                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">Không có dữ liệu</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="lma-text-center lma-text-muted-foreground">Không có dữ liệu</TableCell></TableRow>
               )}
             </TableBody>
           </Table>

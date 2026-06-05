@@ -50,22 +50,22 @@ const ViolationsPage = () => {
   const deptDetailData = deptDetail ? departmentViolations.find((d) => d.dept.donViId === deptDetail) : null;
 
   if (isLoading) {
-    return <div className="p-8 text-center text-muted-foreground">Đang tải dữ liệu...</div>;
+    return <div className="lma-p-8 lma-text-center lma-text-muted-foreground">Đang tải dữ liệu...</div>;
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <h2 className="text-lg font-bold">Theo dõi vượt mức quy định</h2>
-        <Badge variant="outline" className="text-xs">Định mức: theo cán bộ/năm</Badge>
+    <div className="lma-space-y-6">
+      <div className="lma-flex lma-items-center lma-justify-between lma-flex-wrap lma-gap-2">
+        <h2 className="lma-text-lg lma-font-bold">Theo dõi vượt mức quy định</h2>
+        <Badge variant="outline" className="lma-text-xs">Định mức: theo cán bộ/năm</Badge>
       </div>
 
       <Card>
-        <CardContent className="p-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-            <div className="lg:col-span-2 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Tìm cán bộ hoặc phòng ban..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+        <CardContent className="lma-p-4">
+          <div className="lma-grid lma-grid-cols-1 sm:lma-grid-cols-2 lg:lma-grid-cols-5 lma-gap-3">
+            <div className="lg:lma-col-span-2 lma-relative">
+              <Search className="lma-absolute lma-left-3 lma-top-1/2 -lma-translate-y-1/2 lma-h-4 lma-w-4 lma-text-muted-foreground" />
+              <Input placeholder="Tìm cán bộ hoặc phòng ban..." value={search} onChange={(e) => setSearch(e.target.value)} className="lma-pl-9" />
             </div>
             <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
               <SelectTrigger><SelectValue /></SelectTrigger>

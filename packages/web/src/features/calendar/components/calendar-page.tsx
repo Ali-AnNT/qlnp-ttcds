@@ -27,12 +27,12 @@ const CalendarPage = () => {
   }, [activeRequests, filterDept]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <h2 className="text-lg font-bold">Theo dõi lịch nghỉ phép</h2>
-        <div className="flex gap-2">
+    <div className="lma-space-y-4">
+      <div className="lma-flex lma-items-center lma-justify-between lma-flex-wrap lma-gap-2">
+        <h2 className="lma-text-lg lma-font-bold">Theo dõi lịch nghỉ phép</h2>
+        <div className="lma-flex lma-gap-2">
           <Select value={filterDept} onValueChange={setFilterDept}>
-            <SelectTrigger className="w-48"><SelectValue placeholder="Phòng ban" /></SelectTrigger>
+            <SelectTrigger className="lma-w-48"><SelectValue placeholder="Phòng ban" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tất cả phòng ban</SelectItem>
               {departments.map((d) => (
@@ -40,27 +40,27 @@ const CalendarPage = () => {
               ))}
             </SelectContent>
           </Select>
-          <div className="flex border rounded-md">
+          <div className="lma-flex lma-border lma-rounded-md">
             <Button
               variant={viewMode === "calendar" ? "secondary" : "ghost"}
               size="sm"
               onClick={() => setViewMode("calendar")}
             >
-              <CalendarDays className="h-4 w-4" />
+              <CalendarDays className="lma-h-4 lma-w-4" />
             </Button>
             <Button
               variant={viewMode === "list" ? "secondary" : "ghost"}
               size="sm"
               onClick={() => setViewMode("list")}
             >
-              <List className="h-4 w-4" />
+              <List className="lma-h-4 lma-w-4" />
             </Button>
           </div>
         </div>
       </div>
 
       {loading ? (
-        <div className="text-center text-muted-foreground py-8">Đang tải...</div>
+        <div className="lma-text-center lma-text-muted-foreground lma-py-8">Đang tải...</div>
       ) : viewMode === "calendar" ? (
         <CalendarGrid requests={filteredRequests} />
       ) : (

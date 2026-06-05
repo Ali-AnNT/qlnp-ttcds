@@ -143,21 +143,21 @@ export const ConfigPage = () => {
   };
 
   return (
-    <div className="space-y-4 max-w-4xl">
-      <h2 className="text-lg font-bold">Cấu hình quy định nghỉ phép</h2>
+    <div className="lma-space-y-4 lma-max-w-4xl">
+      <h2 className="lma-text-lg lma-font-bold">Cấu hình quy định nghỉ phép</h2>
       {!isAdmin && (
-        <p className="text-sm text-muted-foreground">
+        <p className="lma-text-sm lma-text-muted-foreground">
           Bạn chỉ có quyền xem. Liên hệ QTHT để thay đổi cấu hình.
         </p>
       )}
       <Tabs defaultValue="general">
-        <TabsList className="grid grid-cols-3 w-full">
-          <TabsTrigger value="general" className="text-xs">Cấu hình chung</TabsTrigger>
-          <TabsTrigger value="types" className="text-xs">Loại phép</TabsTrigger>
-          <TabsTrigger value="approval" className="text-xs">Cấp phê duyệt</TabsTrigger>
+        <TabsList className="lma-grid lma-grid-cols-3 lma-w-full">
+          <TabsTrigger value="general" className="lma-text-xs">Cấu hình chung</TabsTrigger>
+          <TabsTrigger value="types" className="lma-text-xs">Loại phép</TabsTrigger>
+          <TabsTrigger value="approval" className="lma-text-xs">Cấp phê duyệt</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="general" className="space-y-4">
+        <TabsContent value="general" className="lma-space-y-4">
           <GeneralSettings
             configs={localSystemConfigs}
             onChange={handleSystemConfigChange}

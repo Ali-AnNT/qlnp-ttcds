@@ -64,7 +64,7 @@ Add Tailwind CSS prefix to all utility classes across the web package. Remove `p
 |-------|------|--------|
 | 1 | [Research](./phase-01-research.md) | Completed |
 | 2 | [Configure](./phase-02-configure.md) | Completed |
-| 3 | [Update Source Files](./phase-03-update-source-files.md) | Pending |
+| 3 | [Update Source Files](./phase-03-update-source-files.md) | Completed |
 | 4 | [Update CSS](./phase-04-update-css.md) | Pending |
 | 5 | [Verify Build](./phase-05-verify-build.md) | Pending |
 

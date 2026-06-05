@@ -45,56 +45,56 @@ const DashboardPage = () => {
       label: "Ngày phép còn lại",
       value: remainingDays,
       icon: CalendarDays,
-      color: "text-accent",
+      color: "lma-text-accent",
     },
     {
       label: "Đơn đang chờ duyệt",
       value: pendingCount,
       icon: Clock,
-      color: "text-warning",
+      color: "lma-text-warning",
     },
     {
       label: "Đơn đã duyệt",
       value: approvedCount,
       icon: CheckCircle,
-      color: "text-success",
+      color: "lma-text-success",
     },
     {
       label: "Tổng ngày đã nghỉ",
       value: usedDays,
       icon: FileText,
-      color: "text-info",
+      color: "lma-text-info",
     },
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="bg-card rounded-lg border !p-5">
-        <h1 className="text-xl font-bold">Xin chào, {user?.fullName}!</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+    <div className="lma-space-y-6">
+      <div className="lma-bg-card lma-rounded-lg lma-border !lma-p-5">
+        <h1 className="lma-text-xl lma-font-bold">Xin chào, {user?.fullName}!</h1>
+        <p className="lma-text-sm lma-text-muted-foreground lma-mt-1">
           {user?.userName} • {user?.role}
         </p>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="lma-grid lma-grid-cols-1 sm:lma-grid-cols-2 lg:lma-grid-cols-4 lma-gap-4">
         {metrics.map((m) => (
           <Card key={m.label}>
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className={cn("p-2.5 rounded-lg bg-muted", m.color)}>
-                <m.icon className="h-5 w-5" />
+            <CardContent className="lma-p-4 lma-flex lma-items-center lma-gap-4">
+              <div className={cn("lma-p-2.5 lma-rounded-lg lma-bg-muted", m.color)}>
+                <m.icon className="lma-h-5 lma-w-5" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{loading ? "—" : m.value}</p>
-                <p className="text-xs text-muted-foreground">{m.label}</p>
+                <p className="lma-text-2xl lma-font-bold">{loading ? "—" : m.value}</p>
+                <p className="lma-text-xs lma-text-muted-foreground">{m.label}</p>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="lma-flex lma-flex-wrap lma-gap-2">
         {(user?.role === AppRoles.Staff || user?.role === AppRoles.Leader) && (
           <Link to={ROUTES.leaveNew}>
-            <Button className="bg-accent hover:bg-accent/90 text-accent-foreground">
+            <Button className="lma-bg-accent hover:lma-bg-accent/90 lma-text-accent-foreground">
               Tạo đơn nghỉ phép
             </Button>
           </Link>
@@ -114,21 +114,21 @@ const DashboardPage = () => {
       </div>
 
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Hoạt động gần đây</CardTitle>
+        <CardHeader className="lma-pb-3">
+          <CardTitle className="lma-text-base">Hoạt động gần đây</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
+          <div className="lma-space-y-2">
             {recentRequests.map((r) => {
               const lt = leaveTypes.find((t) => t.id === r.leaveTypeId);
               return (
                 <div
                   key={r.id}
-                  className="flex items-center justify-between py-2 border-b last:border-0 text-sm"
+                  className="lma-flex lma-items-center lma-justify-between lma-py-2 lma-border-b last:lma-border-0 lma-text-sm"
                 >
-                  <div className="flex-1 min-w-0">
-                    <span className="font-medium">{r.userName}</span>
-                    <span className="text-muted-foreground">
+                  <div className="lma-flex-1 lma-min-w-0">
+                    <span className="lma-font-medium">{r.userName}</span>
+                    <span className="lma-text-muted-foreground">
                       {" "}
                       — {lt?.name}: {formatDate(r.startDate)} →{" "}
                       {formatDate(r.endDate)} ({r.totalDays} ngày)
@@ -136,7 +136,7 @@ const DashboardPage = () => {
                   </div>
                   <Badge
                     className={cn(
-                      "text-[11px] ml-2 shrink-0",
+                      "lma-text-[11px] lma-ml-2 shrink-0",
                       getApprovalStatusColor(
                         r.status,
                         r.approvedLevel,
@@ -155,7 +155,7 @@ const DashboardPage = () => {
               );
             })}
             {recentRequests.length === 0 && (
-              <p className="text-center text-muted-foreground py-4">
+              <p className="lma-text-center lma-text-muted-foreground lma-py-4">
                 Chưa có hoạt động
               </p>
             )}

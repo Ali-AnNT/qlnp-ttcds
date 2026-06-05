@@ -57,8 +57,8 @@ const LoginPage = () => {
 
   if (loading && !user) {
     return (
-      <div className="min-h-screen bg-primary flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary-foreground" />
+      <div className="lma-min-h-screen lma-bg-primary lma-flex lma-items-center lma-justify-center">
+        <Loader2 className="lma-h-8 lma-w-8 lma-animate-spin lma-text-primary-foreground" />
       </div>
     );
   }
@@ -66,27 +66,27 @@ const LoginPage = () => {
   // Production mode: no dev login available — show access denied + retry
   if (!DEV_MODE) {
     return (
-      <div className="min-h-screen bg-primary flex items-center justify-center !p-4">
-        <Card className="shadow-xl border-0 max-w-md w-full text-center !p-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-accent mb-4">
-            <CalendarDays className="h-8 w-8 text-accent-foreground" />
+      <div className="lma-min-h-screen lma-bg-primary lma-flex lma-items-center lma-justify-center !lma-p-4">
+        <Card className="lma-shadow-xl lma-border-0 lma-max-w-md lma-w-full lma-text-center !lma-p-8">
+          <div className="lma-inline-flex lma-items-center lma-justify-center lma-w-16 lma-h-16 lma-rounded-2xl lma-bg-accent lma-mb-4">
+            <CalendarDays className="lma-h-8 lma-w-8 lma-text-accent-foreground" />
           </div>
-          <h1 className="text-xl font-bold mb-2">
+          <h1 className="lma-text-xl lma-font-bold lma-mb-2">
             Bạn không có quyền truy cập module này
           </h1>
-          <p className="text-sm text-muted-foreground mb-6">
+          <p className="lma-text-sm lma-text-muted-foreground lma-mb-6">
             Vui lòng đăng nhập qua cổng thông tin chính để được cấp quyền truy
             cập.
           </p>
           <Button
             onClick={handleRetry}
             disabled={retrying}
-            className="w-full gap-2"
+            className="lma-w-full lma-gap-2"
           >
             {retrying ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="lma-h-4 lma-w-4 lma-animate-spin" />
             ) : (
-              <RefreshCw className="h-4 w-4" />
+              <RefreshCw className="lma-h-4 lma-w-4" />
             )}
             {retrying ? "Đang thử lại..." : "Thử lại"}
           </Button>
@@ -97,18 +97,18 @@ const LoginPage = () => {
 
   // Dev mode: show dev login form
   return (
-    <div className="min-h-screen bg-primary flex items-center justify-center !p-4">
-      <Card className="shadow-xl border-0 max-w-md w-full text-center !p-8">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-accent mb-4">
-          <CalendarDays className="h-8 w-8 text-accent-foreground" />
+    <div className="lma-min-h-screen lma-bg-primary lma-flex lma-items-center lma-justify-center !lma-p-4">
+      <Card className="lma-shadow-xl lma-border-0 lma-max-w-md lma-w-full lma-text-center !lma-p-8">
+        <div className="lma-inline-flex lma-items-center lma-justify-center lma-w-16 lma-h-16 lma-rounded-2xl lma-bg-accent lma-mb-4">
+          <CalendarDays className="lma-h-8 lma-w-8 lma-text-accent-foreground" />
         </div>
-        <h1 className="text-xl font-bold mb-2">HỆ THỐNG QUẢN LÝ NGHỈ PHÉP</h1>
-        <p className="text-sm text-muted-foreground mb-6">
+        <h1 className="lma-text-xl lma-font-bold lma-mb-2">HỆ THỐNG QUẢN LÝ NGHỈ PHÉP</h1>
+        <p className="lma-text-sm lma-text-muted-foreground lma-mb-6">
           Đăng nhập qua hệ thống SSO để tiếp tục
         </p>
 
-        <div className="mt-6 pt-6 border-t border-border">
-          <h3 className="text-sm font-semibold mb-3 text-foreground">
+        <div className="lma-mt-6 lma-pt-6 lma-border-t lma-border-border">
+          <h3 className="lma-text-sm lma-font-semibold lma-mb-3 lma-text-foreground">
             Dev Login
           </h3>
           <select
@@ -117,7 +117,7 @@ const LoginPage = () => {
               setDevUser(e.target.value);
               setDevError("");
             }}
-            className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm mb-3"
+            className="lma-w-full lma-px-3 lma-py-2 lma-rounded-md lma-border lma-border-input lma-bg-background lma-text-sm lma-mb-3"
           >
             <option value="">-- Chọn tài khoản test --</option>
             {DEV_USERS.map((u) => (
@@ -129,17 +129,17 @@ const LoginPage = () => {
           <Button
             onClick={handleDevLogin}
             disabled={!devUser || devLoggingIn}
-            className="w-full gap-2"
+            className="lma-w-full lma-gap-2"
           >
             {devLoggingIn ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="lma-h-4 lma-w-4 lma-animate-spin" />
             ) : (
-              <LogIn className="h-4 w-4" />
+              <LogIn className="lma-h-4 lma-w-4" />
             )}
             {devLoggingIn ? "Đang đăng nhập..." : "Đăng nhập (Dev)"}
           </Button>
           {devError && (
-            <p className="text-xs text-destructive mt-2">{devError}</p>
+            <p className="lma-text-xs lma-text-destructive lma-mt-2">{devError}</p>
           )}
         </div>
       </Card>

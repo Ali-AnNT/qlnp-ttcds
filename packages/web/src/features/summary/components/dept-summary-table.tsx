@@ -27,17 +27,17 @@ export function DeptSummaryTable({
   onDetailClick,
 }: DeptSummaryTableProps) {
   return (
-    <Card className="lg:col-span-2">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm">Tổng hợp theo phòng ban</CardTitle>
+    <Card className="lg:lma-col-span-2">
+      <CardHeader className="lma-pb-2">
+        <CardTitle className="lma-text-sm">Tổng hợp theo phòng ban</CardTitle>
       </CardHeader>
-      <CardContent className="p-0">
+      <CardContent className="lma-p-0">
         <Table>
           <TableHeader>
-            <TableRow className="bg-muted/50">
+            <TableRow className="lma-bg-muted/50">
               <TableHead>Phòng ban</TableHead>
-              <TableHead className="text-center">Tổng CB</TableHead>
-              <TableHead className="text-center">
+              <TableHead className="lma-text-center">Tổng CB</TableHead>
+              <TableHead className="lma-text-center">
                 Tổng ngày phép đã duyệt
               </TableHead>
             </TableRow>
@@ -46,26 +46,26 @@ export function DeptSummaryTable({
             {deptSummary.map((d, i) => (
               <TableRow
                 key={d.donViId}
-                className={i % 2 === 1 ? "bg-muted/20" : ""}
+                className={i % 2 === 1 ? "lma-bg-muted/20" : ""}
               >
-                <TableCell className="font-medium">
+                <TableCell className="lma-font-medium">
                   {d.tenDonVi ?? ""}
                 </TableCell>
-                <TableCell className="text-center">
+                <TableCell className="lma-text-center">
                   <Button
                     type="button"
                     variant="link"
-                    className="h-auto !p-0 font-semibold"
+                    className="lma-h-auto !lma-p-0 lma-font-semibold"
                     onClick={() => onEmpClick(d.donViId)}
                   >
                     {d.totalEmp}
                   </Button>
                 </TableCell>
-                <TableCell className="text-center">
+                <TableCell className="lma-text-center">
                   <Button
                     type="button"
                     variant="link"
-                    className="h-auto !p-0 font-semibold"
+                    className="lma-h-auto !lma-p-0 lma-font-semibold"
                     onClick={() => onDetailClick(d.donViId)}
                   >
                     {d.totalLeave}

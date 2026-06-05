@@ -233,11 +233,11 @@ const LeaveMyPage = () => {
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        <div className="h-8 w-48 bg-muted animate-pulse rounded" />
+      <div className="lma-space-y-4">
+        <div className="lma-h-8 lma-w-48 lma-bg-muted lma-animate-pulse rounded" />
         <Card>
-          <CardContent className="p-0">
-            <div className="h-64" />
+          <CardContent className="lma-p-0">
+            <div className="lma-h-64" />
           </CardContent>
         </Card>
       </div>
@@ -245,11 +245,11 @@ const LeaveMyPage = () => {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <h2 className="text-lg font-bold">Danh sách đơn của tôi</h2>
+    <div className="lma-space-y-4">
+      <div className="lma-flex lma-items-center lma-justify-between lma-flex-wrap lma-gap-2">
+        <h2 className="lma-text-lg lma-font-bold">Danh sách đơn của tôi</h2>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="lma-w-40">
             <SelectValue placeholder="Trạng thái" />
           </SelectTrigger>
           <SelectContent>
@@ -264,19 +264,19 @@ const LeaveMyPage = () => {
       </div>
 
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="lma-p-0">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead className="w-12">STT</TableHead>
+              <TableRow className="lma-bg-muted/50">
+                <TableHead className="lma-w-12">STT</TableHead>
                 <TableHead>Loại phép</TableHead>
                 <TableHead>Ngày bắt đầu</TableHead>
                 <TableHead>Ngày kết thúc</TableHead>
-                <TableHead className="w-16">Số ngày</TableHead>
+                <TableHead className="lma-w-16">Số ngày</TableHead>
                 <TableHead>Lý do</TableHead>
                 <TableHead>Trạng thái</TableHead>
                 <TableHead>Ngày gửi</TableHead>
-                <TableHead className="w-28">Thao tác</TableHead>
+                <TableHead className="lma-w-28">Thao tác</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -284,7 +284,7 @@ const LeaveMyPage = () => {
                 <TableRow>
                   <TableCell
                     colSpan={9}
-                    className="text-center text-muted-foreground py-8"
+                    className="lma-text-center lma-text-muted-foreground lma-py-8"
                   >
                     Không có đơn nào
                   </TableCell>
@@ -295,23 +295,23 @@ const LeaveMyPage = () => {
                   return (
                     <TableRow
                       key={r.id}
-                      className={i % 2 === 1 ? "bg-muted/20" : ""}
+                      className={i % 2 === 1 ? "lma-bg-muted/20" : ""}
                     >
-                      <TableCell className="text-center">{i + 1}</TableCell>
+                      <TableCell className="lma-text-center">{i + 1}</TableCell>
                       <TableCell>{lt?.name}</TableCell>
                       <TableCell>{formatDate(r.startDate)}</TableCell>
                       <TableCell>{formatDate(r.endDate)}</TableCell>
-                      <TableCell className="text-center">
+                      <TableCell className="lma-text-center">
                         {r.totalDays}
                       </TableCell>
-                      <TableCell className="max-w-[200px] truncate">
+                      <TableCell className="lma-max-w-[200px] truncate">
                         {r.reason}
                       </TableCell>
                       <TableCell>
                         <Badge
                           variant="outline"
                           className={cn(
-                            "text-[11px]",
+                            "lma-text-[11px]",
                             getApprovalStatusColor(
                               r.status,
                               r.approvedLevel,
@@ -329,23 +329,23 @@ const LeaveMyPage = () => {
                       <TableCell>{formatDate(r.createdAt)}</TableCell>
                       <TableCell>
                         {r.status === "pending" && (
-                          <div className="flex gap-1">
+                          <div className="lma-flex lma-gap-1">
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-7 px-2 text-primary"
+                              className="lma-h-7 lma-px-2 lma-text-primary"
                               onClick={() => openEdit(r)}
                               type="button"
                             >
-                              <Pencil className="h-3 w-3" />
+                              <Pencil className="lma-h-3 lma-w-3" />
                             </Button>
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-7 px-2 text-destructive"
+                              className="lma-h-7 lma-px-2 lma-text-destructive"
                               onClick={() => handleCancel(r.id)}
                             >
-                              <XCircle className="h-3 w-3" />
+                              <XCircle className="lma-h-3 lma-w-3" />
                             </Button>
                           </div>
                         )}
@@ -361,13 +361,13 @@ const LeaveMyPage = () => {
 
       {/* Edit Dialog */}
       <Dialog open={!!editRequest} onOpenChange={() => setEditRequest(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="lma-max-w-lg">
           <DialogHeader>
             <DialogTitle>Sửa đơn xin nghỉ phép</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit(onEditSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <Label className="text-[13px]">Loại đơn xin nghỉ</Label>
+          <form onSubmit={handleSubmit(onEditSubmit)} className="lma-space-y-4">
+            <div className="lma-space-y-2">
+              <Label className="lma-text-[13px]">Loại đơn xin nghỉ</Label>
               <Controller
                 name="leaveTypeId"
                 control={control}
@@ -387,14 +387,14 @@ const LeaveMyPage = () => {
                 )}
               />
               {errors.leaveTypeId && (
-                <p className="text-destructive text-xs">
+                <p className="lma-text-destructive lma-text-xs">
                   {errors.leaveTypeId.message}
                 </p>
               )}
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-[13px]">Ngày bắt đầu</Label>
+            <div className="lma-grid lma-grid-cols-2 lma-gap-4">
+              <div className="lma-space-y-2">
+                <Label className="lma-text-[13px]">Ngày bắt đầu</Label>
                 <Controller
                   name="startDate"
                   control={control}
@@ -415,13 +415,13 @@ const LeaveMyPage = () => {
                   )}
                 />
                 {errors.startDate && (
-                  <p className="text-destructive text-xs">
+                  <p className="lma-text-destructive lma-text-xs">
                     {errors.startDate.message}
                   </p>
                 )}
               </div>
-              <div className="space-y-2">
-                <Label className="text-[13px]">Ngày kết thúc</Label>
+              <div className="lma-space-y-2">
+                <Label className="lma-text-[13px]">Ngày kết thúc</Label>
                 <Controller
                   name="endDate"
                   control={control}
@@ -441,26 +441,26 @@ const LeaveMyPage = () => {
                   )}
                 />
                 {errors.endDate && (
-                  <p className="text-destructive text-xs">
+                  <p className="lma-text-destructive lma-text-xs">
                     {errors.endDate.message}
                   </p>
                 )}
               </div>
             </div>
             {editDays > 0 && (
-              <div className="bg-muted rounded-md px-3 py-2 text-sm">
+              <div className="lma-bg-muted lma-rounded-md lma-px-3 lma-py-2 lma-text-sm">
                 Số ngày nghỉ: <strong>{editDays}</strong> ngày
               </div>
             )}
-            <div className="space-y-2">
-              <Label className="text-[13px]">Lý do nghỉ</Label>
+            <div className="lma-space-y-2">
+              <Label className="lma-text-[13px]">Lý do nghỉ</Label>
               <Textarea
                 {...register("reason")}
                 placeholder="Nhập lý do..."
                 rows={3}
               />
               {errors.reason && (
-                <p className="text-destructive text-xs">
+                <p className="lma-text-destructive lma-text-xs">
                   {errors.reason.message}
                 </p>
               )}

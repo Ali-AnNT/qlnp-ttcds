@@ -14,11 +14,11 @@ export function RouteErrorBoundary() {
       : "Lỗi không xác định";
 
   return (
-    <div className="flex items-center justify-center min-h-[400px] !p-6">
-      <div className="text-center space-y-3">
-        <p className="text-destructive font-medium">Có lỗi khi tải trang</p>
-        <p className="text-sm text-muted-foreground">{message}</p>
-        <Link to="/" className="text-sm text-accent hover:underline">
+    <div className="lma-flex lma-items-center lma-justify-center lma-min-h-[400px] !lma-p-6">
+      <div className="lma-text-center lma-space-y-3">
+        <p className="lma-text-destructive lma-font-medium">Có lỗi khi tải trang</p>
+        <p className="lma-text-sm lma-text-muted-foreground">{message}</p>
+        <Link to="/" className="lma-text-sm lma-text-accent hover:lma-underline">
           Quay lại trang chủ
         </Link>
       </div>

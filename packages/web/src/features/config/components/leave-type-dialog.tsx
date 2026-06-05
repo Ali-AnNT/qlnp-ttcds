@@ -34,23 +34,23 @@ export const LeaveTypeDialog = ({
           <DialogTitle>{editingType?.id ? "Sửa loại phép" : "Thêm loại phép"}</DialogTitle>
         </DialogHeader>
         {editingType && (
-          <div className="space-y-3">
+          <div className="lma-space-y-3">
             <div>
-              <Label className="text-xs">Tên loại phép</Label>
+              <Label className="lma-text-xs">Tên loại phép</Label>
               <Input
                 value={editingType.name}
                 onChange={(e) => onSetEditingType({ ...editingType, name: e.target.value })}
               />
             </div>
             <div>
-              <Label className="text-xs">Mã</Label>
+              <Label className="lma-text-xs">Mã</Label>
               <Input
                 value={editingType.code}
                 onChange={(e) => onSetEditingType({ ...editingType, code: e.target.value })}
               />
             </div>
             <div>
-              <Label className="text-xs">Số ngày mặc định</Label>
+              <Label className="lma-text-xs">Số ngày mặc định</Label>
               <Input
                 type="number"
                 min={0}
@@ -64,7 +64,7 @@ export const LeaveTypeDialog = ({
               />
             </div>
             <div>
-              <Label className="text-xs">Mô tả</Label>
+              <Label className="lma-text-xs">Mô tả</Label>
               <Input
                 value={editingType.description}
                 onChange={(e) =>

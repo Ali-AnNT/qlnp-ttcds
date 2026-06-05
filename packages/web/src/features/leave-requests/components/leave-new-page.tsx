@@ -173,14 +173,14 @@ const LeaveNewPage = () => {
   };
 
   return (
-    <div className="max-w-2xl">
+    <div className="lma-max-w-2xl">
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Tạo đơn xin nghỉ phép</CardTitle>
+          <CardTitle className="lma-text-lg">Tạo đơn xin nghỉ phép</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label className="text-[13px]">Loại đơn xin nghỉ</Label>
+        <CardContent className="lma-space-y-4">
+          <div className="lma-space-y-2">
+            <Label className="lma-text-[13px]">Loại đơn xin nghỉ</Label>
             <Controller
               name="leaveTypeId"
               control={control}
@@ -200,15 +200,15 @@ const LeaveNewPage = () => {
               )}
             />
             {errors.leaveTypeId && (
-              <p className="text-destructive text-xs">
+              <p className="lma-text-destructive lma-text-xs">
                 {errors.leaveTypeId.message}
               </p>
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-[13px]">Ngày bắt đầu</Label>
+          <div className="lma-grid lma-grid-cols-2 lma-gap-4">
+            <div className="lma-space-y-2">
+              <Label className="lma-text-[13px]">Ngày bắt đầu</Label>
               <Controller
                 name="startDate"
                 control={control}
@@ -224,13 +224,13 @@ const LeaveNewPage = () => {
                 )}
               />
               {errors.startDate && (
-                <p className="text-destructive text-xs">
+                <p className="lma-text-destructive lma-text-xs">
                   {errors.startDate.message}
                 </p>
               )}
             </div>
-            <div className="space-y-2">
-              <Label className="text-[13px]">Ngày kết thúc</Label>
+            <div className="lma-space-y-2">
+              <Label className="lma-text-[13px]">Ngày kết thúc</Label>
               <Controller
                 name="endDate"
                 control={control}
@@ -250,7 +250,7 @@ const LeaveNewPage = () => {
                 )}
               />
               {errors.endDate && (
-                <p className="text-destructive text-xs">
+                <p className="lma-text-destructive lma-text-xs">
                   {errors.endDate.message}
                 </p>
               )}
@@ -258,28 +258,28 @@ const LeaveNewPage = () => {
           </div>
 
           {days > 0 && (
-            <div className="bg-muted rounded-md px-3 py-2 text-sm">
+            <div className="lma-bg-muted lma-rounded-md lma-px-3 lma-py-2 lma-text-sm">
               Số ngày nghỉ: <strong>{days}</strong> ngày
             </div>
           )}
 
-          <div className="space-y-2">
-            <Label className="text-[13px]">Lý do nghỉ</Label>
+          <div className="lma-space-y-2">
+            <Label className="lma-text-[13px]">Lý do nghỉ</Label>
             <Textarea
               {...register("reason")}
               placeholder="Nhập lý do xin nghỉ..."
               rows={3}
             />
             {errors.reason && (
-              <p className="text-destructive text-xs">
+              <p className="lma-text-destructive lma-text-xs">
                 {errors.reason.message}
               </p>
             )}
           </div>
 
-          <div className="flex gap-2 pt-2">
+          <div className="lma-flex lma-gap-2 lma-pt-2">
             <Button
-              className="bg-accent hover:bg-accent/90 text-accent-foreground"
+              className="lma-bg-accent hover:lma-bg-accent/90 lma-text-accent-foreground"
               onClick={handleSubmit(onSubmit)}
             >
               Gửi phê duyệt

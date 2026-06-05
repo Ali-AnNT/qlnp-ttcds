@@ -147,7 +147,7 @@ const SidebarProvider = React.forwardRef<
               } as React.CSSProperties
             }
             className={cn(
-              "group/sidebar-wrapper flex min-h-svh w-full has-[[data-variant=inset]]:bg-sidebar",
+              "group/sidebar-wrapper lma-flex lma-min-h-svh lma-w-full has-[[data-variant=inset]]:lma-bg-sidebar",
               className,
             )}
             ref={ref}
@@ -187,7 +187,7 @@ const Sidebar = React.forwardRef<
       return (
         <div
           className={cn(
-            "flex h-full w-[--sidebar-width] flex-col bg-sidebar text-sidebar-foreground",
+            "lma-flex lma-h-full lma-w-[--sidebar-width] lma-flex-col lma-bg-sidebar lma-text-sidebar-foreground",
             className,
           )}
           ref={ref}
@@ -204,7 +204,7 @@ const Sidebar = React.forwardRef<
           <SheetContent
             data-sidebar="sidebar"
             data-mobile="true"
-            className="w-[--sidebar-width] bg-sidebar !p-0 text-sidebar-foreground [&>button]:hidden"
+            className="lma-w-[--sidebar-width] lma-bg-sidebar !lma-p-0 lma-text-sidebar-foreground [&>button]:lma-hidden"
             style={
               {
                 "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
@@ -212,7 +212,7 @@ const Sidebar = React.forwardRef<
             }
             side={side}
           >
-            <div className="flex h-full w-full flex-col">{children}</div>
+            <div className="lma-flex lma-h-full lma-w-full lma-flex-col">{children}</div>
           </SheetContent>
         </Sheet>
       );
@@ -221,7 +221,7 @@ const Sidebar = React.forwardRef<
     return (
       <div
         ref={ref}
-        className="group peer hidden text-sidebar-foreground md:block"
+        className="group peer lma-hidden lma-text-sidebar-foreground md:lma-block"
         data-state={state}
         data-collapsible={state === "collapsed" ? collapsible : ""}
         data-variant={variant}
@@ -230,31 +230,31 @@ const Sidebar = React.forwardRef<
         {/* This is what handles the sidebar gap on desktop */}
         <div
           className={cn(
-            "relative h-svh w-[--sidebar-width] bg-transparent transition-[width] duration-200 ease-linear",
-            "group-data-[collapsible=offcanvas]:w-0",
-            "group-data-[side=right]:rotate-180",
+            "lma-relative lma-h-svh lma-w-[--sidebar-width] lma-bg-transparent lma-transition-[width] lma-duration-200 lma-ease-linear",
+            "group-data-[collapsible=offcanvas]:lma-w-0",
+            "group-data-[side=right]:lma-rotate-180",
             variant === "floating" || variant === "inset"
-              ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4))]"
-              : "group-data-[collapsible=icon]:w-[--sidebar-width-icon]",
+              ? "group-data-[collapsible=icon]:lma-w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4))]"
+              : "group-data-[collapsible=icon]:lma-w-[--sidebar-width-icon]",
           )}
         />
         <div
           className={cn(
-            "fixed inset-y-0 z-10 hidden h-svh w-[--sidebar-width] transition-[left,right,width] duration-200 ease-linear md:flex",
+            "lma-fixed lma-inset-y-0 lma-z-10 lma-hidden lma-h-svh lma-w-[--sidebar-width] lma-transition-[left,right,width] lma-duration-200 lma-ease-linear md:lma-flex",
             side === "left"
-              ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
-              : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
+              ? "lma-left-0 group-data-[collapsible=offcanvas]:lma-left-[calc(var(--sidebar-width)*-1)]"
+              : "lma-right-0 group-data-[collapsible=offcanvas]:lma-right-[calc(var(--sidebar-width)*-1)]",
             // Adjust the padding for floating and inset variants.
             variant === "floating" || variant === "inset"
-              ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+2px)]"
-              : "group-data-[collapsible=icon]:w-[--sidebar-width-icon] group-data-[side=left]:border-r group-data-[side=right]:border-l",
+              ? "lma-p-2 group-data-[collapsible=icon]:lma-w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+2px)]"
+              : "group-data-[collapsible=icon]:lma-w-[--sidebar-width-icon] group-data-[side=left]:lma-border-r group-data-[side=right]:lma-border-l",
             className,
           )}
           {...props}
         >
           <div
             data-sidebar="sidebar"
-            className="flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow"
+            className="lma-flex lma-h-full lma-w-full lma-flex-col lma-bg-sidebar group-data-[variant=floating]:lma-rounded-lg group-data-[variant=floating]:lma-border group-data-[variant=floating]:lma-border-sidebar-border group-data-[variant=floating]:lma-shadow"
           >
             {children}
           </div>
@@ -277,7 +277,7 @@ const SidebarTrigger = React.forwardRef<
       data-sidebar="trigger"
       variant="ghost"
       size="icon"
-      className={cn("h-7 w-7", className)}
+      className={cn("lma-h-7 lma-w-7", className)}
       onClick={(event) => {
         onClick?.(event);
         toggleSidebar();
@@ -285,7 +285,7 @@ const SidebarTrigger = React.forwardRef<
       {...props}
     >
       <PanelLeft />
-      <span className="sr-only">Toggle Sidebar</span>
+      <span className="lma-sr-only">Toggle Sidebar</span>
     </Button>
   );
 });
@@ -307,12 +307,12 @@ const SidebarRail = React.forwardRef<
       onClick={toggleSidebar}
       title="Toggle Sidebar"
       className={cn(
-        "absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] group-data-[side=left]:-right-4 group-data-[side=right]:left-0 hover:after:bg-sidebar-border sm:flex",
-        "[[data-side=left]_&]:cursor-w-resize [[data-side=right]_&]:cursor-e-resize",
-        "[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize",
-        "group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full group-data-[collapsible=offcanvas]:hover:bg-sidebar",
-        "[[data-side=left][data-collapsible=offcanvas]_&]:-right-2",
-        "[[data-side=right][data-collapsible=offcanvas]_&]:-left-2",
+        "lma-absolute lma-inset-y-0 lma-z-20 lma-hidden lma-w-4 -lma-translate-x-1/2 lma-transition-all lma-ease-linear after:lma-absolute after:lma-inset-y-0 after:lma-left-1/2 after:lma-w-[2px] group-data-[side=left]:-lma-right-4 group-data-[side=right]:lma-left-0 hover:after:lma-bg-sidebar-border sm:lma-flex",
+        "[[data-side=left]_&]:lma-cursor-w-resize [[data-side=right]_&]:lma-cursor-e-resize",
+        "[[data-side=left][data-state=collapsed]_&]:lma-cursor-e-resize [[data-side=right][data-state=collapsed]_&]:lma-cursor-w-resize",
+        "group-data-[collapsible=offcanvas]:lma-translate-x-0 group-data-[collapsible=offcanvas]:after:lma-left-full group-data-[collapsible=offcanvas]:hover:lma-bg-sidebar",
+        "[[data-side=left][data-collapsible=offcanvas]_&]:-lma-right-2",
+        "[[data-side=right][data-collapsible=offcanvas]_&]:-lma-left-2",
         className,
       )}
       {...props}
@@ -329,8 +329,8 @@ const SidebarInset = React.forwardRef<
     <main
       ref={ref}
       className={cn(
-        "relative flex min-h-svh flex-1 flex-col bg-background",
-        "peer-data-[variant=inset]:min-h-[calc(100svh-theme(spacing.4))] md:peer-data-[variant=inset]:m-2 md:peer-data-[state=collapsed]:peer-data-[variant=inset]:ml-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow",
+        "lma-relative lma-flex lma-min-h-svh lma-flex-1 lma-flex-col lma-bg-background",
+        "peer-data-[variant=inset]:lma-min-h-[calc(100svh-theme(spacing.4))] md:peer-data-[variant=inset]:lma-m-2 md:peer-data-[state=collapsed]:peer-data-[variant=inset]:lma-ml-2 md:peer-data-[variant=inset]:lma-ml-0 md:peer-data-[variant=inset]:lma-rounded-xl md:peer-data-[variant=inset]:lma-shadow",
         className,
       )}
       {...props}
@@ -348,7 +348,7 @@ const SidebarInput = React.forwardRef<
       ref={ref}
       data-sidebar="input"
       className={cn(
-        "h-8 w-full bg-background shadow-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+        "lma-h-8 lma-w-full lma-bg-background lma-shadow-none focus-visible:lma-ring-2 focus-visible:lma-ring-sidebar-ring",
         className,
       )}
       {...props}
@@ -365,7 +365,7 @@ const SidebarHeader = React.forwardRef<
     <div
       ref={ref}
       data-sidebar="header"
-      className={cn("flex flex-col gap-2 !p-2", className)}
+      className={cn("lma-flex lma-flex-col lma-gap-2 !lma-p-2", className)}
       {...props}
     />
   );
@@ -380,7 +380,7 @@ const SidebarFooter = React.forwardRef<
     <div
       ref={ref}
       data-sidebar="footer"
-      className={cn("flex flex-col gap-2 !p-2", className)}
+      className={cn("lma-flex lma-flex-col lma-gap-2 !lma-p-2", className)}
       {...props}
     />
   );
@@ -395,7 +395,7 @@ const SidebarSeparator = React.forwardRef<
     <Separator
       ref={ref}
       data-sidebar="separator"
-      className={cn("mx-2 w-auto bg-sidebar-border", className)}
+      className={cn("lma-mx-2 lma-w-auto lma-bg-sidebar-border", className)}
       {...props}
     />
   );
@@ -411,7 +411,7 @@ const SidebarContent = React.forwardRef<
       ref={ref}
       data-sidebar="content"
       className={cn(
-        "flex min-h-0 flex-1 flex-col gap-2 overflow-auto group-data-[collapsible=icon]:overflow-hidden",
+        "lma-flex lma-min-h-0 lma-flex-1 lma-flex-col lma-gap-2 lma-overflow-auto group-data-[collapsible=icon]:lma-overflow-hidden",
         className,
       )}
       {...props}
@@ -428,7 +428,7 @@ const SidebarGroup = React.forwardRef<
     <div
       ref={ref}
       data-sidebar="group"
-      className={cn("relative flex w-full min-w-0 flex-col !p-2", className)}
+      className={cn("lma-relative lma-flex lma-w-full lma-min-w-0 lma-flex-col !lma-p-2", className)}
       {...props}
     />
   );
@@ -446,8 +446,8 @@ const SidebarGroupLabel = React.forwardRef<
       ref={ref}
       data-sidebar="group-label"
       className={cn(
-        "flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-sidebar-foreground/70 outline-none ring-sidebar-ring transition-[margin,opa] duration-200 ease-linear focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
-        "group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0",
+        "lma-flex lma-h-8 shrink-0 lma-items-center lma-rounded-md lma-px-2 lma-text-xs lma-font-medium lma-text-sidebar-foreground/70 outline-none lma-ring-sidebar-ring lma-transition-[margin,opa] lma-duration-200 lma-ease-linear focus-visible:lma-ring-2 [&>svg]:lma-size-4 [&>svg]:shrink-0",
+        "group-data-[collapsible=icon]:-lma-mt-8 group-data-[collapsible=icon]:lma-opacity-0",
         className,
       )}
       {...props}
@@ -468,10 +468,10 @@ const SidebarGroupAction = React.forwardRef<
       type={type}
       data-sidebar="group-action"
       className={cn(
-        "absolute right-3 top-3.5 flex aspect-square w-5 items-center justify-center rounded-md !p-0 text-sidebar-foreground outline-none ring-sidebar-ring transition-transform hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
+        "lma-absolute lma-right-3 lma-top-3.5 lma-flex aspect-square lma-w-5 lma-items-center lma-justify-center lma-rounded-md !lma-p-0 lma-text-sidebar-foreground outline-none lma-ring-sidebar-ring lma-transition-transform hover:lma-bg-sidebar-accent hover:lma-text-sidebar-accent-foreground focus-visible:lma-ring-2 [&>svg]:lma-size-4 [&>svg]:shrink-0",
         // Increases the hit area of the button on mobile.
-        "after:absolute after:-inset-2 after:md:hidden",
-        "group-data-[collapsible=icon]:hidden",
+        "after:lma-absolute after:-lma-inset-2 after:md:lma-hidden",
+        "group-data-[collapsible=icon]:lma-hidden",
         className,
       )}
       {...props}
@@ -487,7 +487,7 @@ const SidebarGroupContent = React.forwardRef<
   <div
     ref={ref}
     data-sidebar="group-content"
-    className={cn("w-full text-sm", className)}
+    className={cn("lma-w-full lma-text-sm", className)}
     {...props}
   />
 ));
@@ -500,7 +500,7 @@ const SidebarMenu = React.forwardRef<
   <ul
     ref={ref}
     data-sidebar="menu"
-    className={cn("flex w-full min-w-0 flex-col gap-1", className)}
+    className={cn("lma-flex lma-w-full lma-min-w-0 lma-flex-col lma-gap-1", className)}
     {...props}
   />
 ));
@@ -513,25 +513,25 @@ const SidebarMenuItem = React.forwardRef<
   <li
     ref={ref}
     data-sidebar="menu-item"
-    className={cn("group/menu-item relative", className)}
+    className={cn("group/menu-item lma-relative", className)}
     {...props}
   />
 ));
 SidebarMenuItem.displayName = "SidebarMenuItem";
 
 const sidebarMenuButtonVariants = cva(
-  "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md !p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
+  "peer/menu-button lma-flex lma-w-full lma-items-center lma-gap-2 lma-overflow-hidden lma-rounded-md !lma-p-2 lma-text-left lma-text-sm outline-none lma-ring-sidebar-ring lma-transition-[width,height,padding] hover:lma-bg-sidebar-accent hover:lma-text-sidebar-accent-foreground focus-visible:lma-ring-2 active:lma-bg-sidebar-accent active:lma-text-sidebar-accent-foreground disabled:lma-pointer-events-none disabled:lma-opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:lma-pr-8 aria-disabled:lma-pointer-events-none aria-disabled:lma-opacity-50 data-[active=true]:lma-bg-sidebar-accent data-[active=true]:lma-font-medium data-[active=true]:lma-text-sidebar-accent-foreground data-[state=open]:hover:lma-bg-sidebar-accent data-[state=open]:hover:lma-text-sidebar-accent-foreground group-data-[collapsible=icon]:!lma-size-8 group-data-[collapsible=icon]:!lma-p-2 [&>span:last-child]:truncate [&>svg]:lma-size-4 [&>svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+        default: "hover:lma-bg-sidebar-accent hover:lma-text-sidebar-accent-foreground",
         outline:
-          "bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]",
+          "lma-bg-background lma-shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:lma-bg-sidebar-accent hover:lma-text-sidebar-accent-foreground hover:lma-shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]",
       },
       size: {
-        default: "h-8 text-sm",
-        sm: "h-7 text-xs",
-        lg: "h-12 text-sm group-data-[collapsible=icon]:!p-0",
+        default: "lma-h-8 lma-text-sm",
+        sm: "lma-h-7 lma-text-xs",
+        lg: "lma-h-12 lma-text-sm group-data-[collapsible=icon]:!lma-p-0",
       },
     },
     defaultVariants: {
@@ -627,15 +627,15 @@ const SidebarMenuAction = React.forwardRef<
         type={type}
         data-sidebar="menu-action"
         className={cn(
-          "absolute right-1 top-1.5 flex aspect-square w-5 items-center justify-center rounded-md !p-0 text-sidebar-foreground outline-none ring-sidebar-ring transition-transform peer-hover/menu-button:text-sidebar-accent-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
+          "lma-absolute lma-right-1 lma-top-1.5 lma-flex aspect-square lma-w-5 lma-items-center lma-justify-center lma-rounded-md !lma-p-0 lma-text-sidebar-foreground outline-none lma-ring-sidebar-ring lma-transition-transform peer-hover/menu-button:lma-text-sidebar-accent-foreground hover:lma-bg-sidebar-accent hover:lma-text-sidebar-accent-foreground focus-visible:lma-ring-2 [&>svg]:lma-size-4 [&>svg]:shrink-0",
           // Increases the hit area of the button on mobile.
-          "after:absolute after:-inset-2 after:md:hidden",
-          "peer-data-[size=sm]/menu-button:top-1",
-          "peer-data-[size=default]/menu-button:top-1.5",
-          "peer-data-[size=lg]/menu-button:top-2.5",
-          "group-data-[collapsible=icon]:hidden",
+          "after:lma-absolute after:-lma-inset-2 after:md:lma-hidden",
+          "peer-data-[size=sm]/menu-button:lma-top-1",
+          "peer-data-[size=default]/menu-button:lma-top-1.5",
+          "peer-data-[size=lg]/menu-button:lma-top-2.5",
+          "group-data-[collapsible=icon]:lma-hidden",
           showOnHover &&
-            "group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-[state=open]:opacity-100 peer-data-[active=true]/menu-button:text-sidebar-accent-foreground md:opacity-0",
+            "group-focus-within/menu-item:lma-opacity-100 group-hover/menu-item:lma-opacity-100 data-[state=open]:lma-opacity-100 peer-data-[active=true]/menu-button:lma-text-sidebar-accent-foreground md:lma-opacity-0",
           className,
         )}
         {...props}
@@ -653,12 +653,12 @@ const SidebarMenuBadge = React.forwardRef<
     ref={ref}
     data-sidebar="menu-badge"
     className={cn(
-      "pointer-events-none absolute right-1 flex h-5 min-w-5 select-none items-center justify-center rounded-md px-1 text-xs font-medium tabular-nums text-sidebar-foreground",
-      "peer-hover/menu-button:text-sidebar-accent-foreground peer-data-[active=true]/menu-button:text-sidebar-accent-foreground",
-      "peer-data-[size=sm]/menu-button:top-1",
-      "peer-data-[size=default]/menu-button:top-1.5",
-      "peer-data-[size=lg]/menu-button:top-2.5",
-      "group-data-[collapsible=icon]:hidden",
+      "lma-pointer-events-none lma-absolute lma-right-1 lma-flex lma-h-5 lma-min-w-5 lma-select-none lma-items-center lma-justify-center lma-rounded-md lma-px-1 lma-text-xs lma-font-medium tabular-nums lma-text-sidebar-foreground",
+      "peer-hover/menu-button:lma-text-sidebar-accent-foreground peer-data-[active=true]/menu-button:lma-text-sidebar-accent-foreground",
+      "peer-data-[size=sm]/menu-button:lma-top-1",
+      "peer-data-[size=default]/menu-button:lma-top-1.5",
+      "peer-data-[size=lg]/menu-button:lma-top-2.5",
+      "group-data-[collapsible=icon]:lma-hidden",
       className,
     )}
     {...props}
@@ -681,17 +681,17 @@ const SidebarMenuSkeleton = React.forwardRef<
     <div
       ref={ref}
       data-sidebar="menu-skeleton"
-      className={cn("flex h-8 items-center gap-2 rounded-md px-2", className)}
+      className={cn("lma-flex lma-h-8 lma-items-center lma-gap-2 lma-rounded-md lma-px-2", className)}
       {...props}
     >
       {showIcon && (
         <Skeleton
-          className="size-4 rounded-md"
+          className="lma-size-4 lma-rounded-md"
           data-sidebar="menu-skeleton-icon"
         />
       )}
       <Skeleton
-        className="h-4 max-w-[--skeleton-width] flex-1"
+        className="lma-h-4 lma-max-w-[--skeleton-width] lma-flex-1"
         data-sidebar="menu-skeleton-text"
         style={
           {
@@ -712,8 +712,8 @@ const SidebarMenuSub = React.forwardRef<
     ref={ref}
     data-sidebar="menu-sub"
     className={cn(
-      "mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l border-sidebar-border px-2.5 py-0.5",
-      "group-data-[collapsible=icon]:hidden",
+      "lma-mx-3.5 lma-flex lma-min-w-0 lma-translate-x-px lma-flex-col lma-gap-1 lma-border-l lma-border-sidebar-border lma-px-2.5 lma-py-0.5",
+      "group-data-[collapsible=icon]:lma-hidden",
       className,
     )}
     {...props}
@@ -744,11 +744,11 @@ const SidebarMenuSubButton = React.forwardRef<
       data-size={size}
       data-active={isActive}
       className={cn(
-        "flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sidebar-foreground outline-none ring-sidebar-ring aria-disabled:pointer-events-none aria-disabled:opacity-50 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-sidebar-accent-foreground",
-        "data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground",
-        size === "sm" && "text-xs",
-        size === "md" && "text-sm",
-        "group-data-[collapsible=icon]:hidden",
+        "lma-flex lma-h-7 lma-min-w-0 -lma-translate-x-px lma-items-center lma-gap-2 lma-overflow-hidden lma-rounded-md lma-px-2 lma-text-sidebar-foreground outline-none lma-ring-sidebar-ring aria-disabled:lma-pointer-events-none aria-disabled:lma-opacity-50 hover:lma-bg-sidebar-accent hover:lma-text-sidebar-accent-foreground focus-visible:lma-ring-2 active:lma-bg-sidebar-accent active:lma-text-sidebar-accent-foreground disabled:lma-pointer-events-none disabled:lma-opacity-50 [&>span:last-child]:truncate [&>svg]:lma-size-4 [&>svg]:shrink-0 [&>svg]:lma-text-sidebar-accent-foreground",
+        "data-[active=true]:lma-bg-sidebar-accent data-[active=true]:lma-text-sidebar-accent-foreground",
+        size === "sm" && "lma-text-xs",
+        size === "md" && "lma-text-sm",
+        "group-data-[collapsible=icon]:lma-hidden",
         className,
       )}
       {...props}

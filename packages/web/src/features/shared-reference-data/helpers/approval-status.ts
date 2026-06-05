@@ -40,13 +40,13 @@ export function getApprovalStatusColor(
   maxLevel: number,
 ): string {
   if (status === "approved")
-    return "bg-success/10 text-success border-success/30";
-  if (status === "rejected") return "bg-red-100 text-red-700 border-red-300";
+    return "lma-bg-success/10 lma-text-success lma-border-success/30";
+  if (status === "rejected") return "lma-bg-red-100 lma-text-red-700 lma-border-red-300";
   if (status === "cancelled")
-    return "bg-gray-100 text-gray-500 border-gray-300";
+    return "lma-bg-gray-100 lma-text-gray-500 lma-border-gray-300";
   if (status === "pending" && approvedLevel > 0 && approvedLevel < maxLevel)
-    return "bg-blue-100 text-blue-700 border-blue-300";
+    return "lma-bg-blue-100 lma-text-blue-700 lma-border-blue-300";
   if (status === "pending")
-    return "bg-yellow-100 text-yellow-700 border-yellow-300";
-  return "bg-gray-100 text-gray-500 border-gray-300";
+    return "lma-bg-yellow-100 lma-text-yellow-700 lma-border-yellow-300";
+  return "lma-bg-gray-100 lma-text-gray-500 lma-border-gray-300";
 }

@@ -106,21 +106,21 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
     );
   };
 
-  const sidebarWidth = collapsed ? "w-16" : "w-60";
+  const sidebarWidth = collapsed ? "lma-w-16" : "lma-w-60";
 
   if (isMobile && !open) return null;
 
   return (
     <aside
       className={cn(
-        "bg-sidebar text-sidebar-foreground flex flex-col shrink-0 transition-all duration-200 h-screen sticky top-0 z-40 border-r border-sidebar-border",
-        isMobile ? "fixed left-0 top-0 w-60" : sidebarWidth,
+        "lma-bg-sidebar lma-text-sidebar-foreground lma-flex lma-flex-col shrink-0 lma-transition-all lma-duration-200 lma-h-screen lma-sticky lma-top-0 lma-z-40 lma-border-r lma-border-sidebar-border",
+        isMobile ? "lma-fixed lma-left-0 lma-top-0 lma-w-60" : sidebarWidth,
       )}
     >
-      <div className="h-14 flex items-center px-4 border-b border-sidebar-border gap-2">
-        <CalendarDays className="h-6 w-6 text-accent shrink-0" />
+      <div className="lma-h-14 lma-flex lma-items-center lma-px-4 lma-border-b lma-border-sidebar-border lma-gap-2">
+        <CalendarDays className="lma-h-6 lma-w-6 lma-text-accent shrink-0" />
         {!collapsed && (
-          <span className="font-bold text-sm truncate">QUẢN LÝ NGHỈ PHÉP</span>
+          <span className="lma-font-bold lma-text-sm truncate">QUẢN LÝ NGHỈ PHÉP</span>
         )}
         {isMobile && (
           <Button
@@ -128,14 +128,14 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="ml-auto h-7 w-7"
+            className="lma-ml-auto lma-h-7 lma-w-7"
           >
-            <X className="h-4 w-4" />
+            <X className="lma-h-4 lma-w-4" />
           </Button>
         )}
       </div>
 
-      <nav className="flex-1 py-2 overflow-y-auto">
+      <nav className="lma-flex-1 lma-py-2 lma-overflow-y-auto">
         {visibleItems.map((item) => {
           const Icon = item.icon;
           const isExpanded = expandedItems.includes(item.label);
@@ -151,27 +151,27 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
                   variant="ghost"
                   onClick={() => toggleExpand(item.label)}
                   className={cn(
-                    "w-full h-auto justify-start gap-3 px-4 py-2.5 text-sm font-normal rounded-none hover:bg-sidebar-accent transition-colors",
-                    isChildActive && "bg-sidebar-accent",
+                    "lma-w-full lma-h-auto lma-justify-start lma-gap-3 lma-px-4 lma-py-2.5 lma-text-sm lma-font-normal lma-rounded-none hover:lma-bg-sidebar-accent lma-transition-colors",
+                    isChildActive && "lma-bg-sidebar-accent",
                   )}
                 >
-                  <Icon className="h-4 w-4 shrink-0" />
+                  <Icon className="lma-h-4 lma-w-4 shrink-0" />
                   {!collapsed && (
                     <>
-                      <span className="flex-1 text-left truncate">
+                      <span className="lma-flex-1 lma-text-left truncate">
                         {item.label}
                       </span>
                       <ChevronDown
                         className={cn(
-                          "h-3 w-3 transition-transform",
-                          isExpanded && "rotate-180",
+                          "lma-h-3 lma-w-3 lma-transition-transform",
+                          isExpanded && "lma-rotate-180",
                         )}
                       />
                     </>
                   )}
                 </Button>
                 {!collapsed && isExpanded && (
-                  <div className="ml-4 border-l border-sidebar-border">
+                  <div className="lma-ml-4 lma-border-l lma-border-sidebar-border">
                     {item.children.map((child) => (
                       <NavLink
                         key={child.path}
@@ -179,10 +179,10 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
                         onClick={isMobile ? onClose : undefined}
                         className={({ isActive }) =>
                           cn(
-                            "block pl-6 pr-4 py-2 text-[13px] hover:bg-sidebar-accent transition-colors",
+                            "lma-block lma-pl-6 lma-pr-4 lma-py-2 lma-text-[13px] hover:lma-bg-sidebar-accent lma-transition-colors",
                             isActive
-                              ? "bg-accent text-accent-foreground font-medium"
-                              : "text-sidebar-foreground",
+                              ? "lma-bg-accent lma-text-accent-foreground lma-font-medium"
+                              : "lma-text-sidebar-foreground",
                           )
                         }
                       >
@@ -203,28 +203,28 @@ export const AppSidebar = ({ collapsed, open, onClose, isMobile }: Props) => {
               onClick={isMobile ? onClose : undefined}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-sidebar-accent transition-colors",
+                  "lma-flex lma-items-center lma-gap-3 lma-px-4 lma-py-2.5 lma-text-sm hover:lma-bg-sidebar-accent lma-transition-colors",
                   isActive
-                    ? "bg-accent text-accent-foreground font-medium"
+                    ? "lma-bg-accent lma-text-accent-foreground lma-font-medium"
                     : "",
                 )
               }
             >
-              <Icon className="h-4 w-4 shrink-0" />
+              <Icon className="lma-h-4 lma-w-4 shrink-0" />
               {!collapsed && <span className="truncate">{item.label}</span>}
             </NavLink>
           );
         })}
       </nav>
 
-      <div className="border-t border-sidebar-border !p-2">
+      <div className="lma-border-t lma-border-sidebar-border !lma-p-2">
         <Button
           type="button"
           variant="ghost"
           onClick={logout}
-          className="w-full h-auto justify-start gap-3 px-4 py-2.5 text-sm font-normal hover:bg-sidebar-accent rounded-md transition-colors"
+          className="lma-w-full lma-h-auto lma-justify-start lma-gap-3 lma-px-4 lma-py-2.5 lma-text-sm lma-font-normal hover:lma-bg-sidebar-accent lma-rounded-md lma-transition-colors"
         >
-          <LogOut className="h-4 w-4 shrink-0" />
+          <LogOut className="lma-h-4 lma-w-4 shrink-0" />
           {!collapsed && <span>Đăng xuất</span>}
         </Button>
       </div>

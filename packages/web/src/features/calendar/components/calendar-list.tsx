@@ -20,10 +20,10 @@ export const CalendarList = ({ requests, departments, leaveTypes, maxLevelByType
 
   return (
     <Card>
-      <CardContent className="p-0">
+      <CardContent className="lma-p-0">
         <Table>
           <TableHeader>
-            <TableRow className="bg-muted/50">
+            <TableRow className="lma-bg-muted/50">
               <TableHead>Tên CB</TableHead>
               <TableHead>Phòng ban</TableHead>
               <TableHead>Loại phép</TableHead>
@@ -38,25 +38,25 @@ export const CalendarList = ({ requests, departments, leaveTypes, maxLevelByType
               const lt = leaveTypes.find((t) => t.id === r.leaveTypeId);
               const dept = departments.find((d) => d.donViId === r.donViId);
               return (
-                <TableRow key={r.id} className={i % 2 === 1 ? "bg-muted/20" : ""}>
-                  <TableCell className="font-medium">{r.userName}</TableCell>
+                <TableRow key={r.id} className={i % 2 === 1 ? "lma-bg-muted/20" : ""}>
+                  <TableCell className="lma-font-medium">{r.userName}</TableCell>
                   <TableCell>{dept?.tenDonVi}</TableCell>
                   <TableCell>{lt?.name}</TableCell>
                   <TableCell>{formatDate(r.startDate)}</TableCell>
                   <TableCell>{formatDate(r.endDate)}</TableCell>
-                  <TableCell className="text-center">{r.totalDays}</TableCell>
+                  <TableCell className="lma-text-center">{r.totalDays}</TableCell>
                   <TableCell>
                     <Badge
                       variant="outline"
                       className={cn(
-                        "text-[11px]",
+                        "lma-text-[11px]",
                         r.status === "approved"
-                          ? "bg-success/10 text-success border-success/30"
+                          ? "lma-bg-success/10 lma-text-success lma-border-success/30"
                           : r.status === "pending"
-                            ? "bg-warning/10 text-warning border-warning/30"
+                            ? "lma-bg-warning/10 lma-text-warning lma-border-warning/30"
                             : r.status === "rejected"
-                              ? "bg-destructive/10 text-destructive border-destructive/30"
-                              : "bg-muted text-muted-foreground",
+                              ? "lma-bg-destructive/10 lma-text-destructive lma-border-destructive/30"
+                              : "lma-bg-muted lma-text-muted-foreground",
                       )}
                     >
                       {getApprovalStatusLabel(r.status, r.approvedLevel, maxLevelByType.get(r.leaveTypeId) ?? 1)}

@@ -14,9 +14,9 @@ export const AppLayout = () => {
 
   if (!DEV_MODE) {
     return (
-      <div className="min-h-screen flex w-full bg-background">
-        <main className="flex-1 overflow-auto">
-          <Card className="px-3 py-2">
+      <div className="lma-min-h-screen lma-flex lma-w-full lma-bg-background">
+        <main className="lma-flex-1 lma-overflow-auto">
+          <Card className="lma-px-3 lma-py-2">
             <Outlet />
           </Card>
         </main>
@@ -25,11 +25,11 @@ export const AppLayout = () => {
   }
 
   return (
-    <div className="min-h-screen flex w-full bg-background">
+    <div className="lma-min-h-screen lma-flex lma-w-full lma-bg-background">
       {/* Overlay for mobile */}
       {isMobile && sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-30"
+          className="lma-fixed lma-inset-0 lma-bg-black/50 lma-z-30"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -39,10 +39,10 @@ export const AppLayout = () => {
         onClose={() => setSidebarOpen(false)}
         isMobile={isMobile}
       />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="lma-flex-1 lma-flex lma-flex-col lma-min-w-0">
         <AppHeader onToggleSidebar={() => setSidebarOpen((p) => !p)} />
-        <main className="flex-1 !p-4 md:p-6 overflow-auto">
-          <Card className="px-3 py-2">
+        <main className="lma-flex-1 !lma-p-4 md:lma-p-6 lma-overflow-auto">
+          <Card className="lma-px-3 lma-py-2">
             <Outlet />
           </Card>
         </main>

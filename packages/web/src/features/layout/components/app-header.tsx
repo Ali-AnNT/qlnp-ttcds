@@ -26,30 +26,30 @@ export const AppHeader = ({ onToggleSidebar }: { onToggleSidebar: () => void }) 
   const initials = user?.fullName?.split(" ").slice(-1)[0]?.[0] || "U";
 
   return (
-    <header className="h-14 bg-card border-b flex items-center px-4 gap-3 sticky top-0 z-20">
+    <header className="lma-h-14 lma-bg-card lma-border-b lma-flex lma-items-center lma-px-4 lma-gap-3 lma-sticky lma-top-0 lma-z-20">
       <Button variant="ghost" size="icon" onClick={onToggleSidebar} className="shrink-0">
-        <Menu className="h-5 w-5" />
+        <Menu className="lma-h-5 lma-w-5" />
       </Button>
 
-      <nav className="flex items-center gap-1 text-sm text-muted-foreground flex-1 min-w-0">
-        <Link to={ROUTES.layout} className="hover:text-foreground">Trang chủ</Link>
-        <ChevronRight className="h-3 w-3" />
-        <span className="text-foreground font-medium truncate">{crumb}</span>
+      <nav className="lma-flex lma-items-center lma-gap-1 lma-text-sm lma-text-muted-foreground lma-flex-1 lma-min-w-0">
+        <Link to={ROUTES.layout} className="hover:lma-text-foreground">Trang chủ</Link>
+        <ChevronRight className="lma-h-3 lma-w-3" />
+        <span className="lma-text-foreground lma-font-medium truncate">{crumb}</span>
       </nav>
 
-      <Button variant="ghost" size="icon" className="relative">
-        <Bell className="h-5 w-5" />
+      <Button variant="ghost" size="icon" className="lma-relative">
+        <Bell className="lma-h-5 lma-w-5" />
       </Button>
 
-      <div className="flex items-center gap-2 pl-2 border-l">
-        <Avatar className="h-8 w-8">
-          <AvatarFallback className="bg-accent text-accent-foreground text-xs font-semibold">
+      <div className="lma-flex lma-items-center lma-gap-2 lma-pl-2 lma-border-l">
+        <Avatar className="lma-h-8 lma-w-8">
+          <AvatarFallback className="lma-bg-accent lma-text-accent-foreground lma-text-xs lma-font-semibold">
             {initials}
           </AvatarFallback>
         </Avatar>
-        <div className="hidden md:block text-right">
-          <p className="text-sm font-medium leading-tight">{user?.fullName}</p>
-          <p className="text-[11px] text-muted-foreground">{user?.userName} • {user?.role}</p>
+        <div className="lma-hidden md:lma-block lma-text-right">
+          <p className="lma-text-sm lma-font-medium lma-leading-tight">{user?.fullName}</p>
+          <p className="lma-text-[11px] lma-text-muted-foreground">{user?.userName} • {user?.role}</p>
         </div>
       </div>
     </header>

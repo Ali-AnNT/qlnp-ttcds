@@ -32,14 +32,14 @@ interface ViolationChartProps {
 
 export function ViolationChart({ violationByType, deptViolations }: ViolationChartProps) {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div className="lma-grid lma-grid-cols-1 lg:lma-grid-cols-2 lma-gap-4">
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Phân loại vượt mức theo lý do nghỉ</CardTitle>
+        <CardHeader className="lma-pb-2">
+          <CardTitle className="lma-text-sm">Phân loại vượt mức theo lý do nghỉ</CardTitle>
         </CardHeader>
         <CardContent>
           {violationByType.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8 text-sm">Không có dữ liệu</p>
+            <p className="lma-text-center lma-text-muted-foreground lma-py-8 lma-text-sm">Không có dữ liệu</p>
           ) : (
             <ResponsiveContainer width="100%" height={260}>
               <PieChart>
@@ -64,12 +64,12 @@ export function ViolationChart({ violationByType, deptViolations }: ViolationCha
         </CardContent>
       </Card>
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Số ngày vượt mức theo phòng ban</CardTitle>
+        <CardHeader className="lma-pb-2">
+          <CardTitle className="lma-text-sm">Số ngày vượt mức theo phòng ban</CardTitle>
         </CardHeader>
         <CardContent>
           {deptViolations.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8 text-sm">Không có dữ liệu</p>
+            <p className="lma-text-center lma-text-muted-foreground lma-py-8 lma-text-sm">Không có dữ liệu</p>
           ) : (
             <ResponsiveContainer width="100%" height={260}>
               <BarChart

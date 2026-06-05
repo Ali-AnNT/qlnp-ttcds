@@ -32,55 +32,55 @@ export const GeneralSettings = ({ configs, onChange, isAdmin }: GeneralSettingsP
 
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm">Cài đặt chung</CardTitle>
+      <CardHeader className="lma-pb-2">
+        <CardTitle className="lma-text-sm">Cài đặt chung</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="flex items-center gap-2">
-            <Label className="text-xs w-40">Số ngày phép tối đa/năm</Label>
+      <CardContent className="lma-space-y-3">
+        <div className="lma-grid lma-grid-cols-1 sm:lma-grid-cols-2 lma-gap-3">
+          <div className="lma-flex lma-items-center lma-gap-2">
+            <Label className="lma-text-xs lma-w-40">Số ngày phép tối đa/năm</Label>
             <Input
               type="number"
               min={0}
-              className="w-20 h-8 text-sm"
+              className="lma-w-20 lma-h-8 lma-text-sm"
               value={getSystemConfig("max_annual_leave")}
               onChange={(e) => onChange("max_annual_leave", e.target.value)}
               disabled={!isAdmin}
             />
-            <span className="text-xs text-muted-foreground">ngày</span>
+            <span className="lma-text-xs lma-text-muted-foreground">ngày</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Label className="text-xs w-40">Số ngày tối thiểu/đơn</Label>
+          <div className="lma-flex lma-items-center lma-gap-2">
+            <Label className="lma-text-xs lma-w-40">Số ngày tối thiểu/đơn</Label>
             <Input
               type="number"
               min={0}
-              className="w-20 h-8 text-sm"
+              className="lma-w-20 lma-h-8 lma-text-sm"
               value={getSystemConfig("min_request_days")}
               onChange={(e) => onChange("min_request_days", e.target.value)}
               disabled={!isAdmin}
             />
-            <span className="text-xs text-muted-foreground">ngày</span>
+            <span className="lma-text-xs lma-text-muted-foreground">ngày</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Label className="text-xs w-40">Số ngày phép chuyển sang</Label>
+          <div className="lma-flex lma-items-center lma-gap-2">
+            <Label className="lma-text-xs lma-w-40">Số ngày phép chuyển sang</Label>
             <Input
               type="number"
               min={0}
-              className="w-20 h-8 text-sm"
+              className="lma-w-20 lma-h-8 lma-text-sm"
               value={getSystemConfig("max_carry_over")}
               onChange={(e) => onChange("max_carry_over", e.target.value)}
               disabled={!isAdmin}
             />
-            <span className="text-xs text-muted-foreground">ngày</span>
+            <span className="lma-text-xs lma-text-muted-foreground">ngày</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Label className="text-xs w-40">Chu kỳ tính phép</Label>
+          <div className="lma-flex lma-items-center lma-gap-2">
+            <Label className="lma-text-xs lma-w-40">Chu kỳ tính phép</Label>
             <Select
               value={getSystemConfig("leave_cycle") || "yearly"}
               onValueChange={(v) => onChange("leave_cycle", v)}
               disabled={!isAdmin}
             >
-              <SelectTrigger className="w-28 h-8 text-sm">
+              <SelectTrigger className="lma-w-28 lma-h-8 lma-text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -89,9 +89,9 @@ export const GeneralSettings = ({ configs, onChange, isAdmin }: GeneralSettingsP
               </SelectContent>
             </Select>
           </div>
-          <div className="flex items-center gap-2">
-            <Label className="text-xs w-40">Ngày làm việc trong tuần</Label>
-            <div className="flex gap-1">
+          <div className="lma-flex lma-items-center lma-gap-2">
+            <Label className="lma-text-xs lma-w-40">Ngày làm việc trong tuần</Label>
+            <div className="lma-flex lma-gap-1">
               {daysLabels.map((label, idx) => (
                 <button
                   key={idx}
@@ -99,10 +99,10 @@ export const GeneralSettings = ({ configs, onChange, isAdmin }: GeneralSettingsP
                   disabled={!isAdmin}
                   onClick={() => toggleDay(idx)}
                   className={cn(
-                    "w-7 h-7 text-[10px] rounded flex items-center justify-center transition-colors",
+                    "lma-w-7 lma-h-7 lma-text-[10px] rounded lma-flex lma-items-center lma-justify-center lma-transition-colors",
                     workDays.includes(idx)
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:bg-muted-foreground/20"
+                      ? "lma-bg-primary lma-text-primary-foreground"
+                      : "lma-bg-muted lma-text-muted-foreground hover:lma-bg-muted-foreground/20"
                   )}
                 >
                   {label}

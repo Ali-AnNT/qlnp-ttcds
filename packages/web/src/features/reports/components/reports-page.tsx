@@ -85,36 +85,36 @@ const ReportsPage = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold">Thống kê báo cáo</h2>
+    <div className="lma-space-y-6">
+      <div className="lma-flex lma-items-center lma-justify-between">
+        <h2 className="lma-text-lg lma-font-bold">Thống kê báo cáo</h2>
         <Button variant="outline" onClick={handleExport}>
-          <Download className="h-4 w-4 mr-1" /> Xuất Excel
+          <Download className="lma-h-4 lma-w-4 lma-mr-1" /> Xuất Excel
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="lma-grid lma-grid-cols-1 sm:lma-grid-cols-3 lma-gap-4">
         <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold">{totalDays}</p>
-            <p className="text-xs text-muted-foreground">Tổng ngày nghỉ đã duyệt</p>
+          <CardContent className="lma-p-4 lma-text-center">
+            <p className="lma-text-2xl lma-font-bold">{totalDays}</p>
+            <p className="lma-text-xs lma-text-muted-foreground">Tổng ngày nghỉ đã duyệt</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-success">{approvedRatio}%</p>
-            <p className="text-xs text-muted-foreground">Tỷ lệ duyệt</p>
+          <CardContent className="lma-p-4 lma-text-center">
+            <p className="lma-text-2xl lma-font-bold lma-text-success">{approvedRatio}%</p>
+            <p className="lma-text-xs lma-text-muted-foreground">Tỷ lệ duyệt</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-destructive">{rejected.length}</p>
-            <p className="text-xs text-muted-foreground">Đơn bị từ chối</p>
+          <CardContent className="lma-p-4 lma-text-center">
+            <p className="lma-text-2xl lma-font-bold lma-text-destructive">{rejected.length}</p>
+            <p className="lma-text-xs lma-text-muted-foreground">Đơn bị từ chối</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="lma-grid lma-grid-cols-1 lg:lma-grid-cols-2 lma-gap-4">
         <DeptBarChart data={byDept} />
         <TypePieChart data={byType} />
       </div>

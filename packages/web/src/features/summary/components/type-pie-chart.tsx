@@ -10,11 +10,11 @@ interface TypePieChartProps {
 function renderLegend(props: DefaultLegendContentProps) {
   const { payload } = props;
   return (
-    <div className="flex flex-wrap justify-center gap-3 mt-2">
+    <div className="lma-flex lma-flex-wrap lma-justify-center lma-gap-3 lma-mt-2">
       {payload?.map((entry, index) => (
-        <div key={index} className="flex items-center gap-1.5 text-xs">
-          <div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: entry.color }} />
-          <span className="text-muted-foreground">{entry.value}</span>
+        <div key={index} className="lma-flex lma-items-center lma-gap-1.5 lma-text-xs">
+          <div className="lma-w-3 lma-h-3 lma-rounded-sm shrink-0" style={{ backgroundColor: entry.color }} />
+          <span className="lma-text-muted-foreground">{entry.value}</span>
         </div>
       ))}
     </div>
@@ -24,8 +24,8 @@ function renderLegend(props: DefaultLegendContentProps) {
 export function TypePieChart({ data }: TypePieChartProps) {
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm">Phân bổ theo loại phép</CardTitle>
+      <CardHeader className="lma-pb-2">
+        <CardTitle className="lma-text-sm">Phân bổ theo loại phép</CardTitle>
       </CardHeader>
       <CardContent>
         {data.length > 0 ? (
@@ -39,7 +39,7 @@ export function TypePieChart({ data }: TypePieChartProps) {
             </PieChart>
           </ResponsiveContainer>
         ) : (
-          <p className="text-center text-muted-foreground py-8">Chưa có dữ liệu</p>
+          <p className="lma-text-center lma-text-muted-foreground lma-py-8">Chưa có dữ liệu</p>
         )}
       </CardContent>
     </Card>

@@ -22,17 +22,17 @@ export function DetailDialog({ request, departments, maxLevelByType, onClose }: 
     <Dialog open={!!request} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader><DialogTitle>Chi tiết đơn nghỉ phép</DialogTitle></DialogHeader>
-        <div className="space-y-3 text-sm">
-          <div className="grid grid-cols-2 gap-2">
-            <div><span className="text-muted-foreground">Họ tên:</span> <strong>{request.userName}</strong></div>
-            <div><span className="text-muted-foreground">Phòng ban:</span> {department?.tenDonVi ?? "—"}</div>
-            <div><span className="text-muted-foreground">Loại phép:</span> {request.leaveTypeName ?? "—"}</div>
-            <div><span className="text-muted-foreground">Số ngày:</span> {request.totalDays}</div>
-            <div><span className="text-muted-foreground">Trạng thái:</span> {statusLabel}</div>
-            <div><span className="text-muted-foreground">Từ ngày:</span> {formatDate(request.startDate)}</div>
-            <div><span className="text-muted-foreground">Đến ngày:</span> {formatDate(request.endDate)}</div>
+        <div className="lma-space-y-3 lma-text-sm">
+          <div className="lma-grid lma-grid-cols-2 lma-gap-2">
+            <div><span className="lma-text-muted-foreground">Họ tên:</span> <strong>{request.userName}</strong></div>
+            <div><span className="lma-text-muted-foreground">Phòng ban:</span> {department?.tenDonVi ?? "—"}</div>
+            <div><span className="lma-text-muted-foreground">Loại phép:</span> {request.leaveTypeName ?? "—"}</div>
+            <div><span className="lma-text-muted-foreground">Số ngày:</span> {request.totalDays}</div>
+            <div><span className="lma-text-muted-foreground">Trạng thái:</span> {statusLabel}</div>
+            <div><span className="lma-text-muted-foreground">Từ ngày:</span> {formatDate(request.startDate)}</div>
+            <div><span className="lma-text-muted-foreground">Đến ngày:</span> {formatDate(request.endDate)}</div>
           </div>
-          <div><span className="text-muted-foreground">Lý do:</span> {request.reason}</div>
+          <div><span className="lma-text-muted-foreground">Lý do:</span> {request.reason}</div>
         </div>
       </DialogContent>
     </Dialog>
