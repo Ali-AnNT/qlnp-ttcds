@@ -1,6 +1,7 @@
 import { useAuth } from "@/features/auth";
 import { useDashboardStats } from "../hooks/use-dashboard-stats";
 import { useRecentRequests } from "../hooks/use-recent-requests";
+import { useMyStats } from "../hooks/use-my-stats";
 import { formatDate } from "@/shared/lib/date-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Badge } from "@/shared/ui/badge";
@@ -20,19 +21,24 @@ const DashboardPage = () => {
   const {
     leaveTypes,
     maxLevelByType,
-    remainingDays,
     loading: statsLoading,
   } = useDashboardStats();
 
   const {
     pendingApproval,
-    approvedCount,
-    totalDaysUsed,
     recentRequests,
     loading: requestsLoading,
   } = useRecentRequests();
 
-  const loading = statsLoading || requestsLoading;
+  const {
+    remainingDays,
+    pendingCount,
+    approvedCount,
+    usedDays,
+    loading: myStatsLoading,
+  } = useMyStats();
+
+  const loading = statsLoading || requestsLoading || myStatsLoading;
 
   const metrics = [
     {
@@ -43,7 +49,7 @@ const DashboardPage = () => {
     },
     {
       label: "Đơn đang chờ duyệt",
-      value: pendingApproval.length,
+      value: pendingCount,
       icon: Clock,
       color: "text-warning",
     },
@@ -55,7 +61,7 @@ const DashboardPage = () => {
     },
     {
       label: "Tổng ngày đã nghỉ",
-      value: totalDaysUsed,
+      value: usedDays,
       icon: FileText,
       color: "text-info",
     },
@@ -63,7 +69,7 @@ const DashboardPage = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-card rounded-lg border p-5">
+      <div className="bg-card rounded-lg border !p-5">
         <h1 className="text-xl font-bold">Xin chào, {user?.fullName}!</h1>
         <p className="text-sm text-muted-foreground mt-1">
           {user?.userName} • {user?.role}

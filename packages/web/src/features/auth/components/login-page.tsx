@@ -66,8 +66,8 @@ const LoginPage = () => {
   // Production mode: no dev login available — show access denied + retry
   if (!DEV_MODE) {
     return (
-      <div className="min-h-screen bg-primary flex items-center justify-center p-4">
-        <Card className="shadow-xl border-0 max-w-md w-full text-center p-8">
+      <div className="min-h-screen bg-primary flex items-center justify-center !p-4">
+        <Card className="shadow-xl border-0 max-w-md w-full text-center !p-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-accent mb-4">
             <CalendarDays className="h-8 w-8 text-accent-foreground" />
           </div>
@@ -75,9 +75,14 @@ const LoginPage = () => {
             Bạn không có quyền truy cập module này
           </h1>
           <p className="text-sm text-muted-foreground mb-6">
-            Vui lòng đăng nhập qua cổng thông tin chính để được cấp quyền truy cập.
+            Vui lòng đăng nhập qua cổng thông tin chính để được cấp quyền truy
+            cập.
           </p>
-          <Button onClick={handleRetry} disabled={retrying} className="w-full gap-2">
+          <Button
+            onClick={handleRetry}
+            disabled={retrying}
+            className="w-full gap-2"
+          >
             {retrying ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
@@ -92,8 +97,8 @@ const LoginPage = () => {
 
   // Dev mode: show dev login form
   return (
-    <div className="min-h-screen bg-primary flex items-center justify-center p-4">
-      <Card className="shadow-xl border-0 max-w-md w-full text-center p-8">
+    <div className="min-h-screen bg-primary flex items-center justify-center !p-4">
+      <Card className="shadow-xl border-0 max-w-md w-full text-center !p-8">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-accent mb-4">
           <CalendarDays className="h-8 w-8 text-accent-foreground" />
         </div>
