@@ -46,10 +46,10 @@
 
 @layer base {
   * {
-    @apply border-border;
+    @apply lma-border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply lma-bg-background lma-text-foreground;
     font-family: 'Be Vietnam Pro', sans-serif;
   }
 }
