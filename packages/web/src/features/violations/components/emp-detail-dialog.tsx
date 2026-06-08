@@ -14,24 +14,24 @@ interface EmpDetailDialogProps {
 export function EmpDetailDialog({ data, leaveTypes, open, onOpenChange }: EmpDetailDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="lma-max-w-3xl">
         <DialogHeader>
           <DialogTitle>Chi tiết vượt mức - {data?.userName}</DialogTitle>
         </DialogHeader>
         {data && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-3 text-sm">
+          <div className="lma-space-y-4">
+            <div className="lma-grid lma-grid-cols-3 lma-gap-3 lma-text-sm">
               <div>
-                <span className="text-muted-foreground">Phòng ban:</span>{" "}
-                <span className="font-medium">{data.dept?.tenDonVi}</span>
+                <span className="lma-text-muted-foreground">Phòng ban:</span>{" "}
+                <span className="lma-font-medium">{data.dept?.tenDonVi}</span>
               </div>
               <div>
-                <span className="text-muted-foreground">Đã sử dụng:</span>{" "}
-                <span className="font-medium">{data.totalUsed} ngày</span>
+                <span className="lma-text-muted-foreground">Đã sử dụng:</span>{" "}
+                <span className="lma-font-medium">{data.totalUsed} ngày</span>
               </div>
               <div>
-                <span className="text-muted-foreground">Vượt:</span>{" "}
-                <span className="font-bold text-destructive">+{data.overage} ngày</span>
+                <span className="lma-text-muted-foreground">Vượt:</span>{" "}
+                <span className="lma-font-bold lma-text-destructive">+{data.overage} ngày</span>
               </div>
             </div>
             <Table>
@@ -40,7 +40,7 @@ export function EmpDetailDialog({ data, leaveTypes, open, onOpenChange }: EmpDet
                   <TableHead>Loại phép</TableHead>
                   <TableHead>Từ ngày</TableHead>
                   <TableHead>Đến ngày</TableHead>
-                  <TableHead className="text-center">Số ngày</TableHead>
+                  <TableHead className="lma-text-center">Số ngày</TableHead>
                   <TableHead>Lý do</TableHead>
                 </TableRow>
               </TableHeader>
@@ -50,8 +50,8 @@ export function EmpDetailDialog({ data, leaveTypes, open, onOpenChange }: EmpDet
                     <TableCell>{leaveTypes.find((t) => t.id === r.leaveTypeId)?.name}</TableCell>
                     <TableCell>{formatDate(r.startDate)}</TableCell>
                     <TableCell>{formatDate(r.endDate)}</TableCell>
-                    <TableCell className="text-center">{r.totalDays}</TableCell>
-                    <TableCell className="max-w-xs truncate">{r.reason}</TableCell>
+                    <TableCell className="lma-text-center">{r.totalDays}</TableCell>
+                    <TableCell className="lma-max-w-xs truncate">{r.reason}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

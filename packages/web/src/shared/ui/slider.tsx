@@ -9,13 +9,13 @@ const Slider = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SliderPrimitive.Root
     ref={ref}
-    className={cn("relative flex w-full touch-none select-none items-center", className)}
+    className={cn("lma-relative lma-flex lma-w-full touch-none lma-select-none lma-items-center", className)}
     {...props}
   >
-    <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary">
-      <SliderPrimitive.Range className="absolute h-full bg-primary" />
+    <SliderPrimitive.Track className="lma-relative lma-h-2 lma-w-full lma-grow lma-overflow-hidden lma-rounded-full lma-bg-secondary">
+      <SliderPrimitive.Range className="lma-absolute lma-h-full lma-bg-primary" />
     </SliderPrimitive.Track>
-    <SliderPrimitive.Thumb className="block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50" />
+    <SliderPrimitive.Thumb className="lma-block lma-h-5 lma-w-5 lma-rounded-full lma-border-2 lma-border-primary lma-bg-background lma-ring-offset-background lma-transition-colors focus-visible:lma-outline-none focus-visible:lma-ring-2 focus-visible:lma-ring-ring focus-visible:lma-ring-offset-2 disabled:lma-pointer-events-none disabled:lma-opacity-50" />
   </SliderPrimitive.Root>
 ));
 Slider.displayName = SliderPrimitive.Root.displayName;

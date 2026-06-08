@@ -5,7 +5,7 @@ import { router } from "./router";
 
 export default function App() {
   return (
-    <div className="qlnp-app">
+    <div>
       <ErrorBoundary>
         <Providers>
           <RouterProvider router={router} />

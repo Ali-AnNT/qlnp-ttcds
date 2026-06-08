@@ -33,12 +33,12 @@ export const DefaultDaysSettings = ({
 
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm">Số ngày phép năm mặc định theo loại nhân viên</CardTitle>
+      <CardHeader className="lma-pb-2">
+        <CardTitle className="lma-text-sm">Số ngày phép năm mặc định theo loại nhân viên</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <CardContent className="lma-space-y-4">
+        <div className="lma-space-y-2">
+          <div className="lma-grid lma-grid-cols-1 sm:lma-grid-cols-2 lma-gap-3">
             {roles.map((role) => {
               const maxAnnualStr = getSystemConfig("max_annual_leave");
               const maxAnnual = Number.isNaN(parseFloat(maxAnnualStr)) ? 12 : parseFloat(maxAnnualStr);
@@ -47,18 +47,18 @@ export const DefaultDaysSettings = ({
               const effectiveDays = Math.min(maxAnnual, roleDefault);
               
               return (
-                <div key={role} className="flex items-center gap-2">
-                  <Label className="text-xs w-40 truncate">{roleLabels[role]}</Label>
+                <div key={role} className="lma-flex lma-items-center lma-gap-2">
+                  <Label className="lma-text-xs lma-w-40 truncate">{roleLabels[role]}</Label>
                   <Input
                     type="number"
                     min={0}
-                    className="w-20 h-8 text-sm"
+                    className="lma-w-20 lma-h-8 lma-text-sm"
                     value={getRoleDefaultDays(role)}
                     onChange={(e) => onChange(role, e.target.value)}
                     disabled={!isAdmin}
                   />
-                  <span className="text-xs text-muted-foreground">ngày</span>
-                  <span className="text-xs text-muted-foreground ml-1">
+                  <span className="lma-text-xs lma-text-muted-foreground">ngày</span>
+                  <span className="lma-text-xs lma-text-muted-foreground lma-ml-1">
                     &#8594; hiệu lực: <strong>{effectiveDays}</strong>
                   </span>
                 </div>
@@ -69,7 +69,7 @@ export const DefaultDaysSettings = ({
 
         {isAdmin && (
           <Button size="sm" onClick={onSave} disabled={isSaving}>
-            <Save className="h-4 w-4 mr-1" />
+            <Save className="lma-h-4 lma-w-4 lma-mr-1" />
             Lưu cấu hình
           </Button>
         )}

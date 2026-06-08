@@ -11,8 +11,8 @@ interface DeptBarChartProps {
 export function DeptBarChart({ data }: DeptBarChartProps) {
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm">Ngày nghỉ theo phòng ban</CardTitle>
+      <CardHeader className="lma-pb-2">
+        <CardTitle className="lma-text-sm">Ngày nghỉ theo phòng ban</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={250}>

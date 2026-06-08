@@ -10,18 +10,18 @@ interface LeaveBalanceInfo {
 
 export function LeaveBalanceCard({ balance }: { balance: LeaveBalanceInfo }) {
   return (
-    <Card className="hover:shadow-lg transition-shadow">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="p-3 rounded-xl bg-secondary text-primary">
-            <CalendarDays className="h-5 w-5" />
+    <Card className="hover:lma-shadow-lg lma-transition-shadow">
+      <CardContent className="lma-p-6">
+        <div className="lma-flex lma-items-center lma-justify-between lma-mb-4">
+          <div className="lma-p-3 lma-rounded-xl lma-bg-secondary lma-text-primary">
+            <CalendarDays className="lma-h-5 lma-w-5" />
           </div>
-          <span className="text-3xl font-bold text-foreground">{balance.remaining}</span>
+          <span className="lma-text-3xl lma-font-bold lma-text-foreground">{balance.remaining}</span>
         </div>
-        <h3 className="font-semibold text-foreground mb-1">{balance.label}</h3>
-        <p className="text-sm text-muted-foreground">Đã dùng {balance.used}/{balance.total} ngày</p>
-        <div className="mt-3 h-2 rounded-full bg-secondary overflow-hidden">
-          <div className="h-full rounded-full bg-primary transition-all" style={{ width: balance.total > 0 ? `${(balance.used / balance.total) * 100}%` : "0%" }} />
+        <h3 className="lma-font-semibold lma-text-foreground lma-mb-1">{balance.label}</h3>
+        <p className="lma-text-sm lma-text-muted-foreground">Đã dùng {balance.used}/{balance.total} ngày</p>
+        <div className="lma-mt-3 lma-h-2 lma-rounded-full lma-bg-secondary lma-overflow-hidden">
+          <div className="lma-h-full lma-rounded-full lma-bg-primary lma-transition-all" style={{ width: balance.total > 0 ? `${(balance.used / balance.total) * 100}%` : "0%" }} />
         </div>
       </CardContent>
     </Card>

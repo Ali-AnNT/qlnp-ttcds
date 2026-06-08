@@ -13,8 +13,8 @@ interface TypePieChartProps {
 export function TypePieChart({ data }: TypePieChartProps) {
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm">Phân bổ theo loại phép</CardTitle>
+      <CardHeader className="lma-pb-2">
+        <CardTitle className="lma-text-sm">Phân bổ theo loại phép</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={250}>

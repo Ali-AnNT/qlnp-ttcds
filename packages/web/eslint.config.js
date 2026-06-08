@@ -4,6 +4,7 @@ import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 import boundaries from "eslint-plugin-boundaries";
+import tailwind from "eslint-plugin-tailwindcss";
 
 export default tseslint.config(
   { ignores: ["dist"] },
@@ -18,6 +19,7 @@ export default tseslint.config(
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
       boundaries: boundaries,
+      tailwindcss: tailwind,
     },
     settings: {
       "boundaries/elements": [
@@ -38,12 +40,22 @@ export default tseslint.config(
           mode: "file",
         },
       ],
+      "tailwindcss": {
+        "callees": ["cn", "clsx", "cva"],
+        "classListDoubleQuote": true,
+        "prefix": "lma-",
+      },
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "@typescript-eslint/no-unused-vars": "off",
-      
+
+      "tailwindcss/classnames-order": "off",
+      "tailwindcss/no-contradicting-classname": "warn",
+      "tailwindcss/enforces-negative-arbitrary-values": "warn",
+      "tailwindcss/migration-from-tailwind-2": "off",
+
       // VSA Boundary Rules
       "boundaries/entry-point": [
         "error",

@@ -29,17 +29,17 @@ export class ErrorBoundary extends Component<Props, State> {
       if (this.props.fallback) return this.props.fallback;
 
       return (
-        <div className="flex items-center justify-center min-h-[200px] !p-6">
-          <div className="text-center space-y-3">
-            <p className="text-destructive font-medium">
+        <div className="lma-flex lma-items-center lma-justify-center lma-min-h-[200px] !lma-p-6">
+          <div className="lma-text-center lma-space-y-3">
+            <p className="lma-text-destructive lma-font-medium">
               Có lỗi khi hiển thị nội dung
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="lma-text-sm lma-text-muted-foreground">
               {this.state.error?.message}
             </p>
             <button
               type="button"
-              className="text-sm text-accent hover:underline"
+              className="lma-text-sm lma-text-accent hover:lma-underline"
               onClick={() => this.setState({ hasError: false, error: null })}
             >
               Thử lại

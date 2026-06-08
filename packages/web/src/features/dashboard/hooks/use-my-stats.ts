@@ -5,7 +5,7 @@ import { myStatsApi, type MyStatsResponse } from "../api/my-stats.api";
  *  Replaces client-side aggregation across leave-balances/my + leave-requests/my. */
 export function useMyStats() {
   const query = useQuery<MyStatsResponse>({
-    queryKey: ["my-stats"],
+    queryKey: ["lma-my-stats"],
     queryFn: async () => {
       const res = await myStatsApi.get();
       if (res.data === null) {

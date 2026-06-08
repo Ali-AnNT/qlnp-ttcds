@@ -34,8 +34,8 @@ export const CalendarGrid = ({ requests }: CalendarGridProps) => {
 
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
+      <CardHeader className="lma-pb-2">
+        <div className="lma-flex lma-items-center lma-justify-between">
           <Button
             variant="ghost"
             size="icon"
@@ -45,9 +45,9 @@ export const CalendarGrid = ({ requests }: CalendarGridProps) => {
               )
             }
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="lma-h-4 lma-w-4" />
           </Button>
-          <span className="font-semibold">
+          <span className="lma-font-semibold">
             {format(currentMonth, "MMMM yyyy", { locale: vi })}
           </span>
           <Button
@@ -59,19 +59,19 @@ export const CalendarGrid = ({ requests }: CalendarGridProps) => {
               )
             }
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="lma-h-4 lma-w-4" />
           </Button>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground mb-1">
+        <div className="lma-grid lma-grid-cols-7 lma-gap-1 lma-text-center lma-text-xs lma-text-muted-foreground lma-mb-1">
           {["T2", "T3", "T4", "T5", "T6", "T7", "CN"].map((d) => (
-            <div key={d} className="py-1 font-medium">
+            <div key={d} className="lma-py-1 lma-font-medium">
               {d}
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-7 gap-1">
+        <div className="lma-grid lma-grid-cols-7 lma-gap-1">
           {Array.from({ length: (monthStart.getDay() + 6) % 7 }).map((_, i) => (
             <div key={`pad-${i}`} />
           ))}
@@ -81,26 +81,26 @@ export const CalendarGrid = ({ requests }: CalendarGridProps) => {
               <div
                 key={day.toISOString()}
                 className={cn(
-                  "min-h-[60px] border rounded !p-1 text-xs",
-                  leaves.length > 0 && "bg-accent/5",
+                  "lma-min-h-[60px] lma-border rounded !lma-p-1 lma-text-xs",
+                  leaves.length > 0 && "lma-bg-accent/5",
                 )}
               >
-                <div className="font-medium text-right">{format(day, "d")}</div>
+                <div className="lma-font-medium lma-text-right">{format(day, "d")}</div>
                 {leaves.slice(0, 2).map((l) => (
                   <div
                     key={l.id}
                     className={cn(
-                      "truncate text-[10px] rounded px-1 mt-0.5",
+                      "truncate lma-text-[10px] rounded lma-px-1 lma-mt-0.5",
                       l.status === "approved"
-                        ? "bg-success/20 text-success"
-                        : "bg-warning/20 text-warning",
+                        ? "lma-bg-success/20 lma-text-success"
+                        : "lma-bg-warning/20 lma-text-warning",
                     )}
                   >
                     {l.userName?.split(" ").pop()}
                   </div>
                 ))}
                 {leaves.length > 2 && (
-                  <div className="text-[10px] text-muted-foreground">
+                  <div className="lma-text-[10px] lma-text-muted-foreground">
                     +{leaves.length - 2}
                   </div>
                 )}

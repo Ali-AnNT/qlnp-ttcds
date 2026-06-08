@@ -36,9 +36,9 @@ export const ApprovalDialog = ({
           <DialogTitle>{editingApproval?.id ? "Sửa cấp duyệt" : "Thêm cấp duyệt"}</DialogTitle>
         </DialogHeader>
         {editingApproval && (
-          <div className="space-y-3">
+          <div className="lma-space-y-3">
             <div>
-              <Label className="text-xs">Loại phép</Label>
+              <Label className="lma-text-xs">Loại phép</Label>
               <Select
                 value={String(editingApproval.leaveTypeId)}
                 onValueChange={(v) =>
@@ -58,7 +58,7 @@ export const ApprovalDialog = ({
               </Select>
             </div>
             <div>
-              <Label className="text-xs">Cấp duyệt</Label>
+              <Label className="lma-text-xs">Cấp duyệt</Label>
               <Select
                 value={String(editingApproval.approvalLevel)}
                 onValueChange={(v) =>
@@ -81,7 +81,7 @@ export const ApprovalDialog = ({
               </Select>
             </div>
             <div>
-              <Label className="text-xs">Vai trò duyệt</Label>
+              <Label className="lma-text-xs">Vai trò duyệt</Label>
               <Select
                 value={editingApproval.approverRole}
                 onValueChange={(v) =>

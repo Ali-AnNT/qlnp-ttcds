@@ -52,19 +52,19 @@ export function ApprovalPage() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <h2 className="text-lg font-bold">Phê duyệt đơn nghỉ phép</h2>
+    <div className="lma-space-y-4">
+      <div className="lma-flex lma-items-center lma-justify-between lma-flex-wrap lma-gap-2">
+        <h2 className="lma-text-lg lma-font-bold">Phê duyệt đơn nghỉ phép</h2>
         <Input
           placeholder="Tìm theo tên..."
           value={filterName}
           onChange={(e) => setFilterName(e.target.value)}
-          className="w-60"
+          className="lma-w-60"
         />
       </div>
 
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="lma-p-0">
           <ApprovalTable
             requests={visibleRequests}
             departments={departments}

@@ -54,7 +54,7 @@ const ChartContainer = React.forwardRef<
         data-chart={chartId}
         ref={ref}
         className={cn(
-          "flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-none [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-none [&_.recharts-surface]:outline-none",
+          "lma-flex aspect-video lma-justify-center lma-text-xs [&_.recharts-cartesian-axis-tick_text]:lma-fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:lma-stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:lma-stroke-border [&_.recharts-dot[stroke='#fff']]:lma-stroke-transparent [&_.recharts-layer]:lma-outline-none [&_.recharts-polar-grid_[stroke='#ccc']]:lma-stroke-border [&_.recharts-radial-bar-background-sector]:lma-fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:lma-fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:lma-stroke-border [&_.recharts-sector[stroke='#fff']]:lma-stroke-transparent [&_.recharts-sector]:lma-outline-none [&_.recharts-surface]:lma-outline-none",
           className,
         )}
         {...props}
@@ -155,14 +155,14 @@ const ChartTooltipContent = React.forwardRef<
           : itemConfig?.label;
 
       if (labelFormatter) {
-        return <div className={cn("font-medium", labelClassName)}>{labelFormatter(value, payload)}</div>;
+        return <div className={cn("lma-font-medium", labelClassName)}>{labelFormatter(value, payload)}</div>;
       }
 
       if (!value) {
         return null;
       }
 
-      return <div className={cn("font-medium", labelClassName)}>{value}</div>;
+      return <div className={cn("lma-font-medium", labelClassName)}>{value}</div>;
     }, [label, labelFormatter, payload, hideLabel, labelClassName, config, labelKey]);
 
     if (!active || !payload?.length) {
@@ -175,12 +175,12 @@ const ChartTooltipContent = React.forwardRef<
       <div
         ref={ref}
         className={cn(
-          "grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl",
+          "lma-grid lma-min-w-[8rem] lma-items-start lma-gap-1.5 lma-rounded-lg lma-border lma-border-border/50 lma-bg-background lma-px-2.5 lma-py-1.5 lma-text-xs lma-shadow-xl",
           className,
         )}
       >
         {!nestLabel ? tooltipLabel : null}
-        <div className="grid gap-1.5">
+        <div className="lma-grid lma-gap-1.5">
           {payload.map((item, index) => {
             const key = `${nameKey || item.name || item.dataKey || "value"}`;
             const itemConfig = getPayloadConfigFromPayload(config, item, key);
@@ -190,8 +190,8 @@ const ChartTooltipContent = React.forwardRef<
               <div
                 key={item.dataKey}
                 className={cn(
-                  "flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5 [&>svg]:text-muted-foreground",
-                  indicator === "dot" && "items-center",
+                  "lma-flex lma-w-full lma-flex-wrap lma-items-stretch lma-gap-2 [&>svg]:lma-h-2.5 [&>svg]:lma-w-2.5 [&>svg]:lma-text-muted-foreground",
+                  indicator === "dot" && "lma-items-center",
                 )}
               >
                 {formatter && item?.value !== undefined && item.name ? (
@@ -203,11 +203,11 @@ const ChartTooltipContent = React.forwardRef<
                     ) : (
                       !hideIndicator && (
                         <div
-                          className={cn("shrink-0 rounded-[2px] border-[--color-border] bg-[--color-bg]", {
-                            "h-2.5 w-2.5": indicator === "dot",
-                            "w-1": indicator === "line",
-                            "w-0 border-[1.5px] border-dashed bg-transparent": indicator === "dashed",
-                            "my-0.5": nestLabel && indicator === "dashed",
+                          className={cn("lma-shrink-0 lma-rounded-[2px] lma-border-[--color-border] lma-bg-[--color-bg]", {
+                            "lma-h-2.5 lma-w-2.5": indicator === "dot",
+                            "lma-w-1": indicator === "line",
+                            "lma-w-0 lma-border-[1.5px] lma-border-dashed lma-bg-transparent": indicator === "dashed",
+                            "lma-my-0.5": nestLabel && indicator === "dashed",
                           })}
                           style={
                             {
@@ -220,16 +220,16 @@ const ChartTooltipContent = React.forwardRef<
                     )}
                     <div
                       className={cn(
-                        "flex flex-1 justify-between leading-none",
-                        nestLabel ? "items-end" : "items-center",
+                        "lma-flex lma-flex-1 lma-justify-between lma-leading-none",
+                        nestLabel ? "lma-items-end" : "lma-items-center",
                       )}
                     >
-                      <div className="grid gap-1.5">
+                      <div className="lma-grid lma-gap-1.5">
                         {nestLabel ? tooltipLabel : null}
-                        <span className="text-muted-foreground">{itemConfig?.label || item.name}</span>
+                        <span className="lma-text-muted-foreground">{itemConfig?.label || item.name}</span>
                       </div>
                       {item.value && (
-                        <span className="font-mono font-medium tabular-nums text-foreground">
+                        <span className="lma-font-mono lma-font-medium tabular-nums lma-text-foreground">
                           {typeof item.value === "number" ? item.value.toLocaleString() : String(item.value)}
                         </span>
                       )}
@@ -267,7 +267,7 @@ const ChartLegendContent = React.forwardRef<
   return (
     <div
       ref={ref}
-      className={cn("flex items-center justify-center gap-4", verticalAlign === "top" ? "pb-3" : "pt-3", className)}
+      className={cn("lma-flex lma-items-center lma-justify-center lma-gap-4", verticalAlign === "top" ? "lma-pb-3" : "lma-pt-3", className)}
     >
       {payload.map((item, index) => {
         const key = `${nameKey || item.dataKey || "value"}`;
@@ -276,13 +276,13 @@ const ChartLegendContent = React.forwardRef<
         return (
           <div
             key={`${item.value || item.dataKey || index}`}
-            className={cn("flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground")}
+            className={cn("lma-flex lma-items-center lma-gap-1.5 [&>svg]:lma-h-3 [&>svg]:lma-w-3 [&>svg]:lma-text-muted-foreground")}
           >
             {itemConfig?.icon && !hideIcon ? (
               <itemConfig.icon />
             ) : (
               <div
-                className="h-2 w-2 shrink-0 rounded-[2px]"
+                className="lma-h-2 lma-w-2 lma-shrink-0 lma-rounded-[2px]"
                 style={{
                   backgroundColor: item.color,
                 }}

@@ -5,22 +5,22 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/shared/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "lma-inline-flex lma-items-center lma-justify-center lma-gap-2 lma-whitespace-nowrap lma-rounded-md lma-text-sm lma-font-medium lma-ring-offset-background lma-transition-colors focus-visible:lma-outline-none focus-visible:lma-ring-2 focus-visible:lma-ring-ring focus-visible:lma-ring-offset-2 disabled:lma-pointer-events-none disabled:lma-opacity-50 [&_svg]:lma-pointer-events-none [&_svg]:lma-size-4 [&_svg]:lma-shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+        default: "lma-bg-primary lma-text-primary-foreground hover:lma-bg-primary/90",
+        destructive: "lma-bg-destructive lma-text-destructive-foreground hover:lma-bg-destructive/90",
+        outline: "lma-border lma-border-input lma-bg-background hover:lma-bg-accent hover:lma-text-accent-foreground",
+        secondary: "lma-bg-secondary lma-text-secondary-foreground hover:lma-bg-secondary/80",
+        ghost: "hover:lma-bg-accent hover:lma-text-accent-foreground",
+        link: "lma-text-primary lma-underline-offset-4 hover:lma-underline",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
-        icon: "h-10 w-10",
+        default: "lma-h-10 lma-px-4 lma-py-2",
+        sm: "lma-h-9 lma-rounded-md lma-px-3",
+        lg: "lma-h-11 lma-rounded-md lma-px-8",
+        icon: "lma-h-10 lma-w-10",
       },
     },
     defaultVariants: {

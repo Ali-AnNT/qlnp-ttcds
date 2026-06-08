@@ -29,18 +29,18 @@ export function ApprovalTable({
     return (
       <Table>
         <TableHeader>
-          <TableRow className="bg-muted/50">
-            <TableHead className="w-12">STT</TableHead>
+          <TableRow className="lma-bg-muted/50">
+            <TableHead className="lma-w-12">STT</TableHead>
             <TableHead>Họ tên CB</TableHead>
             <TableHead>Phòng ban</TableHead>
             <TableHead>Loại phép</TableHead>
             <TableHead>Từ ngày</TableHead>
             <TableHead>Đến ngày</TableHead>
-            <TableHead className="w-16">Số ngày</TableHead>
+            <TableHead className="lma-w-16">Số ngày</TableHead>
             <TableHead>Lý do</TableHead>
             <TableHead>Trạng thái</TableHead>
             <TableHead>Ngày gửi</TableHead>
-            <TableHead className="w-40">Thao tác</TableHead>
+            <TableHead className="lma-w-40">Thao tác</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -48,7 +48,7 @@ export function ApprovalTable({
             <TableRow key={i}>
               {Array.from({ length: 11 }).map((_, j) => (
                 <TableCell key={j}>
-                  <div className="h-4 bg-muted rounded animate-pulse" />
+                  <div className="lma-h-4 lma-bg-muted rounded lma-animate-pulse" />
                 </TableCell>
               ))}
             </TableRow>
@@ -62,23 +62,23 @@ export function ApprovalTable({
     return (
       <Table>
         <TableHeader>
-          <TableRow className="bg-muted/50">
-            <TableHead className="w-12">STT</TableHead>
+          <TableRow className="lma-bg-muted/50">
+            <TableHead className="lma-w-12">STT</TableHead>
             <TableHead>Họ tên CB</TableHead>
             <TableHead>Phòng ban</TableHead>
             <TableHead>Loại phép</TableHead>
             <TableHead>Từ ngày</TableHead>
             <TableHead>Đến ngày</TableHead>
-            <TableHead className="w-16">Số ngày</TableHead>
+            <TableHead className="lma-w-16">Số ngày</TableHead>
             <TableHead>Lý do</TableHead>
             <TableHead>Trạng thái</TableHead>
             <TableHead>Ngày gửi</TableHead>
-            <TableHead className="w-40">Thao tác</TableHead>
+            <TableHead className="lma-w-40">Thao tác</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           <TableRow>
-            <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
+            <TableCell colSpan={11} className="lma-text-center lma-text-muted-foreground lma-py-8">
               Không có đơn chờ duyệt
             </TableCell>
           </TableRow>
@@ -90,18 +90,18 @@ export function ApprovalTable({
   return (
     <Table>
       <TableHeader>
-        <TableRow className="bg-muted/50">
-          <TableHead className="w-12">STT</TableHead>
+        <TableRow className="lma-bg-muted/50">
+          <TableHead className="lma-w-12">STT</TableHead>
           <TableHead>Họ tên CB</TableHead>
           <TableHead>Phòng ban</TableHead>
           <TableHead>Loại phép</TableHead>
           <TableHead>Từ ngày</TableHead>
           <TableHead>Đến ngày</TableHead>
-          <TableHead className="w-16">Số ngày</TableHead>
+          <TableHead className="lma-w-16">Số ngày</TableHead>
           <TableHead>Lý do</TableHead>
           <TableHead>Trạng thái</TableHead>
           <TableHead>Ngày gửi</TableHead>
-          <TableHead className="w-40">Thao tác</TableHead>
+          <TableHead className="lma-w-40">Thao tác</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -110,46 +110,46 @@ export function ApprovalTable({
           const maxLevel = maxLevelByType.get(r.leaveTypeId) ?? 1;
           const statusLabel = getApprovalStatusLabel(r.status, r.approvedLevel, maxLevel);
           return (
-            <TableRow key={r.id} className={i % 2 === 1 ? "bg-muted/20" : ""}>
-              <TableCell className="text-center">{i + 1}</TableCell>
-              <TableCell className="font-medium">{r.userName}</TableCell>
+            <TableRow key={r.id} className={i % 2 === 1 ? "lma-bg-muted/20" : ""}>
+              <TableCell className="lma-text-center">{i + 1}</TableCell>
+              <TableCell className="lma-font-medium">{r.userName}</TableCell>
               <TableCell>{dept?.tenDonVi}</TableCell>
               <TableCell>{r.leaveTypeName ?? "—"}</TableCell>
               <TableCell>{formatDate(r.startDate)}</TableCell>
               <TableCell>{formatDate(r.endDate)}</TableCell>
-              <TableCell className="text-center">{r.totalDays}</TableCell>
-              <TableCell className="max-w-[150px] truncate">{r.reason}</TableCell>
+              <TableCell className="lma-text-center">{r.totalDays}</TableCell>
+              <TableCell className="lma-max-w-[150px] truncate">{r.reason}</TableCell>
               <TableCell>{statusLabel}</TableCell>
               <TableCell>{formatDate(r.createdAt)}</TableCell>
               <TableCell>
-                <div className="flex gap-1">
+                <div className="lma-flex lma-gap-1">
                   <Button
                     size="sm"
-                    className="h-7 px-2 bg-success hover:bg-success/90 text-success-foreground disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="lma-h-7 lma-px-2 lma-bg-success hover:lma-bg-success/90 lma-text-success-foreground disabled:lma-opacity-40 disabled:lma-cursor-not-allowed"
                     onClick={() => onApprove(r.id)}
                     disabled={!r.canCurrentUserApprove}
                     title={r.canCurrentUserApprove ? "Phê duyệt" : "Đơn đang chờ cấp khác duyệt"}
                   >
-                    <CheckCircle className="h-3 w-3 mr-1" />
+                    <CheckCircle className="lma-h-3 lma-w-3 lma-mr-1" />
                   </Button>
                   <Button
                     size="sm"
                     variant="destructive"
-                    className="h-7 px-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="lma-h-7 lma-px-2 disabled:lma-opacity-40 disabled:lma-cursor-not-allowed"
                     onClick={() => onReject(r.id)}
                     disabled={!r.canCurrentUserApprove}
                     title={r.canCurrentUserApprove ? "Từ chối" : "Đơn đang chờ cấp khác duyệt"}
                   >
-                    <XCircle className="h-3 w-3 mr-1" />
+                    <XCircle className="lma-h-3 lma-w-3 lma-mr-1" />
                   </Button>
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-7 px-2"
+                    className="lma-h-7 lma-px-2"
                     onClick={() => onDetail(r)}
                     title="Xem chi tiết"
                   >
-                    <Eye className="h-3 w-3" />
+                    <Eye className="lma-h-3 lma-w-3" />
                   </Button>
                 </div>
               </TableCell>

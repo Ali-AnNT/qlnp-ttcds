@@ -140,14 +140,14 @@ function DatePicker({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <div className={cn("relative flex items-center", className)}>
+        <div className={cn("lma-relative lma-flex lma-items-center", className)}>
           <Input
             value={inputValue}
             onChange={handleInputChange}
             onBlur={handleBlur}
             placeholder={placeholder}
             disabled={disabled}
-            className="pr-10"
+            className="lma-pr-10"
             role="combobox"
             aria-expanded={open}
             aria-haspopup="dialog"
@@ -156,15 +156,15 @@ function DatePicker({
             type="button"
             variant="ghost"
             size="icon"
-            className="absolute right-0 h-full px-3 hover:bg-transparent"
+            className="lma-absolute lma-right-0 lma-h-full lma-px-3 hover:lma-bg-transparent"
             disabled={disabled}
             tabIndex={-1}
           >
-            <CalendarIcon className="h-4 w-4 opacity-50" />
+            <CalendarIcon className="lma-h-4 lma-w-4 lma-opacity-50" />
           </Button>
         </div>
       </PopoverTrigger>
-      <PopoverContent className="w-auto !p-0" align="start">
+      <PopoverContent className="lma-w-auto !lma-p-0" align="start">
         <Calendar
           mode="single"
           selected={date}
