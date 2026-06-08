@@ -2,6 +2,7 @@ using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 using QLNP.Api.Data;
 using QLNP.Api.Infrastructure.Auth;
+using QLNP.Api.Shared;
 using QLNP.Api.Shared.Domain;
 using QLNP.Api.Features.LeaveRequests;
 using Aspose.Cells;
@@ -22,12 +23,9 @@ internal sealed class ExportReportEndpoint : Endpoint<Request> {
             .Include(r => r.LeaveType)
             .AsQueryable();
 
-        if (!string.IsNullOrEmpty(req.Status))
-            q = q.Where(r => r.Status == req.Status);
-        if (req.From.HasValue)
-            q = q.Where(r => r.EndDate >= req.From.Value.ToDateTime(TimeOnly.MinValue));
-        if (req.To.HasValue)
-            q = q.Where(r => r.StartDate <= req.To.Value.ToDateTime(TimeOnly.MaxValue));
+        q = q.WhereIf(!string.IsNullOrEmpty(req.Status), r => r.Status == req.Status);
+        q = q.WhereIf(req.From.HasValue, r => r.EndDate >= req.From!.Value.ToDateTime(TimeOnly.MinValue));
+        q = q.WhereIf(req.To.HasValue, r => r.StartDate <= req.To!.Value.ToDateTime(TimeOnly.MaxValue));
 
         var requests = await q.OrderBy(r => r.StartDate).ToListAsync(ct);
 

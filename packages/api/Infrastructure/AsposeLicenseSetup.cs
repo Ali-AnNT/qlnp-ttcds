@@ -8,12 +8,12 @@ internal static class AsposeLicenseSetup {
             var license = new License();
             // Try embedded resource first, then file path
             var assembly = typeof(AsposeLicenseSetup).Assembly;
-            using var stream = assembly.GetManifestResourceStream("QLNP.Api.Resources.Aspose.Cells.lic");
+            using var stream = assembly.GetManifestResourceStream("QLNP.Api.Resources.LicenseAsposeTotal.lic");
             if (stream is not null) {
                 license.SetLicense(stream);
             } else {
                 // Fallback: try file path
-                var licensePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Aspose.Cells.lic");
+                var licensePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LicenseAsposeTotal.lic");
                 if (File.Exists(licensePath)) {
                     license.SetLicense(licensePath);
                 }

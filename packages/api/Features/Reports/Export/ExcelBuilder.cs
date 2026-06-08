@@ -71,7 +71,12 @@ internal static class ExcelBuilder {
                 ws.AutoFilter.Range = $"A1:{endCol}{rowCount}";
             }
 
-            ws.AutoFitColumns();
+            try {
+                ws.AutoFitColumns();
+            } catch (Exception ex) {
+                // AutoFitColumns requires gdiplus/libgdiplus on Linux which may be missing in Docker/Linux environments
+                Console.WriteLine($"[ExcelBuilder] AutoFitColumns failed on {ws.Name}: {ex.Message}");
+            }
         }
     }
 
