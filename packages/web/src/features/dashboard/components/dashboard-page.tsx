@@ -69,22 +69,22 @@ const DashboardPage = () => {
 
   return (
     <div className="lma-space-y-6">
-      <div className="lma-bg-card lma-rounded-lg lma-border !lma-p-5">
-        <h1 className="lma-text-xl lma-font-bold">Xin chào, {user?.fullName}!</h1>
-        <p className="lma-text-sm lma-text-muted-foreground lma-mt-1">
-          {user?.userName} • {user?.role}
-        </p>
-      </div>
       <div className="lma-grid lma-grid-cols-1 sm:lma-grid-cols-2 lg:lma-grid-cols-4 lma-gap-4">
         {metrics.map((m) => (
           <Card key={m.label}>
             <CardContent className="lma-p-4 lma-flex lma-items-center lma-gap-4">
-              <div className={cn("lma-p-2.5 lma-rounded-lg lma-bg-muted", m.color)}>
+              <div
+                className={cn("lma-p-2.5 lma-rounded-lg lma-bg-muted", m.color)}
+              >
                 <m.icon className="lma-h-5 lma-w-5" />
               </div>
               <div>
-                <p className="lma-text-2xl lma-font-bold">{loading ? "—" : m.value}</p>
-                <p className="lma-text-xs lma-text-muted-foreground">{m.label}</p>
+                <p className="lma-text-2xl lma-font-bold">
+                  {loading ? "—" : m.value}
+                </p>
+                <p className="lma-text-xs lma-text-muted-foreground">
+                  {m.label}
+                </p>
               </div>
             </CardContent>
           </Card>

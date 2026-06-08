@@ -45,6 +45,13 @@
 }
 
 @layer base {
+  /* Reset all inherited CSS properties to browser defaults within #root.
+     This neutralizes parent DNN page's aggressive CSS reset that strips
+     margin, padding, border, font-size, font, and vertical-align. */
+  #root {
+    all: revert;
+  }
+
   * {
     @apply lma-border-border;
   }
