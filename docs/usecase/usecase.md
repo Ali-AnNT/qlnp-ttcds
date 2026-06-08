@@ -260,7 +260,7 @@
 
 - **2a. Lọc theo trạng thái**: Đã duyệt, chưa duyệt, bị từ chối
 - **3a. Click vào phòng ban**: Drill-down xem chi tiết nhân viên trong phòng
-- **5a. Xuất Excel**: Backend tạo file `.xlsx` qua ClosedXML, trả về stream
+- **5a. Xuất Excel**: Backend tạo file `.xlsx` qua Aspose.Cells, trả về stream
 
 ### Business Rules
 
@@ -274,7 +274,7 @@
 |---|---|
 | **Route** | `/reports` |
 | **API** | `GET /api/reports/export` |
-| **Feature** | `Reports/Export` (ExcelBuilder, ClosedXML) |
+| **Feature** | `Reports/Export` (ExcelBuilder, Aspose.Cells) |
 | **Entity** | `LeaveRequest`, `LeaveBalance`, `LeaveType`, `DM_DONVI` |
 | **Page** | `ReportsPage.tsx` |
 

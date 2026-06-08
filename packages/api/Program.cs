@@ -12,6 +12,8 @@ using QLNP.Api.Shared.Contracts;
 
 var builder = WebApplication.CreateBuilder(args);
 
+QLNP.Api.Infrastructure.AsposeLicenseSetup.Initialize();
+
 builder.Services.AddFastEndpoints()
     .SwaggerDocument(o => {
         o.DocumentSettings = s => {

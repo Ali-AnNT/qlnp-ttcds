@@ -200,7 +200,19 @@ source:
 
 ### T-05: `Reports/Export` endpoint ✅ DONE
 
-- **What**: `GET /api/reports/export`. Export leave requests ra Excel .xlsx. Chỉ GD.PGD. Filter: status, from, to, period (none/month/quarter/year). ClosedXML 0.105.0 (MIT license).
+- **What**: `GET /api/reports/export`. Export leave requests ra Excel .xlsx. Chỉ GD.PGD. Filter: status, from, to, period (none/month/quarter/year). Aspose.Cells 20.11.0.
+- **Refs**: FR-054, AC-019, BR-008, SRS FR-08.4, UC-06 A-3
+- **Dependencies**: —
+- **Files**:
+  - Modify: `packages/api/Features/Reports/Export/ExcelBuilder.cs`
+  - Modify: `packages/api/Features/Reports/Export/ExportReportEndpoint.cs`
+  - Create: `packages/api/Features/Reports/Export/ExportModels.cs`
+  - Create: `packages/api/Features/Reports/Export/ExportDataMapper.cs`
+  - Create: `packages/api/Resources/ExcelTemplates/BaoCaoNghiPhep.xlsx`
+  - Create: `packages/api/Infrastructure/AsposeLicenseSetup.cs`
+- **AC**: Export chạy ok, detail sheet (period=none) có 1 sheet; period=month|quarter|year → 4 sheets, dùng Smart Markers.
+- **Priority**: P0
+- **Status**: ✅ Complete
 - **Refs**: FR-054, AC-019, BR-008, SRS FR-08.4, UC-06 A-3
 - **Status**: ✅ Complete — 1 detail sheet (period=none) or 4 sheets (period=month|quarter|year)
 
@@ -306,7 +318,7 @@ Solid arrow = hard dependency. Dotted = soft (works without, feature reduced).
 | LeaveBalances.UsedDays cộng dồn sai khi approve | Medium | T-10 test AC-012 |
 | Iframe bị block bởi frame policy | Medium | T-08 CSP frame-ancestors header |
 | Audit entity thêm migration lớn | Low | T-01 isolated, rollback dễ |
-| ClosedXML license (Reports/Export) | ✅ Resolved | ClosedXML 0.105.0 (MIT license) |
+| Aspose.Cells license (Reports/Export) | ✅ Resolved | Aspose.Cells 20.11.0 (watermark if missing) |
 | Supabase migrations folder có info hữu ích | Low | Backup `archive/` trước khi xóa |
 | Auto-approve bypass unintended levels | Low | ApprovalHelper.GetAutoApproveLevel chỉ match configured roles; full approve chỉ khi matchLevel >= maxLevel hoặc approver-without-match |
 
@@ -319,6 +331,6 @@ Solid arrow = hard dependency. Dotted = soft (works without, feature reduced).
 3. **Endpoint approve/reject**: Sub-resource `POST /api/leave-requests/{id}/approve` và `/reject`.
 4. **CSP `frame-ancestors`**: Config qua `Security:FrameAncestors` env var. Dev default `'self'`.
 5. **Audit logging**: Full audit (all mutations + status transitions) nhưng **deferred** — không block sprint. T-01 entity tạo sẵn, T-03 wiring làm sau.
-6. **Reports/Export**: Dùng ClosedXML 0.105.0 (MIT license) cho .xlsx generation. `period=none` → 1 detail sheet; `period=month|quarter|year` → 4 sheets.
+6. **Reports/Export**: Dùng Aspose.Cells 20.11.0 với Smart Markers (template-based) cho .xlsx generation. `period=none` → 1 detail sheet; `period=month|quarter|year` → 4 sheets.
 7. **Auto-approve by requester role**: `ApprovalHelper.GetAutoApproveLevel()` determines how many levels to auto-approve based on requester roles vs approval flow config. `AutoApproveAll` sentinel (-1) handles approver roles that don't match any configured level. Balance deducted in same transaction when fully auto-approved.
 8. **Approvable requests**: `GET /api/leave-requests/approvable` — config-driven, single API call for FE. Registered before generic `GET ""` route to prevent shadowing.

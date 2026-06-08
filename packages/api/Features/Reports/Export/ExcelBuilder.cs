@@ -1,168 +1,87 @@
-using ClosedXML.Excel;
-using QLNP.Api.Shared.Domain;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using Aspose.Cells;
 
 namespace QLNP.Api.Features.Reports.Export;
 
 internal static class ExcelBuilder {
-    public static XLWorkbook BuildWorkbook(
-        List<LeaveRequest> requests,
-        Dictionary<long, (string hoTen, string? tenDonVi)> userLookup,
-        string period) {
-        var wb = new XLWorkbook();
+    private const string TemplateResourceName = "QLNP.Api.Resources.ExcelTemplates.BaoCaoNghiPhep.xlsx";
 
-        AddDetailSheet(wb, requests, userLookup);
+    public static Workbook BuildWorkbook(
+        List<DetailRow> details,
+        List<EmployeeLeaveRow>? employeeLeaves,
+        List<DepartmentRow>? departments,
+        List<SummaryRow>? summary) {
 
-        if (period != "none") {
-            var grouped = GroupByPeriod(requests, period);
-            AddEmployeeLeaveTypeSheet(wb, grouped, userLookup);
-            AddDepartmentSheet(wb, grouped, userLookup);
-            AddSummarySheet(wb, grouped);
+        var workbook = LoadTemplate();
+        var designer = new WorkbookDesigner { Workbook = workbook };
+
+        // Always bind Details
+        designer.SetDataSource("Details", details);
+
+        // Conditionally bind grouped data
+        if (employeeLeaves is { Count: > 0 }) {
+            designer.SetDataSource("EmployeeLeaves", employeeLeaves);
+            designer.SetDataSource("Departments", departments!);
+            designer.SetDataSource("Summary", summary!);
         }
+
+        // Process all Smart Markers
+        designer.Process(false);
+
+        // Post-process
+        var wb = designer.Workbook;
+        RemoveEmptySheets(wb, employeeLeaves is null or { Count: 0 });
+        ApplyAutoFilterAndFit(wb);
 
         return wb;
     }
 
-    private static void AddDetailSheet(XLWorkbook wb, List<LeaveRequest> requests, Dictionary<long, (string hoTen, string? tenDonVi)> userLookup) {
-        var ws = wb.Worksheets.Add("Chi tiết");
-        var headers = new[] { "STT", "Họ tên", "Phòng ban", "Loại phép", "Từ ngày", "Đến ngày", "Số ngày", "Trạng thái" };
+    private static Workbook LoadTemplate() {
+        var assembly = typeof(ExcelBuilder).Assembly;
+        using var stream = assembly.GetManifestResourceStream(TemplateResourceName)
+            ?? throw new FileNotFoundException(
+                $"Excel template not found: {TemplateResourceName}. " +
+                "Available: " + string.Join(", ", assembly.GetManifestResourceNames()));
 
-        for (int i = 0; i < headers.Length; i++)
-            ws.Cell(1, i + 1).Value = headers[i];
+        return new Workbook(stream);
+    }
 
-        for (int i = 0; i < requests.Count; i++) {
-            var r = requests[i];
-            var row = i + 2;
-            var info = userLookup.GetValueOrDefault(r.UserId);
-            ws.Cell(row, 1).Value = i + 1;
-            ws.Cell(row, 2).Value = info.hoTen;
-            ws.Cell(row, 3).Value = info.tenDonVi ?? "";
-            ws.Cell(row, 4).Value = r.LeaveType?.Name ?? "";
-            ws.Cell(row, 5).Value = r.StartDate.ToString("dd/MM/yyyy");
-            ws.Cell(row, 6).Value = r.EndDate.ToString("dd/MM/yyyy");
-            ws.Cell(row, 7).Value = r.TotalDays;
-            ws.Cell(row, 8).Value = StatusLabels.ToVietnamese(r.Status);
+    private static void RemoveEmptySheets(Workbook wb, bool removeGrouped) {
+        if (!removeGrouped) return;
+
+        // Remove by name (Aspose.Cells re-indexes after each remove)
+        var sheetsToRemove = new[] { "Nhân viên - Loại phép", "Theo phòng ban", "Tổng hợp" };
+        foreach (var name in sheetsToRemove) {
+            var ws = wb.Worksheets[name];
+            if (ws != null) {
+                wb.Worksheets.RemoveAt(ws.Index);
+            }
         }
-
-        ws.Column(7).Style.NumberFormat.Format = "0.0";
-        FormatSheet(ws, requests.Count + 1);
     }
 
-    private static void AddEmployeeLeaveTypeSheet(XLWorkbook wb, IEnumerable<PeriodGroup> groups, Dictionary<long, (string hoTen, string? tenDonVi)> userLookup) {
-        var ws = wb.Worksheets.Add("Nhân viên - Loại phép");
-        var headers = new[] { "Kỳ", "Họ tên", "Loại phép", "Tổng số ngày" };
+    private static void ApplyAutoFilterAndFit(Workbook wb) {
+        foreach (Worksheet ws in wb.Worksheets) {
+            int rowCount = ws.Cells.MaxDataRow + 1;
+            int colCount = ws.Cells.MaxDataColumn + 1;
 
-        for (int i = 0; i < headers.Length; i++)
-            ws.Cell(1, i + 1).Value = headers[i];
+            if (rowCount > 1 && colCount > 0) {
+                string endCol = GetColumnName(colCount);
+                ws.AutoFilter.Range = $"A1:{endCol}{rowCount}";
+            }
 
-        var rows = groups
-            .SelectMany(g => g.Items.GroupBy(it => new { HoTen = userLookup.GetValueOrDefault(it.UserId).hoTen, LeaveType = it.LeaveType?.Name ?? "" })
-                .Select(ig => new {
-                    Period = g.Key,
-                    HoTen = ig.Key.HoTen,
-                    LeaveType = ig.Key.LeaveType,
-                    TotalDays = ig.Sum(x => x.TotalDays)
-                }))
-            .OrderBy(x => x.Period).ThenBy(x => x.HoTen)
-            .ToList();
-
-        for (int i = 0; i < rows.Count; i++) {
-            var row = rows[i];
-            var r = i + 2;
-            ws.Cell(r, 1).Value = row.Period;
-            ws.Cell(r, 2).Value = row.HoTen;
-            ws.Cell(r, 3).Value = row.LeaveType;
-            ws.Cell(r, 4).Value = row.TotalDays;
+            ws.AutoFitColumns();
         }
-
-        ws.Column(4).Style.NumberFormat.Format = "0.0";
-        FormatSheet(ws, rows.Count + 1);
     }
 
-    private static void AddDepartmentSheet(XLWorkbook wb, IEnumerable<PeriodGroup> groups, Dictionary<long, (string hoTen, string? tenDonVi)> userLookup) {
-        var ws = wb.Worksheets.Add("Theo phòng ban");
-        var headers = new[] { "Kỳ", "Phòng ban", "Số NV nghỉ", "Tổng số ngày" };
-
-        for (int i = 0; i < headers.Length; i++)
-            ws.Cell(1, i + 1).Value = headers[i];
-
-        var rows = groups
-            .SelectMany(g => g.Items.GroupBy(it => userLookup.GetValueOrDefault(it.UserId).tenDonVi ?? "")
-                .Select(dg => new {
-                    Period = g.Key,
-                    Department = dg.Key,
-                    EmployeeCount = dg.Select(x => x.UserId).Distinct().Count(),
-                    TotalDays = dg.Sum(x => x.TotalDays)
-                }))
-            .OrderBy(x => x.Period).ThenBy(x => x.Department)
-            .ToList();
-
-        for (int i = 0; i < rows.Count; i++) {
-            var row = rows[i];
-            var r = i + 2;
-            ws.Cell(r, 1).Value = row.Period;
-            ws.Cell(r, 2).Value = row.Department;
-            ws.Cell(r, 3).Value = row.EmployeeCount;
-            ws.Cell(r, 4).Value = row.TotalDays;
+    private static string GetColumnName(int colCount) {
+        var sb = new System.Text.StringBuilder();
+        while (colCount > 0) {
+            colCount--;
+            sb.Insert(0, (char)('A' + colCount % 26));
+            colCount /= 26;
         }
-
-        ws.Column(4).Style.NumberFormat.Format = "0.0";
-        FormatSheet(ws, rows.Count + 1);
-    }
-
-    private static void AddSummarySheet(XLWorkbook wb, IEnumerable<PeriodGroup> groups) {
-        var ws = wb.Worksheets.Add("Tổng hợp");
-        var headers = new[] { "Kỳ", "Tổng số NV nghỉ", "Tổng số ngày" };
-
-        for (int i = 0; i < headers.Length; i++)
-            ws.Cell(1, i + 1).Value = headers[i];
-
-        var rows = groups
-            .Select(g => new {
-                Period = g.Key,
-                EmployeeCount = g.Items.Select(x => x.UserId).Distinct().Count(),
-                TotalDays = g.Items.Sum(x => x.TotalDays)
-            })
-            .OrderBy(x => x.Period)
-            .ToList();
-
-        for (int i = 0; i < rows.Count; i++) {
-            var row = rows[i];
-            var r = i + 2;
-            ws.Cell(r, 1).Value = row.Period;
-            ws.Cell(r, 2).Value = row.EmployeeCount;
-            ws.Cell(r, 3).Value = row.TotalDays;
-        }
-
-        ws.Column(3).Style.NumberFormat.Format = "0.0";
-        FormatSheet(ws, rows.Count + 1);
-    }
-
-    private static List<PeriodGroup> GroupByPeriod(List<LeaveRequest> requests, string period) {
-        return requests
-            .GroupBy(r => GetPeriodKey(r.StartDate, period))
-            .Select(g => new PeriodGroup(g.Key, g.ToList()))
-            .OrderBy(g => g.Key)
-            .ToList();
-    }
-
-    private static string GetPeriodKey(DateTime date, string period) => period switch {
-        "month" => $"{date.Year}-{date.Month:D2}",
-        "quarter" => $"{date.Year}-Q{(date.Month - 1) / 3 + 1}",
-        "year" => $"{date.Year}",
-        _ => throw new ArgumentException($"Invalid period: {period}")
-    };
-
-    private static void FormatSheet(IXLWorksheet ws, int rowCount) {
-        var headerRow = ws.Row(1);
-        headerRow.Style.Font.Bold = true;
-        headerRow.Style.Fill.BackgroundColor = XLColor.FromHtml("#F0F0F0");
-
-        var colCount = ws.ColumnsUsed().Count();
-        if (colCount > 0)
-            ws.Range(1, 1, Math.Max(rowCount, 1), colCount).SetAutoFilter();
-
-        ws.Columns().AdjustToContents();
+        return sb.ToString();
     }
 }
-
-internal sealed record PeriodGroup(string Key, List<LeaveRequest> Items);

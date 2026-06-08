@@ -4,6 +4,7 @@ using QLNP.Api.Data;
 using QLNP.Api.Infrastructure.Auth;
 using QLNP.Api.Shared.Domain;
 using QLNP.Api.Features.LeaveRequests;
+using Aspose.Cells;
 
 namespace QLNP.Api.Features.Reports.Export;
 
@@ -37,10 +38,15 @@ internal sealed class ExportReportEndpoint : Endpoint<Request> {
             kvp => kvp.Key,
             kvp => (kvp.Value.hoTen, (string?)kvp.Value.tenDonVi));
 
-        using var workbook = ExcelBuilder.BuildWorkbook(requests, userLookup, req.Period);
+        // Map domain data to DTOs
+        var details = ExportDataMapper.MapDetails(requests, userLookup);
+        var (empLeaves, depts, summary) = ExportDataMapper.MapGrouped(requests, req.Period, userLookup);
+
+        // Build workbook from template
+        using var workbook = ExcelBuilder.BuildWorkbook(details, empLeaves, depts, summary);
 
         using var stream = new MemoryStream();
-        workbook.SaveAs(stream);
+        workbook.Save(stream, SaveFormat.Xlsx);
         stream.Position = 0;
 
         var fileName = $"bao-cao-nghi-phep-{DateTime.UtcNow:yyyyMMdd}.xlsx";
