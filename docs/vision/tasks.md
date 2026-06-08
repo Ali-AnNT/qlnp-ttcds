@@ -75,6 +75,7 @@ source:
 | 18 | PUT | /api/system-configs/leave-configs | ✅ | FR-061 |
 | 19 | GET | /api/system-configs/leave-configs | ✅ | FR-060 |
 | 20 | GET | /api/reports/export | ✅ | FR-054 |
+| 21 | GET | /api/reports/statistics | ✅ | Reports Statistics API |
 | +1 | POST | /api/auth/dev-login | ✅ | FR-004 (dev) |
 | +2 | GET | /api/leave-requests/my | ✅ | FR-04 (convenience) |
 | +3 | GET | /api/leave-requests/approvable | ✅ | Approval filtering |
@@ -304,7 +305,7 @@ Solid arrow = hard dependency. Dotted = soft (works without, feature reduced).
 - [ ] Embed flow: host postMessage → `/api/auth/me` → dashboard
 - [ ] Dev mode token input UI hoạt động khi `import.meta.env.DEV`
 - [x] Approval 2 cấp đúng state machine; business days đúng (bỏ T7/CN); auto-approve for approver roles
-- [ ] `dotnet build` + `pnpm build` không lỗi
+- [x] `dotnet build` + `pnpm build` không lỗi
 - [ ] AC-001→AC-021 pass
 
 ---
