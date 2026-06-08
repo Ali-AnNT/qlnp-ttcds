@@ -1,6 +1,6 @@
 import { ROUTES } from "@/app/routes";
 import { useAuth } from "@/features/auth";
-import { useSystemConfigs } from "@/features/config/hooks/use-system-configs";
+import { useSystemConfigs } from "@/features/config";
 import { countBusinessDays, parseWorkDays } from "@/shared/lib/date-utils";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";

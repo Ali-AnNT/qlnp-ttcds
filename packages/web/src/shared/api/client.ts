@@ -35,9 +35,11 @@ async function request<T>(
 ): Promise<ApiResponse<T>> {
   const token = getAccessToken();
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
+  if (options.body) {
+    headers["Content-Type"] = "application/json";
+  }
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
   try {
@@ -52,9 +54,11 @@ async function request<T>(
       if (renewed) {
         const newToken = getAccessToken();
         const retryHeaders: Record<string, string> = {
-          "Content-Type": "application/json",
           ...(options.headers as Record<string, string>),
         };
+        if (options.body) {
+          retryHeaders["Content-Type"] = "application/json";
+        }
         if (newToken) retryHeaders["Authorization"] = `Bearer ${newToken}`;
 
         const retryRes = await fetch(`${API_URL}${path}`, {

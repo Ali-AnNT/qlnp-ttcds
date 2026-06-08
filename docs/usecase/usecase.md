@@ -246,7 +246,7 @@
 | **Tên** | Thống kê báo cáo nghỉ phép |
 | **Tác nhân** | GD.PGD |
 | **Mục tiêu** | Xem báo cáo tổng quan, theo phòng ban, loại phép, và xuất Excel |
-| **Trạng thái** | ⚠️ partial |
+| **Trạng thái** | ✅ implemented |
 
 ### KS chính (Main Success Scenario)
 
@@ -260,7 +260,7 @@
 
 - **2a. Lọc theo trạng thái**: Đã duyệt, chưa duyệt, bị từ chối
 - **3a. Click vào phòng ban**: Drill-down xem chi tiết nhân viên trong phòng
-- **5a. Xuất Excel**: Backend tạo file `.xlsx` qua ClosedXML, trả về stream
+- **5a. Xuất Excel**: Backend tạo file `.xlsx` qua Aspose.Cells, trả về stream
 
 ### Business Rules
 
@@ -273,8 +273,8 @@
 | Layer | Artifact |
 |---|---|
 | **Route** | `/reports` |
-| **API** | `GET /api/reports/export` |
-| **Feature** | `Reports/Export` (ExcelBuilder, ClosedXML) |
+| **API** | `GET /api/reports/export`, `GET /api/reports/statistics` |
+| **Feature** | `Reports/Export` (ExcelBuilder, Aspose.Cells), `Reports/Statistics` |
 | **Entity** | `LeaveRequest`, `LeaveBalance`, `LeaveType`, `DM_DONVI` |
 | **Page** | `ReportsPage.tsx` |
 
@@ -331,5 +331,5 @@
 | UC28 | Theo dõi đơn nghỉ phép | ✅ implemented | My/List/Calendar + LeaveBalances |
 | UC29 | Tổng hợp lịch nghỉ phép | ⚠️ partial | Page exists, no dedicated API |
 | UC30 | Cấu hình quy định | ✅ implemented | Config CRUD + LeaveTypes CRUD |
-| UC31 | Thống kê báo cáo | ⚠️ partial | Export Excel exists, KPI/charts frontend-side |
+| UC31 | Thống kê báo cáo | ✅ implemented | Export Excel exists, KPI/charts fetched from statistics API |
 | UC32 | Vượt mức quy định | ❌ not-started | Page stub only, no backend API |
