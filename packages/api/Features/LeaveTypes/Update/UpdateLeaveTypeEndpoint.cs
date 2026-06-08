@@ -38,6 +38,20 @@ internal sealed class UpdateLeaveTypeEndpoint : Endpoint<Request, Result<LeaveTy
         }
 
         await Map.UpdateEntityAsync(r, leaveType, ct);
+
+        // If this leave type was deactivated and was the default, reset to the first remaining active type
+        if (!leaveType.IsActive) {
+            var defaultConfig = await Db.SystemConfigs
+                .FirstOrDefaultAsync(c => c.ConfigKey == "default_leave_type_id", ct);
+            if (defaultConfig is not null && defaultConfig.ConfigValue == id.ToString()) {
+                var firstActive = await Db.LeaveTypes
+                    .Where(lt => lt.IsActive && lt.Id != id)
+                    .OrderBy(lt => lt.Id)
+                    .FirstOrDefaultAsync(ct);
+                defaultConfig.ConfigValue = firstActive?.Id.ToString() ?? "0";
+            }
+        }
+
         await Db.SaveChangesAsync(ct);
 
         var dto = new LeaveTypeDto(leaveType.Id, leaveType.Name, leaveType.Code,

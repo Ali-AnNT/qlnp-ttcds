@@ -19,6 +19,17 @@ internal sealed class UpdateSystemConfigEndpoint : Endpoint<List<SystemConfigDto
     }
 
     public override async Task HandleAsync(List<SystemConfigDto> req, CancellationToken ct) {
+        // Validate default_leave_type_id references an active LeaveType
+        var defaultLeaveTypeConfig = req.FirstOrDefault(c => c.ConfigKey == "default_leave_type_id");
+        if (defaultLeaveTypeConfig is not null && long.TryParse(defaultLeaveTypeConfig.ConfigValue, out var leaveTypeId)) {
+            var exists = await Db.LeaveTypes.AnyAsync(lt => lt.Id == leaveTypeId && lt.IsActive, ct);
+            if (!exists) {
+                AddError("default_leave_type_id", "Loại phép mặc định không tồn tại hoặc đã bị vô hiệu hóa");
+                await Send.ErrorsAsync(400, ct);
+                return;
+            }
+        }
+
         try {
             Db.SystemConfigs.RemoveRange(await Db.SystemConfigs.ToListAsync(ct));
 

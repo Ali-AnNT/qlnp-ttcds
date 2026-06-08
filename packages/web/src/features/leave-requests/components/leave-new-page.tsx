@@ -102,6 +102,10 @@ const LeaveNewPage = () => {
     systemConfigs.find((c) => c.configKey === "work_days")?.configValue,
   );
 
+  const defaultLeaveTypeId = systemConfigs.find(
+    (c) => c.configKey === "default_leave_type_id",
+  )?.configValue;
+
   const today = format(new Date(), "yyyy-MM-dd");
 
   const approvedDates = useMemo(() => {
@@ -125,6 +129,14 @@ const LeaveNewPage = () => {
     return dates;
   }, [leaveRequests, user]);
 
+  // Pre-select default leave type once configs and leave types are loaded.
+  // Only set when both are available and the default ID references a valid active leave type.
+  const resolvedDefaultLeaveTypeId = useMemo(() => {
+    if (!defaultLeaveTypeId || leaveTypes.length === 0) return "";
+    const id = String(defaultLeaveTypeId);
+    return leaveTypes.some((t) => t.id === Number(id) && t.isActive) ? id : "";
+  }, [defaultLeaveTypeId, leaveTypes]);
+
   const {
     register,
     handleSubmit,
@@ -140,6 +152,9 @@ const LeaveNewPage = () => {
       endDate: "",
       reason: "",
     },
+    values: resolvedDefaultLeaveTypeId
+      ? { leaveTypeId: resolvedDefaultLeaveTypeId, startDate: "", endDate: "", reason: "" }
+      : undefined,
   });
 
   const startDateValue = watch("startDate");

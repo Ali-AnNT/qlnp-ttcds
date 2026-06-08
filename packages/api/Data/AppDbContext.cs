@@ -165,7 +165,8 @@ public partial class AppDbContext : DbContext {
             new SystemConfig { Id = 6, ConfigKey = "default_days_LD.PCM", ConfigValue = "14", Description = "Mặc định Lãnh đạo PCM" },
             new SystemConfig { Id = 7, ConfigKey = "default_days_GD.PGD", ConfigValue = "16", Description = "Mặc định Giám đốc PGD" },
             new SystemConfig { Id = 8, ConfigKey = "default_days_QTHT", ConfigValue = "12", Description = "Mặc định Quản trị hệ thống" },
-            new SystemConfig { Id = 9, ConfigKey = "work_days", ConfigValue = "1,2,3,4,5", Description = "Các ngày làm việc trong tuần (0=CN, 1=T2...)" }
+            new SystemConfig { Id = 9, ConfigKey = "work_days", ConfigValue = "1,2,3,4,5", Description = "Các ngày làm việc trong tuần (0=CN, 1=T2...)" },
+            new SystemConfig { Id = 10, ConfigKey = "default_leave_type_id", ConfigValue = "1", Description = "Loại phép mặc định khi tạo đơn xin nghỉ" }
         );
 
         OnModelCreatingPartial(modelBuilder);
