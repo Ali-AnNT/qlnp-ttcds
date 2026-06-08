@@ -162,6 +162,7 @@ export const ConfigPage = () => {
             configs={localSystemConfigs}
             onChange={handleSystemConfigChange}
             isAdmin={isAdmin}
+            leaveTypes={leaveTypes}
           />
           <DefaultDaysSettings
             configs={localSystemConfigs}

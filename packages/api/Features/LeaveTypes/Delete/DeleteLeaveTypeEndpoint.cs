@@ -33,6 +33,18 @@ internal sealed class DeleteLeaveTypeEndpoint : EndpointWithoutRequest {
         }
 
         leaveType.IsActive = false;
+
+        // If this leave type was configured as the default, reset to the first active leave type
+        var defaultConfig = await Db.SystemConfigs
+            .FirstOrDefaultAsync(c => c.ConfigKey == "default_leave_type_id", ct);
+        if (defaultConfig is not null && defaultConfig.ConfigValue == id.ToString()) {
+            var firstActive = await Db.LeaveTypes
+                .Where(lt => lt.IsActive && lt.Id != id)
+                .OrderBy(lt => lt.Id)
+                .FirstOrDefaultAsync(ct);
+            defaultConfig.ConfigValue = firstActive?.Id.ToString() ?? "0";
+        }
+
         await Db.SaveChangesAsync(ct);
 
         await Send.NoContentAsync(ct);

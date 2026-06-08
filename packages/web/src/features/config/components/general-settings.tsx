@@ -2,16 +2,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Label } from "@/shared/ui/label";
 import { Input } from "@/shared/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
-import { SystemConfigDto } from "../api/types";
+import { SystemConfigDto, LeaveTypeDto } from "../api/types";
 import { cn } from "@/shared/lib/utils";
 
 interface GeneralSettingsProps {
   configs: SystemConfigDto[];
   onChange: (key: string, value: string) => void;
   isAdmin: boolean;
+  leaveTypes: LeaveTypeDto[];
 }
 
-export const GeneralSettings = ({ configs, onChange, isAdmin }: GeneralSettingsProps) => {
+export const GeneralSettings = ({ configs, onChange, isAdmin, leaveTypes }: GeneralSettingsProps) => {
   const getSystemConfig = (key: string) =>
     configs.find((c) => c.configKey === key)?.configValue ?? "";
 
@@ -109,6 +110,25 @@ export const GeneralSettings = ({ configs, onChange, isAdmin }: GeneralSettingsP
                 </button>
               ))}
             </div>
+          </div>
+          <div className="lma-flex lma-items-center lma-gap-2">
+            <Label className="lma-text-xs lma-w-40">Loại phép mặc định</Label>
+            <Select
+              value={getSystemConfig("default_leave_type_id") || "1"}
+              onValueChange={(v) => onChange("default_leave_type_id", v)}
+              disabled={!isAdmin}
+            >
+              <SelectTrigger className="lma-w-44 lma-h-8 lma-text-sm">
+                <SelectValue placeholder="Chọn loại phép mặc định" />
+              </SelectTrigger>
+              <SelectContent>
+                {leaveTypes.filter((t) => t.isActive).map((t) => (
+                  <SelectItem key={t.id} value={String(t.id)}>
+                    {t.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </CardContent>
