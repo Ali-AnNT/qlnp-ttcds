@@ -19,6 +19,7 @@ dist-ssr
 # .NET
 bin/
 obj/
+**/publish/
 *.user
 *.suo
 _ReSharper.Caches/

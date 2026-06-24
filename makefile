@@ -53,6 +53,25 @@ build-web-dev:
 web-dev:
 	node scripts/deploy.cjs
 
+# ---------- API IIS deployment ----------
+# Publish .NET API for IIS (inprocess hosting via ASP.NET Core Module)
+# Output: packages/api/publish/
+
+API_PUBLISH_DIR := packages/api/publish
+
+api-iis-publish:
+	@echo "==> Publishing API for IIS hosting..."
+	cd packages/api && dotnet publish QLNP.Api.csproj \
+		-c Release \
+		-o publish \
+		--nologo -v minimal \
+		/p:UseAppHost=false
+	@echo "==> Publish complete: $(API_PUBLISH_DIR)/"
+
+api-iis-deploy: api-iis-publish
+	@echo "==> Deploying API to IIS share..."
+	node scripts/deploy-api-iis.cjs
+
 # ---------- Tests ----------
 test: test-web test-api
 	@echo "All tests passed."
