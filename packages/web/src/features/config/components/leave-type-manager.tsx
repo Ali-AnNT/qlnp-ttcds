@@ -1,8 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/shared/ui/table";
 import { Button } from "@/shared/ui/button";
 import { Switch } from "@/shared/ui/switch";
-import { Plus, Pencil } from "lucide-react";
+import { Input } from "@/shared/ui/input";
+import { Plus, Pencil, Search } from "lucide-react";
 import { LeaveTypeDto } from "../api/types";
 
 interface LeaveTypeManagerProps {
@@ -11,6 +19,8 @@ interface LeaveTypeManagerProps {
   onEdit: (lt: LeaveTypeDto) => void;
   onToggle: (id: number, isActive: boolean) => void;
   isAdmin: boolean;
+  search?: string;
+  onSearchChange: (q: string) => void;
 }
 
 export const LeaveTypeManager = ({
@@ -19,16 +29,31 @@ export const LeaveTypeManager = ({
   onEdit,
   onToggle,
   isAdmin,
+  search,
+  onSearchChange,
 }: LeaveTypeManagerProps) => {
   return (
     <Card>
-      <CardHeader className="lma-pb-2 lma-flex lma-flex-row lma-items-center lma-justify-between">
-        <CardTitle className="lma-text-sm">Danh sách loại phép</CardTitle>
-        {isAdmin && (
-          <Button size="sm" variant="outline" onClick={onAdd}>
-            <Plus className="lma-h-4 lma-w-4 lma-mr-1" /> Thêm loại phép
-          </Button>
-        )}
+      <CardHeader className="lma-pb-2">
+        <div className="lma-flex lma-flex-row lma-items-center lma-justify-between">
+          <CardTitle className="lma-text-sm">Danh sách loại phép</CardTitle>
+          {isAdmin && (
+            <Button size="sm" variant="outline" onClick={onAdd}>
+              <Plus className="lma-h-4 lma-w-4 lma-mr-1" /> Thêm loại phép
+            </Button>
+          )}
+        </div>
+        <div className="lma-mt-2">
+          <div className="lma-relative lma-max-w-xs">
+            <Search className="lma-absolute lma-left-2.5 lma-top-2.5 lma-h-4 lma-w-4 lma-text-muted-foreground" />
+            <Input
+              placeholder="Tìm tên/mã..."
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="lma-pl-8 lma-h-9"
+            />
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="lma-p-0">
         <Table>
@@ -44,11 +69,18 @@ export const LeaveTypeManager = ({
           </TableHeader>
           <TableBody>
             {leaveTypes.map((lt) => (
-              <TableRow key={lt.id}>
+              <TableRow
+                key={lt.id}
+                className={!lt.isActive ? "lma-opacity-60" : ""}
+              >
                 <TableCell className="lma-font-medium">{lt.name}</TableCell>
                 <TableCell>{lt.code}</TableCell>
-                <TableCell className="lma-text-center">{lt.defaultDays}</TableCell>
-                <TableCell className="lma-text-muted-foreground lma-text-xs">{lt.description}</TableCell>
+                <TableCell className="lma-text-center">
+                  {lt.defaultDays}
+                </TableCell>
+                <TableCell className="lma-text-muted-foreground lma-text-xs">
+                  {lt.description}
+                </TableCell>
                 <TableCell className="lma-text-center">
                   <Switch
                     checked={lt.isActive}

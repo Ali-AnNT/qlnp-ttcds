@@ -31,6 +31,33 @@ describe("leaveTypesApi", () => {
     expect(res.data).toEqual([mockType]);
   });
 
+  it("list with q and includeInactive builds query string", async () => {
+    (api.get as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      data: [mockType],
+      error: null,
+    });
+    await leaveTypesApi.list({ q: "an", includeInactive: true });
+    expect(api.get).toHaveBeenCalledWith("/leave-types?q=an&includeInactive=true");
+  });
+
+  it("list with only q builds query string", async () => {
+    (api.get as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      data: [mockType],
+      error: null,
+    });
+    await leaveTypesApi.list({ q: "x" });
+    expect(api.get).toHaveBeenCalledWith("/leave-types?q=x");
+  });
+
+  it("list with only includeInactive builds query string", async () => {
+    (api.get as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      data: [mockType],
+      error: null,
+    });
+    await leaveTypesApi.list({ includeInactive: true });
+    expect(api.get).toHaveBeenCalledWith("/leave-types?includeInactive=true");
+  });
+
   it("get calls api.get with id", async () => {
     (api.get as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       data: mockType,
@@ -56,13 +83,20 @@ describe("leaveTypesApi", () => {
     expect(api.post).toHaveBeenCalledWith("/leave-types", payload);
   });
 
-  it("update calls api.put with id and data", async () => {
+  it("update calls api.put with id and full data", async () => {
     (api.put as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       data: mockType,
       error: null,
     });
-    await leaveTypesApi.update(1, { name: "Updated" });
-    expect(api.put).toHaveBeenCalledWith("/leave-types/1", { name: "Updated" });
+    const payload = {
+      name: "Annual",
+      code: "AN",
+      defaultDays: 12,
+      description: null,
+      isActive: true,
+    };
+    await leaveTypesApi.update(1, payload);
+    expect(api.put).toHaveBeenCalledWith("/leave-types/1", payload);
   });
 
   it("delete calls api.delete with id", async () => {

@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { useAuth } from "@/features/auth";
 import { AppRoles, type UserRole } from "@/features/shared-reference-data";
+import { useDebouncedValue } from "@/shared/hooks/use-debounced-value";
 import { useLeaveTypes } from "../hooks/use-leave-types";
 import { useApprovalConfig } from "../hooks/use-approval-config";
 import { useSystemConfigs } from "../hooks/use-system-configs";
@@ -17,25 +18,28 @@ export const ConfigPage = () => {
   const { user } = useAuth();
   const isAdmin = user?.role === AppRoles.Admin;
 
-  const {
-    leaveTypes,
-    createLeaveType,
-    updateLeaveType,
-    toggleLeaveType,
-  } = useLeaveTypes();
+  // All active leave types — used by other tabs (dropdowns, settings)
+  const allLeaveTypes = useLeaveTypes();
 
-  const {
-    approvalConfigs,
-    updateApprovalConfigs,
-  } = useApprovalConfig();
+  // Filtered leave types — used by LeaveTypeManager (search, always include inactive)
+  const [leaveTypeSearch, setLeaveTypeSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(leaveTypeSearch, 300);
+  // Only search when term is empty (clear) or >= 2 chars — avoid 1-char noise
+  const validSearch = debouncedSearch.length >= 2 ? debouncedSearch : "";
+  const filteredLeaveTypes = useLeaveTypes({
+    q: validSearch || undefined,
+    includeInactive: true,
+  });
 
-  const {
-    systemConfigs: remoteSystemConfigs,
-    updateSystemConfigs,
-  } = useSystemConfigs();
+  const { approvalConfigs, updateApprovalConfigs } = useApprovalConfig();
+
+  const { systemConfigs: remoteSystemConfigs, updateSystemConfigs } =
+    useSystemConfigs();
 
   // Local state for system configs (dirty state)
-  const [localSystemConfigs, setLocalSystemConfigs] = useState<SystemConfigDto[]>([]);
+  const [localSystemConfigs, setLocalSystemConfigs] = useState<
+    SystemConfigDto[]
+  >([]);
   const [isSavingSystemConfigs, setIsSavingSystemConfigs] = useState(false);
 
   useEffect(() => {
@@ -47,8 +51,20 @@ export const ConfigPage = () => {
   const handleSystemConfigChange = (key: string, value: string) => {
     setLocalSystemConfigs((prev) => {
       const existing = prev.find((c) => c.configKey === key);
-      if (existing) return prev.map((c) => c.configKey === key ? { ...c, configValue: value } : c);
-      return [...prev, { id: 0, configKey: key, configValue: value, description: null, updatedAt: new Date().toISOString() }];
+      if (existing)
+        return prev.map((c) =>
+          c.configKey === key ? { ...c, configValue: value } : c,
+        );
+      return [
+        ...prev,
+        {
+          id: 0,
+          configKey: key,
+          configValue: value,
+          description: null,
+          updatedAt: new Date().toISOString(),
+        },
+      ];
     });
   };
 
@@ -72,7 +88,13 @@ export const ConfigPage = () => {
   const [typeDialogOpen, setTypeDialogOpen] = useState(false);
 
   const handleAddLeaveType = () => {
-    setEditingType({ name: "", code: "", defaultDays: 12, description: "", isActive: true });
+    setEditingType({
+      name: "",
+      code: "",
+      defaultDays: 12,
+      description: "",
+      isActive: true,
+    });
     setTypeDialogOpen(true);
   };
 
@@ -92,20 +114,21 @@ export const ConfigPage = () => {
     if (!editingType) return;
     const { id, ...payload } = editingType;
     if (id) {
-      await updateLeaveType({ id, data: payload });
+      await allLeaveTypes.updateLeaveType({ id, data: payload });
     } else {
-      await createLeaveType(payload);
+      await allLeaveTypes.createLeaveType(payload);
     }
     setTypeDialogOpen(false);
   };
 
   // Approval Config Dialog
-  const [editingApproval, setEditingApproval] = useState<ApprovalConfigEdit | null>(null);
+  const [editingApproval, setEditingApproval] =
+    useState<ApprovalConfigEdit | null>(null);
   const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
 
   const handleAddApproval = () => {
     setEditingApproval({
-      leaveTypeId: leaveTypes[0]?.id || 0,
+      leaveTypeId: allLeaveTypes.leaveTypes[0]?.id || 0,
       approvalLevel: 1,
       approverRole: AppRoles.Leader as UserRole,
     });
@@ -128,7 +151,7 @@ export const ConfigPage = () => {
     let updatedConfigs: ConfigDto[];
     if (id) {
       updatedConfigs = approvalConfigs.map((c) =>
-        c.id === id ? { ...c, ...payload } : c
+        c.id === id ? { ...c, ...payload } : c,
       );
     } else {
       updatedConfigs = [...approvalConfigs, { id: 0, ...payload }];
@@ -152,9 +175,15 @@ export const ConfigPage = () => {
       )}
       <Tabs defaultValue="general">
         <TabsList className="lma-grid lma-grid-cols-3 lma-w-full">
-          <TabsTrigger value="general" className="lma-text-xs">Cấu hình chung</TabsTrigger>
-          <TabsTrigger value="types" className="lma-text-xs">Loại phép</TabsTrigger>
-          <TabsTrigger value="approval" className="lma-text-xs">Cấp phê duyệt</TabsTrigger>
+          <TabsTrigger value="general" className="lma-text-xs">
+            Cấu hình chung
+          </TabsTrigger>
+          <TabsTrigger value="types" className="lma-text-xs">
+            Loại phép
+          </TabsTrigger>
+          <TabsTrigger value="approval" className="lma-text-xs">
+            Cấp phê duyệt
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="lma-space-y-4">
@@ -162,7 +191,7 @@ export const ConfigPage = () => {
             configs={localSystemConfigs}
             onChange={handleSystemConfigChange}
             isAdmin={isAdmin}
-            leaveTypes={leaveTypes}
+            leaveTypes={allLeaveTypes.leaveTypes}
           />
           <DefaultDaysSettings
             configs={localSystemConfigs}
@@ -175,18 +204,22 @@ export const ConfigPage = () => {
 
         <TabsContent value="types">
           <LeaveTypeManager
-            leaveTypes={leaveTypes}
+            leaveTypes={filteredLeaveTypes.leaveTypes}
             onAdd={handleAddLeaveType}
             onEdit={handleEditLeaveType}
-            onToggle={(id, isActive) => toggleLeaveType({ id, isActive: !isActive })}
+            onToggle={(id, isActive) =>
+              filteredLeaveTypes.toggleLeaveType({ id, isActive: !isActive })
+            }
             isAdmin={isAdmin}
+            search={leaveTypeSearch}
+            onSearchChange={setLeaveTypeSearch}
           />
         </TabsContent>
 
         <TabsContent value="approval">
           <ApprovalFlowManager
             approvalConfigs={approvalConfigs}
-            leaveTypes={leaveTypes}
+            leaveTypes={allLeaveTypes.leaveTypes}
             onAdd={handleAddApproval}
             onEdit={handleEditApproval}
             onDelete={handleDeleteApproval}
@@ -208,7 +241,7 @@ export const ConfigPage = () => {
         onOpenChange={setApprovalDialogOpen}
         editingApproval={editingApproval}
         onSetEditingApproval={setEditingApproval}
-        leaveTypes={leaveTypes}
+        leaveTypes={allLeaveTypes.leaveTypes}
         onSave={handleSaveApproval}
       />
     </div>

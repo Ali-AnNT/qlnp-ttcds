@@ -1,6 +1,7 @@
 using QLNP.Api.Shared.Contracts;
 using QLNP.Api.Shared.Groups;
 using QLNP.Api.Shared.Domain;
+using QLNP.Api.Shared;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 using QLNP.Api.Data;
@@ -17,14 +18,18 @@ internal sealed class ListLeaveTypesEndpoint : EndpointWithoutRequest<Result<Lis
     }
 
     public override async Task HandleAsync(CancellationToken ct) {
+        var q = Query<string?>("q", isRequired: false);
+        var includeInactive = Query<bool?>("includeInactive", isRequired: false) ?? false;
+        var term = q?.Trim().ToLower();
+
         var items = await Db.LeaveTypes
-            .Where(t => t.IsActive)
+            .WhereIf(!includeInactive, t => t.IsActive)
+            .WhereIf(!string.IsNullOrEmpty(term), t => t.Name.ToLower().Contains(term!) || t.Code.ToLower().Contains(term!))
             .OrderBy(t => t.Name)
+            .Select(t =>
+                new LeaveTypeDto(t.Id, t.Name, t.Code, t.DefaultDays, t.Description, t.IsActive))
             .ToListAsync(ct);
 
-        var dtos = items.Select(t =>
-            new LeaveTypeDto(t.Id, t.Name, t.Code, t.DefaultDays, t.Description, t.IsActive)).ToList();
-
-        await Send.OkAsync(Result<List<LeaveTypeDto>>.Ok(dtos), ct);
+        await Send.OkAsync(Result<List<LeaveTypeDto>>.Ok(items), ct);
     }
 }
