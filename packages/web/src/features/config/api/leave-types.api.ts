@@ -6,7 +6,7 @@ export const leaveTypesApi = {
   get: (id: number) => api.get<LeaveTypeDto>(`/leave-types/${id}`),
   create: (data: Omit<LeaveTypeDto, "id">) =>
     api.post<LeaveTypeDto>("/leave-types", data),
-  update: (id: number, data: Partial<LeaveTypeDto>) =>
+  update: (id: number, data: Omit<LeaveTypeDto, "id">) =>
     api.put<LeaveTypeDto>(`/leave-types/${id}`, data),
   delete: (id: number) => api.delete<void>(`/leave-types/${id}`),
 };

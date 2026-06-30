@@ -26,7 +26,7 @@ export const useLeaveTypes = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<LeaveTypeDto> }) =>
+    mutationFn: ({ id, data }: { id: number; data: Omit<LeaveTypeDto, "id"> }) =>
       leaveTypesApi.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["leave-types"] });
@@ -35,9 +35,15 @@ export const useLeaveTypes = () => {
     onError: () => toast.error("Lỗi cập nhật loại phép"),
   });
 
+  // Backend Update yêu cầu full object (validator ép Name/Code/DefaultDays).
+  // Merge record hiện tại từ cache với isActive mới để gửi đủ field.
   const toggleMutation = useMutation({
-    mutationFn: ({ id, isActive }: { id: number; isActive: boolean }) =>
-      leaveTypesApi.update(id, { isActive }),
+    mutationFn: ({ id, isActive }: { id: number; isActive: boolean }) => {
+      const current = query.data?.find((lt) => lt.id === id);
+      if (!current) throw new Error("Không tìm thấy loại phép để đổi trạng thái");
+      const { id: _id, ...rest } = current;
+      return leaveTypesApi.update(id, { ...rest, isActive });
+    },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["leave-types"] });
       toast.success(variables.isActive ? "Đã kích hoạt loại phép" : "Đã tắt loại phép");
