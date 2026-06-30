@@ -3,13 +3,13 @@ import { leaveTypesApi } from "../api/leave-types.api";
 import { LeaveTypeDto } from "../api/types";
 import { toast } from "sonner";
 
-export const useLeaveTypes = () => {
+export const useLeaveTypes = (opts?: { q?: string; includeInactive?: boolean }) => {
   const queryClient = useQueryClient();
 
   const query = useQuery({
-    queryKey: ["leave-types"],
+    queryKey: ["leave-types", { q: opts?.q, includeInactive: opts?.includeInactive }],
     queryFn: async () => {
-      const { data, error } = await leaveTypesApi.list();
+      const { data, error } = await leaveTypesApi.list({ q: opts?.q, includeInactive: opts?.includeInactive });
       if (error) throw error;
       return data || [];
     },

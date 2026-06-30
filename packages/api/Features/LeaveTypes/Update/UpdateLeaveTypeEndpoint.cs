@@ -32,7 +32,7 @@ internal sealed class UpdateLeaveTypeEndpoint : Endpoint<Request, Result<LeaveTy
         ThrowIfAnyErrors();
 
         var leaveType = await Db.LeaveTypes.FindAsync([id], ct);
-        if (leaveType is null || !leaveType.IsActive) {
+        if (leaveType is null) {
             await Send.NotFoundAsync(ct);
             return;
         }
