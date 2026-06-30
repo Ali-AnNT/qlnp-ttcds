@@ -7,8 +7,8 @@
 - User chốt: merge full object ở frontend, đổi type sang `Omit<LeaveTypeDto,"id">`, scope chỉ leaveTypesApi.update + toggle.
 
 ## Phases
-- **phase-01-fix-api-type-and-toggle.md** — Sửa api type + toggleMutation merge cache. Status: pending.
-- **phase-02-update-test.md** — Cập nhật test truyền full object. Status: pending.
+- **phase-01-fix-api-type-and-toggle.md** — Sửa api type + toggleMutation merge cache. Status: completed.
+- **phase-02-update-test.md** — Cập nhật test truyền full object. Status: completed.
 
 ## Touchpoints
 - `packages/web/src/features/config/api/leave-types.api.ts`
